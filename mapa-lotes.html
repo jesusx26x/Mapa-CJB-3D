@@ -1,0 +1,4259 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ciudad Juan Bosch - Mapa Interactivo de Lotes</title>
+
+    <!-- Libraries -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Theme Variables - Unified with Evolucion.html */
+        :root {
+            --primary: #00d4ff;
+            --secondary: #10b981;
+            --accent: #a855f7;
+            --bg-dark: #0a1628;
+            --bg-secondary: #1a2a4a;
+            --bg-tertiary: #050c18;
+            --glass: rgba(16, 30, 50, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --highlight-pop: #ffb700;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-card-hover: rgba(255, 255, 255, 0.08);
+
+            /* Mapping old variables to new ones for backwards compatibility */
+            --bg-primary: var(--bg-dark);
+            --border-color: var(--border);
+        }
+
+        /* Light Mode */
+        body.light-mode {
+            --bg-dark: #f0f4f8;
+            --bg-secondary: #e2e8f0;
+            --bg-tertiary: #cbd5e1;
+            --glass: rgba(255, 255, 255, 0.9);
+            --border: rgba(0, 0, 0, 0.15);
+            --text-primary: #1e293b;
+            --text-muted: rgba(30, 41, 59, 0.7);
+            --primary: #0066cc;
+            --secondary: #059669;
+            --accent: #9333ea;
+            --bg-card: rgba(0, 0, 0, 0.04);
+            --bg-card-hover: rgba(0, 0, 0, 0.08);
+
+            /* Compatibility */
+            --bg-primary: var(--bg-dark);
+            --border-color: var(--border);
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            margin-left: 15px;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-card-hover);
+            transform: scale(1.05);
+        }
+
+
+        /* Global Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at top right, var(--bg-secondary) 0%, var(--bg-dark) 60%, var(--bg-tertiary) 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            transition: background 0.3s ease, color 0.3s ease;
+            overflow: hidden;
+            /* Match Evolucion.html layout style */
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Light Mode Overrides (Adapted from Evolucion.html) */
+        body.light-mode .filters-panel {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(241, 245, 249, 0.98) 100%) !important;
+            border-right: 1px solid rgba(0, 0, 0, 0.12) !important;
+            /* Right border as panel is left */
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.08);
+            border: none;
+        }
+
+        body.light-mode .panel-title {
+            color: #1e293b !important;
+        }
+
+        body.light-mode .filter-section {
+            background: rgba(255, 255, 255, 0.6) !important;
+            border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        }
+
+        body.light-mode .filter-section:hover {
+            background: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        body.light-mode .filter-section-title {
+            color: #334155 !important;
+        }
+
+        body.light-mode .filter-input,
+        body.light-mode .filter-select,
+        body.light-mode .filter-date-input {
+            background: #fff !important;
+            border-color: rgba(0, 0, 0, 0.15) !important;
+            color: #1e293b !important;
+        }
+
+        body.light-mode .filter-chip {
+            background: rgba(0, 0, 0, 0.05);
+            color: #475569;
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .filter-chip:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .stat-row {
+            border-bottom: 1px dashed rgba(0, 0, 0, 0.1) !important;
+        }
+
+        body.light-mode .logo-text h1 {
+            background: linear-gradient(90deg, #1e293b, #0066cc) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text;
+        }
+
+        body.light-mode .dashboard-alert {
+            background: rgba(239, 68, 68, 0.05) !important;
+            border-color: rgba(239, 68, 68, 0.2) !important;
+        }
+
+        body.light-mode .alert-item {
+            color: #b91c1c !important;
+        }
+
+        /* Light Mode - Header Overrides */
+        body.light-mode .header {
+            background: rgba(255, 255, 255, 0.98) !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        body.light-mode .stat-card-title {
+            color: #334155 !important;
+        }
+
+        body.light-mode .stat-value-big {
+            color: #1e293b !important;
+        }
+
+        body.light-mode .stat-value-big.highlight {
+            color: #059669 !important;
+        }
+
+        body.light-mode .stat-year-box.year-2020 {
+            background: rgba(0, 0, 0, 0.05) !important;
+            border-color: rgba(0, 0, 0, 0.1) !important;
+        }
+
+        body.light-mode .stat-year-box.year-2025 {
+            background: rgba(5, 150, 105, 0.1) !important;
+            border-color: rgba(5, 150, 105, 0.3) !important;
+        }
+
+        body.light-mode .growth-badge {
+            background: linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(0, 102, 204, 0.1)) !important;
+            border-color: rgba(5, 150, 105, 0.3) !important;
+        }
+
+        body.light-mode .growth-text {
+            color: #059669 !important;
+        }
+
+        body.light-mode .infra-item {
+            background: rgba(0, 0, 0, 0.03) !important;
+        }
+
+        body.light-mode .infra-label,
+        body.light-mode .infra-old {
+            color: #64748b !important;
+        }
+
+        body.light-mode .infra-new {
+            color: #059669 !important;
+        }
+
+        body.light-mode .details-panel {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-color: rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(10, 22, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #00a8ff, #0066cc);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 15px rgba(0, 168, 255, 0.3);
+        }
+
+        .logo-text h1 {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #fff, #00a8ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: rgba(0, 168, 255, 0.2);
+            color: #00d4ff;
+        }
+
+        /* Comparison Stats Header */
+        .comparison-stats {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .era-card {
+            padding: 8px 16px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .era-card.era-2020 {
+            background: rgba(107, 114, 128, 0.2);
+            border: 1px solid rgba(107, 114, 128, 0.3);
+        }
+
+        .era-card.era-2025 {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .era-year {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .era-2020 .era-year {
+            color: #9ca3af;
+        }
+
+        .era-2025 .era-year {
+            color: #10b981;
+        }
+
+        .era-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .era-stats {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .era-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .era-value {
+            font-size: 16px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .era-2020 .era-value {
+            color: #6b7280;
+        }
+
+        .era-2025 .era-value {
+            color: #00d4ff;
+        }
+
+        .era-value.highlight {
+            color: #10b981;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .era-metric {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .comparison-arrow {
+            font-size: 28px;
+            color: #00d4ff;
+            animation: pulse-arrow 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-arrow {
+
+            0%,
+            100% {
+                opacity: 0.5;
+                transform: translateX(0);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateX(3px);
+            }
+        }
+
+        .growth-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0, 168, 255, 0.2));
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            border-radius: 20px;
+        }
+
+        .growth-icon {
+            font-size: 18px;
+        }
+
+        .growth-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: #10b981;
+        }
+
+        /* NEW: Stat Card Group Styles */
+        .stat-card-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-comparison {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-year-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 8px;
+            min-width: 70px;
+        }
+
+        .stat-year-box.year-2020 {
+            background: rgba(107, 114, 128, 0.15);
+            border: 1px solid rgba(107, 114, 128, 0.3);
+        }
+
+        .stat-year-box.year-2025 {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+
+        .stat-year-label {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .stat-value-big {
+            font-size: 20px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .year-2020 .stat-value-big {
+            color: #9ca3af;
+        }
+
+        .year-2025 .stat-value-big {
+            color: #00d4ff;
+        }
+
+        .stat-value-big.highlight {
+            color: #10b981;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .stat-arrow {
+            font-size: 20px;
+            color: #00d4ff;
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 45px;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.2), transparent);
+            margin: 0 5px;
+        }
+
+        /* Infrastructure Stats */
+        .infra-group {
+            min-width: 180px;
+        }
+
+        .infra-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .infra-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 3px 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        .infra-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            min-width: 85px;
+        }
+
+        .infra-values {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .infra-old {
+            font-size: 12px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .infra-arrow {
+            font-size: 10px;
+            color: #00d4ff;
+        }
+
+        .infra-new {
+            font-size: 14px;
+            color: #10b981;
+            font-weight: 700;
+        }
+
+
+        /* Main Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 140px);
+        }
+
+
+        /* Filters Panel - Premium Style */
+        .filters-panel {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 25px;
+            /* Increased padding */
+            border: 1px solid var(--border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            /* Increased gap */
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            /* Subtle separator */
+            padding-bottom: 10px;
+        }
+
+        .filter-section-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            /* Spacing between inputs inside a section */
+        }
+
+        .filter-group {
+            margin-bottom: 5px;
+        }
+
+        .filter-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            /* Airy tracking */
+            font-weight: 600;
+        }
+
+        .filter-select,
+        .filter-input,
+        .filter-date-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            /* Ultra subtle bg */
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            /* Slightly softer radius */
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: 'Outfit', sans-serif;
+            outline: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .filter-select:hover,
+        .filter-input:hover,
+        .filter-date-input:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-select:focus,
+        .filter-input:focus,
+        .filter-date-input:focus {
+            border-color: var(--primary);
+            background: rgba(0, 212, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        .filter-select option {
+            background: var(--bg-secondary);
+            color: #fff;
+        }
+
+        /* Date Range Specific Styling */
+        .date-filter-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .date-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .date-input-group label {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Checkbox filters - Chips Style is handled by .filter-chip classes inserted later */
+        /* Keeping basic checkbox styles just in case, but updated */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .checkbox-item:hover {
+            opacity: 0.8;
+        }
+
+        .checkbox-item input {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-item span {
+            font-size: 13px;
+        }
+
+        /* Color Dots */
+        .color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+
+        .color-dot.habitacional {
+            background: #0ea5e9;
+        }
+
+        /* Sky */
+        .color-dot.comercial {
+            background: #f43f5e;
+        }
+
+        /* Rose */
+        .color-dot.institucional {
+            background: #a855f7;
+        }
+
+        /* Purple */
+        .color-dot.infraestructura {
+            background: #10b981;
+        }
+
+        /* Emerald */
+
+
+        /* Search Dropdown Styles */
+        .search-dropdown-container {
+            position: relative;
+        }
+
+        .search-dropdown-container input {
+            width: 100%;
+        }
+
+        .lot-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(26, 42, 74, 0.98);
+            border: 1px solid rgba(0, 168, 255, 0.3);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            z-index: 100;
+            display: none;
+        }
+
+        .lot-dropdown.visible {
+            display: block;
+        }
+
+        .lot-dropdown-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s ease;
+        }
+
+        .lot-dropdown-item:hover {
+            background: rgba(0, 168, 255, 0.2);
+            color: #00d4ff;
+        }
+
+        .lot-dropdown-item .lot-id {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-left: 8px;
+        }
+
+        /* Stats Summary */
+        .stats-summary {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #00d4ff;
+        }
+
+        /* Map Container */
+        .map-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .map-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .map-placeholder-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .map-placeholder h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .map-placeholder p {
+            font-size: 14px;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        /* SVG Map Styles */
+        #lotMap {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ============================================= */
+        /* TAREA 1: CSS MAPA - ESTADO NEUTRO INICIAL    */
+        /* ============================================= */
+
+        /* Base: Estado Neutro (sin brillo) */
+        #lotMap .lote,
+        #svgContainer .lote {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 0.5;
+            opacity: 0.8;
+            filter: none;
+        }
+
+        /* Hover: Sube opacidad, stroke cyan, sin glow excesivo */
+        #lotMap .lote:hover,
+        #svgContainer .lote:hover {
+            stroke: #00d4ff;
+            stroke-width: 2;
+            opacity: 1;
+            filter: brightness(1.1);
+        }
+
+        /* Selected: AQUÍ Y SOLO AQUÍ aplica drop-shadow verde neón */
+        #lotMap .lote.selected,
+        #svgContainer .lote.selected {
+            stroke: #00ff88;
+            stroke-width: 3;
+            opacity: 1;
+            filter: drop-shadow(0 0 12px rgba(0, 255, 136, 0.8)) brightness(1.15);
+        }
+
+        /* Dimmed: Casi invisible, sin interacción */
+        #lotMap .lote.dimmed,
+        #svgContainer .lote.dimmed {
+            opacity: 0.1;
+            pointer-events: none;
+            filter: grayscale(100%);
+        }
+
+        /* Highlighted: Para búsqueda activa */
+        #lotMap .lote.highlighted {
+            animation: pulse-glow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 5px rgba(0, 212, 255, 0.5));
+                opacity: 0.9;
+            }
+
+            50% {
+                filter: drop-shadow(0 0 15px rgba(0, 212, 255, 0.9));
+                opacity: 1;
+            }
+        }
+
+        /* ============================================= */
+        /* TAREA 2 CSS: ESTILOS PANEL FILTROS           */
+        /* ============================================= */
+
+        .filter-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .btn-clear {
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #ef4444;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-clear:hover {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            font-size: 14px;
+            opacity: 0.6;
+        }
+
+        .input-minimal {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .input-minimal:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.15);
+        }
+
+        select.input-minimal {
+            padding-left: 12px;
+            cursor: pointer;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, rgba(0, 168, 255, 0.2), rgba(0, 102, 204, 0.15));
+            border-color: var(--primary);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .btn-icon {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .btn-icon.habitacional {
+            background: #00a8ff;
+        }
+
+        .btn-icon.comercial {
+            background: #f59e0b;
+        }
+
+        .btn-icon.institucional {
+            background: #a855f7;
+        }
+
+        .btn-icon.infraestructura {
+            background: #6b7280;
+        }
+
+        .year-range-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .year-input-group {
+            flex: 1;
+        }
+
+        .year-input-group label {
+            display: block;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .year-input-group .input-minimal {
+            padding-left: 12px;
+        }
+
+        .filter-details {
+            margin-top: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .filter-details-summary {
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .filter-details-summary:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .filter-details[open] .filter-details-summary {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filter-details .filter-group {
+            padding: 10px 14px;
+        }
+
+        /* ============================================= */
+        /* TAREA 3 CSS: HEADER LIGHT MODE               */
+        /* ============================================= */
+
+        body.light-mode .header {
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+            border-bottom-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .stat-card-title {
+            color: #475569;
+        }
+
+        body.light-mode .stat-value-big {
+            color: #1e293b;
+        }
+
+        body.light-mode .year-2020 .stat-value-big {
+            color: #64748b;
+        }
+
+        body.light-mode .year-2025 .stat-value-big {
+            color: #0284c7;
+        }
+
+        body.light-mode .stat-arrow {
+            color: #0284c7;
+        }
+
+        body.light-mode .stat-year-box.year-2020 {
+            background: rgba(100, 116, 139, 0.1);
+            border-color: rgba(100, 116, 139, 0.2);
+        }
+
+        body.light-mode .stat-year-box.year-2025 {
+            background: rgba(2, 132, 199, 0.1);
+            border-color: rgba(2, 132, 199, 0.3);
+        }
+
+        /* Details Panel */
+        .details-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+        }
+
+        .lot-details {
+            display: none;
+        }
+
+        .lot-details.active {
+            display: block;
+        }
+
+        .lot-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .lot-type-badge {
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .lot-type-badge.habitacional {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .lot-type-badge.comercial {
+            background: rgba(255, 217, 61, 0.2);
+            color: #ffd93d;
+        }
+
+        .lot-type-badge.institucional {
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+        }
+
+        .lot-id {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .detail-group {
+            margin-bottom: 20px;
+        }
+
+        .detail-group h4 {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.disponible {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-badge.en-construccion {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .status-badge.terminado {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .status-badge.ocupado {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 50px 25px;
+        }
+
+        .empty-state-illustration {
+            font-size: 56px;
+            margin-bottom: 16px;
+            opacity: 0.7;
+        }
+
+        .empty-state-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .empty-state-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .empty-state-hint {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        /* ========== REDESIGNED DETAIL PANEL STYLES ========== */
+
+        /* Detail Header - Large ID + Status Badge */
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(0, 168, 255, 0.12), rgba(0, 102, 204, 0.08));
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 168, 255, 0.2);
+        }
+
+        .lot-id-large {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .status-badge-large {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Detail Sections */
+        .detail-section {
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .detail-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+            font-weight: 600;
+        }
+
+        /* Definition List Grid */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 90px 1fr;
+            gap: 6px 12px;
+        }
+
+        .detail-grid dt {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .detail-grid dd {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        /* Housing Section Special Style */
+        .housing-section {
+            background: linear-gradient(135deg, rgba(0, 168, 255, 0.08), rgba(16, 185, 129, 0.05));
+            border-radius: 10px;
+            padding: 14px;
+            border: 1px solid rgba(0, 168, 255, 0.15);
+        }
+
+        /* Light mode overrides for details panel */
+        body.light-mode .detail-header {
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.1), rgba(0, 102, 204, 0.05));
+            border-color: rgba(0, 102, 204, 0.2);
+        }
+
+        body.light-mode .lot-id-large {
+            color: #0066cc;
+        }
+
+        body.light-mode .section-title {
+            color: #64748b;
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body.light-mode .detail-grid dt {
+            color: #64748b;
+        }
+
+        body.light-mode .detail-grid dd {
+            color: #1e293b;
+        }
+
+        body.light-mode .empty-state-hint {
+            background: rgba(0, 0, 0, 0.04);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Data Table */
+        .data-table-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .data-table th {
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tr:hover {
+            background: rgba(0, 168, 255, 0.1);
+        }
+
+        .data-table tr.selected {
+            background: rgba(0, 168, 255, 0.2);
+        }
+
+        /* Export Button */
+        .export-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #00a8ff, #0066cc);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 168, 255, 0.4);
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 50;
+        }
+
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(10, 22, 40, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .zoom-btn:hover {
+            background: rgba(0, 168, 255, 0.3);
+            border-color: #00a8ff;
+            transform: scale(1.1);
+        }
+
+        .zoom-btn:active {
+            transform: scale(0.95);
+        }
+
+        .zoom-level {
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 4px 0;
+        }
+
+        /* Reset Filters Button */
+        .reset-btn {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .reset-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        /* Map Tooltip */
+        .map-tooltip {
+            position: absolute;
+            background: rgba(10, 22, 40, 0.95);
+            border: 1px solid rgba(0, 168, 255, 0.5);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: white;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 100;
+            max-width: 200px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .map-tooltip.visible {
+            display: block;
+        }
+
+        .map-tooltip h5 {
+            font-size: 14px;
+            margin-bottom: 4px;
+            color: #00d4ff;
+        }
+
+        .map-tooltip p {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 2px 0;
+        }
+
+        /* Timelapse Controls */
+        .timelapse-controls {
+            background: rgba(0, 168, 255, 0.1);
+            border: 1px solid rgba(0, 168, 255, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .timelapse-controls .panel-title {
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .timelapse-row {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .timelapse-year {
+            font-size: 32px;
+            font-weight: 700;
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .timelapse-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .timelapse-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00d4ff, #0095ff);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 168, 255, 0.5);
+        }
+
+        .timelapse-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .timelapse-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid rgba(0, 168, 255, 0.3);
+            background: rgba(0, 168, 255, 0.1);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+
+        .timelapse-btn:hover {
+            background: rgba(0, 168, 255, 0.3);
+            border-color: #00d4ff;
+        }
+
+        .timelapse-btn.playing {
+
+            /* ==================== IMPROVED FILTER PANEL ==================== */
+            .filter-section {
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+                border-radius: 12px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                margin-bottom: 12px;
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+
+            .filter-section:hover {
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .filter-section.active {
+                border-left: 3px solid #00a8ff;
+                background: linear-gradient(135deg, rgba(0, 168, 255, 0.05), rgba(0, 102, 204, 0.02));
+            }
+
+            .filter-section-header {
+                padding: 12px 15px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                cursor: pointer;
+                user-select: none;
+            }
+
+            .filter-section-title {
+                font-size: 13px;
+                font-weight: 600;
+                color: rgba(255, 255, 255, 0.9);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .filter-toggle-icon {
+                font-size: 10px;
+                color: rgba(255, 255, 255, 0.5);
+                transition: transform 0.3s ease;
+            }
+
+            .filter-section.collapsed .filter-toggle-icon {
+                transform: rotate(-90deg);
+            }
+
+            .filter-section-content {
+                padding: 0 15px 15px 15px;
+                display: block;
+                animation: fadeIn 0.3s ease;
+            }
+
+            .filter-section.collapsed .filter-section-content {
+                display: none;
+            }
+
+            /* Filter Chips */
+            .chip-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .filter-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 12px;
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.08);
+
+                /* ==================== ELEGANT FILTER DESIGN ==================== */
+
+                /* Accordion Sections */
+                .filter-section {
+                    margin-bottom: 2px;
+                    border-bottom: 1px solid var(--border);
+                }
+
+                .filter-section:last-child {
+                    border-bottom: none;
+                }
+
+                .filter-section-header {
+                    padding: 12px 5px;
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    transition: color 0.3s ease;
+                }
+
+                .filter-section-header:hover {
+                    color: var(--primary);
+                }
+
+                .filter-section-header::after {
+                    content: '▼';
+                    font-size: 10px;
+                    color: var(--text-muted);
+                    transition: transform 0.3s ease;
+                }
+
+                .filter-section.collapsed .filter-section-header::after {
+                    transform: rotate(-90deg);
+                }
+
+                .filter-section-content {
+                    padding: 5px 5px 15px 5px;
+                    display: block;
+                    animation: fadeIn 0.3s ease;
+                }
+
+                .filter-section.collapsed .filter-section-content {
+                    display: none;
+                }
+
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-5px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                /* Elegant Chips */
+                .filter-chips {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                }
+
+                .filter-chip {
+                    padding: 6px 14px;
+                    background: rgba(255, 255, 255, 0.04);
+                    border: 1px solid var(--border);
+                    border-radius: 20px;
+                    cursor: pointer;
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+                    font-size: 12px;
+                    color: var(--text-muted);
+                    backdrop-filter: blur(5px);
+                    user-select: none;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+
+                .filter-chip:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    transform: translateY(-2px);
+                    color: var(--text-primary);
+                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+                }
+
+                .filter-chip:active {
+                    transform: translateY(0) scale(0.97);
+                    box-shadow: none;
+                }
+
+                .filter-chip.active {
+                    background: linear-gradient(135deg, var(--primary), #00a8ff);
+                    border-color: transparent;
+                    color: white;
+                    box-shadow: 0 4px 15px rgba(0, 212, 255, 0.35);
+                    font-weight: 600;
+                }
+
+                .filter-chip.active:hover {
+                    box-shadow: 0 6px 20px rgba(0, 212, 255, 0.5);
+                    transform: translateY(-2px);
+                }
+
+                /* Dashboard Alert Panel - Clean */
+                .dashboard-alert {
+                    background: rgba(239, 68, 68, 0.08);
+                    border-left: 3px solid #ef4444;
+                    border-radius: 6px;
+                    padding: 12px;
+                    margin-bottom: 20px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .alert-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: #ef4444;
+                    font-weight: 700;
+                    font-size: 12px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .alert-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 6px 10px;
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: 4px;
+                    font-size: 11px;
+                    color: rgba(255, 255, 255, 0.9);
+                    cursor: pointer;
+                    transition: background 0.2s;
+                }
+
+                .alert-item:hover {
+                    background: rgba(239, 68, 68, 0.2);
+                }
+
+                /* Dashboard Progress Bar */
+                .progress-container {
+                    margin-top: 5px;
+                    width: 100%;
+                }
+
+                .progress-bar-bg {
+                    height: 4px;
+                    /* Thinner */
+                    background: rgba(255, 255, 255, 0.1);
+                    border-radius: 2px;
+                    overflow: hidden;
+                    width: 100%;
+                }
+
+                .progress-bar-fill {
+                    height: 100%;
+                    background: linear-gradient(90deg, var(--primary), var(--secondary));
+                    border-radius: 2px;
+                    transition: width 1s ease;
+                    box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+                }
+
+                .progress-labels {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 10px;
+                    color: var(--text-muted);
+                    margin-top: 6px;
+                    font-weight: 500;
+                }
+
+                /* Floating Legend - Minimal */
+                .map-legend {
+                    position: absolute;
+                    bottom: 25px;
+                    left: 25px;
+                    background: rgba(10, 22, 40, 0.7);
+                    backdrop-filter: blur(15px);
+                    border: 1px solid var(--border);
+                    padding: 15px;
+                    border-radius: 16px;
+                    z-index: 50;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+
+                .legend-content h4 {
+                    font-family: 'Outfit', sans-serif;
+                    font-weight: 600;
+                }
+
+                .map-legend.minimized {
+                    transform: translateX(-120%);
+                }
+
+                .legend-toggle {
+                    position: absolute;
+                    right: -32px;
+                    bottom: 10px;
+                    width: 32px;
+                    height: 32px;
+                    background: var(--bg-secondary);
+                    border: 1px solid var(--border);
+                    border-left: none;
+                    border-radius: 0 10px 10px 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    color: var(--primary);
+                    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.2);
+                }
+
+                .legend-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    margin-bottom: 8px;
+                    font-size: 12px;
+                    color: var(--text-secondary);
+                }
+
+                .legend-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    box-shadow: 0 0 8px currentColor;
+                }
+
+                /* Improved Date Inputs - Minimal */
+                .date-filter-row {
+                    display: flex;
+                    gap: 10px;
+                    margin-bottom: 10px;
+                }
+
+                .date-input-group {
+                    flex: 1;
+                }
+
+                .date-input-group label {
+                    display: block;
+                    font-size: 9px;
+                    color: var(--text-muted);
+                    margin-bottom: 4px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .filter-date-input {
+                    width: 100%;
+                    background: rgba(255, 255, 255, 0.05);
+                    /* Lighter bg */
+                    border: 1px solid var(--border);
+                    color: var(--text-primary);
+                    padding: 8px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-family: 'Outfit', sans-serif;
+                    outline: none;
+                }
+
+                .filter-date-input:focus {
+                    border-color: var(--primary);
+                    background: rgba(0, 212, 255, 0.05);
+                }
+
+                /* Supervision Mode Toggle - Hero Card */
+                .supervision-toggle {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    /* Space out */
+                    gap: 15px;
+                    margin-bottom: 20px;
+                    padding: 16px;
+                    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+                    border: 1px solid rgba(245, 158, 11, 0.3);
+                    border-radius: 12px;
+                    position: relative;
+                    overflow: hidden;
+                    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);
+                    transition: all 0.3s ease;
+                }
+
+                .supervision-toggle:hover {
+                    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.08));
+                    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.2);
+                    border-color: rgba(245, 158, 11, 0.5);
+                }
+
+                .supervision-toggle input:checked+.slider {
+                    background-color: #f59e0b;
+                    /* Amber */
+                    box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+                }
+
+                .switch {
+                    position: relative;
+                    display: inline-block;
+                    width: 44px;
+                    /* Slightly wider */
+                    height: 24px;
+                }
+
+                .switch input {
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                }
+
+                .slider {
+                    position: absolute;
+                    cursor: pointer;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: rgba(255, 255, 255, 0.15);
+                    transition: .4s;
+                    border-radius: 20px;
+                }
+
+                .slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 18px;
+                    width: 18px;
+                    left: 3px;
+                    bottom: 3px;
+                    background-color: white;
+                    transition: .4s;
+                    border-radius: 50%;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                }
+
+                input:checked+.slider:before {
+                    transform: translateX(20px);
+                }
+
+
+                .slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 16px;
+                    width: 16px;
+                    left: 2px;
+                    bottom: 2px;
+                    background-color: white;
+                    transition: .4s;
+                    border-radius: 50%;
+                }
+
+                input:checked+.slider {
+                    background-color: #f59e0b;
+                }
+
+                input:checked+.slider:before {
+                    transform: translateX(16px);
+                }
+
+                /* Tooltip for lots on map */
+                .lot-tooltip-content .status-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    margin-top: 4px;
+                    font-size: 10px;
+                }
+
+                .status-dot {
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                }
+
+                /* Animation */
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                        transform: translateY(-5px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                /* Floating Filter Menu */
+                .floating-filter-menu {
+                    display: none;
+                    position: absolute;
+                    left: 105%;
+                    /* To the right of the panel */
+                    top: 200px;
+                    width: 250px;
+                    background: rgba(15, 23, 42, 0.95);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 12px;
+                    padding: 15px;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                    z-index: 2000;
+                    opacity: 0;
+                    transform: translateX(-10px);
+                    transition: all 0.3s ease;
+                }
+
+                .floating-filter-menu.visible {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+
+                .menu-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                    color: white;
+                }
+
+                .menu-header h4 {
+                    margin: 0;
+                    font-size: 14px;
+                }
+
+                .close-menu {
+                    cursor: pointer;
+                    font-size: 18px;
+                    opacity: 0.7;
+                }
+
+                .close-menu:hover {
+                    opacity: 1;
+                }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="logo-section">
+            <div class="logo-icon">🗺️</div>
+            <div class="logo-text">
+                <h1>Ciudad Juan Bosch</h1>
+                <p>Evolución 2020 → 2025</p>
+            </div>
+        </div>
+
+        <!-- Comparison Stats: 2020 vs 2025 -->
+        <div class="comparison-stats">
+            <!-- Viviendas Habitadas -->
+            <div class="stat-card-group">
+                <div class="stat-card-title">🏠 Viviendas</div>
+                <div class="stat-comparison">
+                    <div class="stat-year-box year-2020">
+                        <span class="stat-year-label">2020</span>
+                        <span class="stat-value-big" id="headerViviendas2020">4,600</span>
+                    </div>
+                    <div class="stat-arrow">→</div>
+                    <div class="stat-year-box year-2025">
+                        <span class="stat-year-label">Filtrado</span>
+                        <span class="stat-value-big highlight" id="headerViviendasCurrent">14,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-divider"></div>
+
+            <!-- Equipamientos -->
+            <div class="stat-card-group">
+                <div class="stat-card-title">🏗️ Equipamientos</div>
+                <div class="stat-comparison">
+                    <div class="stat-year-box year-2020">
+                        <span class="stat-year-label">2020</span>
+                        <span class="stat-value-big" id="headerEquip2020">37</span>
+                    </div>
+                    <div class="stat-arrow">→</div>
+                    <div class="stat-year-box year-2025">
+                        <span class="stat-year-label">Filtrado</span>
+                        <span class="stat-value-big highlight" id="headerEquipCurrent">72</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-divider"></div>
+
+            <!-- Lotes Comerciales -->
+            <div class="stat-card-group">
+                <div class="stat-card-title">🏪 Comerciales</div>
+                <div class="stat-comparison">
+                    <div class="stat-year-box year-2020">
+                        <span class="stat-year-label">Total</span>
+                        <span class="stat-value-big" id="headerComTotal">0</span>
+                    </div>
+                    <div class="stat-arrow">→</div>
+                    <div class="stat-year-box year-2025">
+                        <span class="stat-year-label">Filtrado</span>
+                        <span class="stat-value-big highlight" id="headerComCurrent">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-divider"></div>
+
+            <!-- Infraestructura -->
+            <div class="stat-card-group infra-group">
+                <div class="stat-card-title">🛤️ Infraestructura</div>
+                <div class="infra-stats">
+                    <div class="infra-item">
+                        <span class="infra-label">Vial</span>
+                        <div class="infra-values">
+                            <span class="infra-old">52.83%</span>
+                            <span class="infra-arrow">→</span>
+                            <span class="infra-new">100%</span>
+                        </div>
+                    </div>
+                    <div class="infra-item">
+                        <span class="infra-label">Eléctrica</span>
+                        <div class="infra-values">
+                            <span class="infra-old">69%</span>
+                            <span class="infra-arrow">→</span>
+                            <span class="infra-new">100%</span>
+                        </div>
+                    </div>
+                    <div class="infra-item">
+                        <span class="infra-label">Hidrosanitaria</span>
+                        <div class="infra-values">
+                            <span class="infra-old">52%</span>
+                            <span class="infra-arrow">→</span>
+                            <span class="infra-new">87%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Growth Summary -->
+            <div class="growth-badge">
+                <span class="growth-icon">📈</span>
+                <span class="growth-text">+204% Crecimiento</span>
+            </div>
+        </div>
+
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link">Timelapse</a>
+            <a href="evolucion.html" class="nav-link">Evolución</a>
+            <a href="mapa-lotes.html" class="nav-link active">Mapa de Lotes</a>
+        </nav>
+        <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Cambiar tema">🌙</button>
+    </header>
+
+    <main class="main-container">
+
+        <!-- ============================================= -->
+        <!-- TAREA 2: PANEL FILTROS - DASHBOARD UI LIMPIO -->
+        <!-- ============================================= -->
+        <aside class="filters-panel">
+            <!-- Header: Título + Botón Limpiar -->
+            <div class="filter-panel-header">
+                <h2 class="panel-title">🔍 Filtros</h2>
+                <button class="btn-clear" onclick="resetFilters()">Limpiar</button>
+            </div>
+
+            <!-- Buscador: Ancho completo con icono -->
+            <div class="filter-group">
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔎</span>
+                    <input type="text" class="input-minimal" id="searchInput"
+                        placeholder="Buscar lote por nombre o ID..." autocomplete="off">
+                </div>
+                <div class="lot-dropdown" id="lotDropdown"></div>
+            </div>
+
+            <!-- Categorías: Grid 2x2 -->
+            <div class="filter-group">
+                <label class="filter-label">Categoría</label>
+                <div class="filter-grid">
+                    <button class="filter-btn active" data-tipo="Habitacional" onclick="toggleFilterBtn(this)">
+                        <span class="btn-icon habitacional"></span>
+                        Habitacional
+                    </button>
+                    <button class="filter-btn active" data-tipo="Comercial" onclick="toggleFilterBtn(this)">
+                        <span class="btn-icon comercial"></span>
+                        Comercial
+                    </button>
+                    <button class="filter-btn active" data-tipo="Institucional" onclick="toggleFilterBtn(this)">
+                        <span class="btn-icon institucional"></span>
+                        Institucional
+                    </button>
+                    <button class="filter-btn active" data-tipo="Infraestructura" onclick="toggleFilterBtn(this)">
+                        <span class="btn-icon infraestructura"></span>
+                        Infraestructura
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ubicación: Cuadrante (ahora en panel principal) -->
+            <div class="filter-group">
+                <label class="filter-label">Cuadrante / Sector</label>
+                <select class="input-minimal" id="cuadranteFilter" onchange="applyFilters()">
+                    <option value="">Todos los cuadrantes</option>
+                </select>
+            </div>
+
+            <!-- Estado de Obra -->
+            <div class="filter-group">
+                <label class="filter-label">Estado de Obra</label>
+                <select class="input-minimal" id="estadoFilter" onchange="applyFilters()">
+                    <option value="">Todos los estados</option>
+                </select>
+            </div>
+
+            <!-- Tiempo: Dos inputs lado a lado (Desde/Hasta) -->
+            <div class="filter-group">
+                <label class="filter-label">Año de Entrega</label>
+                <div class="year-range-row">
+                    <div class="year-input-group">
+                        <label>Desde</label>
+                        <input type="number" class="input-minimal" id="yearStart" placeholder="2020" min="2013"
+                            max="2030" onchange="applyFilters()">
+                    </div>
+                    <div class="year-input-group">
+                        <label>Hasta</label>
+                        <input type="number" class="input-minimal" id="yearEnd" placeholder="2026" min="2013" max="2030"
+                            onchange="applyFilters()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros Adicionales Colapsables -->
+            <details class="filter-details">
+                <summary class="filter-details-summary">Más Filtros ▼</summary>
+                <div class="filter-group">
+                    <label class="filter-label">Etapa</label>
+                    <select class="input-minimal" id="etapaFilter" onchange="applyFilters()">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Subtipo</label>
+                    <select class="input-minimal" id="subtipoFilter" onchange="applyFilters()">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Desarrollador</label>
+                    <select class="input-minimal" id="desarrolladorFilter" onchange="applyFilters()">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Pilar</label>
+                    <select class="input-minimal" id="pilarFilter" onchange="applyFilters()">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+            </details>
+
+            <!-- Stats Summary -->
+            <div class="stats-summary">
+                <h3 class="panel-title">📊 Resumen</h3>
+                <div class="stat-row">
+                    <span class="stat-label">Total Lotes</span>
+                    <span class="stat-value" id="totalLotes">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Filtrados</span>
+                    <span class="stat-value highlight" id="filteredLotes">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Área Total (m²)</span>
+                    <span class="stat-value" id="totalArea">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Unidades Hab.</span>
+                    <span class="stat-value" id="totalUnidades">0</span>
+                </div>
+            </div>
+
+            <!-- Timelapse Controls -->
+            <div class="timelapse-controls">
+                <h3 class="panel-title">🎬 Timelapse</h3>
+                <div id="timelapseContainer" class="timelapse-container">
+                    <!-- Year buttons generated dynamically -->
+                </div>
+                <div class="timelapse-row timelapse-buttons">
+                    <button class="timelapse-btn" id="timelapsePlay" title="Reproducir">
+                        ▶️ Play
+                    </button>
+                    <button class="timelapse-btn" id="timelapseReset" title="Mostrar todos">
+                        🔄 Reset
+                    </button>
+                </div>
+                <div class="timelapse-info">
+                    <span id="timelapseCount">0</span> lotes entregados
+                </div>
+            </div>
+
+            <button class="export-btn" onclick="exportFilteredData()">
+                📥 Exportar Datos Filtrados
+            </button>
+        </aside>
+
+        <!-- Map Container -->
+        <section class="map-container" id="mapContainer">
+            <!-- Zoom Controls -->
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoomIn" title="Acercar">+</button>
+                <span class="zoom-level" id="zoomLevel">100%</span>
+                <button class="zoom-btn" id="zoomOut" title="Alejar">−</button>
+                <button class="zoom-btn" id="zoomReset" title="Restablecer"
+                    style="font-size: 14px; margin-top: 5px;">⟲</button>
+            </div>
+            <!-- Map Tooltip -->
+            <div class="map-tooltip" id="mapTooltip">
+                <h5 id="tooltipId"></h5>
+                <p id="tooltipTipo"></p>
+                <p id="tooltipSubtipo"></p>
+            </div>
+            <div class="map-placeholder" id="mapPlaceholder" style="display: none;">
+                <div class="map-placeholder-icon">🗺️</div>
+                <h3>Mapa SVG Pendiente</h3>
+                <p>
+                    El mapa interactivo se mostrará aquí una vez que el equipo de ingeniería
+                    exporte los archivos SVG desde AutoCAD siguiendo la guía proporcionada.
+                </p>
+                <p style="margin-top: 15px; font-size: 12px; color: rgba(255,255,255,0.4);">
+                    Consulte: GUIA_AUTOCAD_EXPORT.md
+                </p>
+            </div>
+            <!-- SVG map will be loaded inline for direct event handling -->
+            <div id="svgContainer" style="width: 100%; height: 100%; overflow: hidden;">
+                <div id="svgLoading"
+                    style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6b7280;">
+                    Cargando mapa...
+                </div>
+            </div>
+        </section>
+
+        <!-- Details Panel -->
+        <aside class="details-panel">
+            <h2 class="panel-title">📋 Detalles del Lote</h2>
+
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-illustration">📍</div>
+                <h3 class="empty-state-title">Sin lote seleccionado</h3>
+                <p class="empty-state-text">Selecciona un lote en el mapa para ver su ficha técnica completa</p>
+                <div class="empty-state-hint">
+                    <span>💡</span> Haz clic en cualquier polígono del mapa
+                </div>
+            </div>
+
+            <div class="lot-details" id="lotDetails">
+                <!-- Detail Header: ID + Status Badge -->
+                <div class="detail-header">
+                    <span class="lot-id-large" id="detailId">00-00-00</span>
+                    <span class="status-badge-large" id="detailEstado">Estado</span>
+                </div>
+
+                <!-- Section: General Info -->
+                <div class="detail-section">
+                    <h4 class="section-title">📋 Información General</h4>
+                    <dl class="detail-grid">
+                        <dt>Tipo</dt>
+                        <dd><span class="lot-type-badge" id="detailTipo">-</span></dd>
+                        <dt>Subtipo</dt>
+                        <dd id="detailSubtipo">-</dd>
+                        <dt>Nombre</dt>
+                        <dd id="detailNombreProyecto" style="color: var(--primary); font-weight: 600;">-</dd>
+                        <dt>Cuadrante</dt>
+                        <dd id="detailCuadrante">-</dd>
+                        <dt>Pilar</dt>
+                        <dd id="detailPilar">-</dd>
+                    </dl>
+                </div>
+
+                <!-- Section: Metrics -->
+                <div class="detail-section">
+                    <h4 class="section-title">📊 Métricas</h4>
+                    <dl class="detail-grid">
+                        <dt>Área (m²)</dt>
+                        <dd id="detailArea">-</dd>
+                        <dt>Unidades</dt>
+                        <dd id="detailUnidades" style="color: var(--secondary); font-weight: 600;">-</dd>
+                    </dl>
+                </div>
+
+                <!-- Section: Developer -->
+                <div class="detail-section">
+                    <h4 class="section-title">🏗️ Desarrollador</h4>
+                    <dl class="detail-grid">
+                        <dt>Empresa</dt>
+                        <dd id="detailDesarrollador">-</dd>
+                        <dt>Etapa</dt>
+                        <dd id="detailEtapa">-</dd>
+                    </dl>
+                </div>
+
+                <!-- Hidden Housing Project Stats (shown dynamically) -->
+                <div id="housingStats" class="detail-section housing-section" style="display:none;">
+                    <h4 class="section-title" style="color: var(--primary);">🏠 Proyecto Habitacional</h4>
+                    <dl class="detail-grid">
+                        <dt>Edificios</dt>
+                        <dd id="detailEdificios">-</dd>
+                        <dt>Viviendas Adj.</dt>
+                        <dd id="detailViviendasAdj" style="color: var(--secondary);">-</dd>
+                        <dt>Total Aptos.</dt>
+                        <dd id="detailTotalApts">-</dd>
+                        <dt>Viv. Reales</dt>
+                        <dd id="detailViviendasReales">-</dd>
+                        <dt>Estac.</dt>
+                        <dd id="detailEstacionamientos">-</dd>
+                        <dt>Áreas Verdes</dt>
+                        <dd id="detailAreasVerdes">-</dd>
+                    </dl>
+                </div>
+
+                <!-- Hidden Proyecto group (legacy) -->
+                <div class="detail-section" id="groupProyecto" style="display:none;">
+                    <h4 class="section-title">🏗️ Proyecto</h4>
+                    <p id="detailProyecto" style="color: var(--primary); font-weight: 600;">-</p>
+                </div>
+
+                <!-- Infrastructure and Security sections -->
+                <div class="detail-section" id="groupInfra" style="display:none;">
+                    <h4 class="section-title">🔧 Infraestructura</h4>
+                    <p id="detailInfra" style="font-size: 12px; line-height: 1.5;">-</p>
+                </div>
+
+                <div class="detail-section" id="groupSeguridad" style="display:none;">
+                    <h4 class="section-title">🔒 Seguridad</h4>
+                    <p id="detailSeguridad">-</p>
+                </div>
+
+                <!-- Observations -->
+                <div class="detail-section">
+                    <h4 class="section-title">📝 Observaciones</h4>
+                    <p id="detailObservaciones" style="font-size: 12px; line-height: 1.5; color: var(--text-muted);">-
+                    </p>
+                </div>
+            </div>
+
+            <!-- Collapsible Data Table -->
+            <details class="data-table-section" open>
+                <summary class="panel-title"
+                    style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                    <span>📑 Lista de Lotes</span>
+                    <span style="font-size:10px; opacity:0.7;">▼</span>
+                </summary>
+                <div style="max-height: 250px; overflow-y: auto; margin-top:10px;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Subtipo</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lotTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+        </aside>
+    </main>
+
+    <!-- Floating Legend Card -->
+    <style>
+        .map-legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            width: 180px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            /* Ignore clicks when hidden */
+        }
+
+        .map-legend.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .legend-content h4 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+            color: #fff;
+        }
+    </style>
+
+    <div class="map-legend" id="mapLegend">
+        <div class="legend-content">
+            <h4>Estado de Obra</h4>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#10b981; box-shadow:0 0 8px #10b981;"></div>
+                <span>Terminado</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#3b82f6; box-shadow:0 0 8px #3b82f6;"></div>
+                <span>En Ejecución</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#f59e0b; box-shadow:0 0 8px #f59e0b;"></div>
+                <span>Paralizado</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#8b5cf6; box-shadow:0 0 8px #8b5cf6;"></div>
+                <span>Adjudicado</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#6b7280;"></div>
+                <span>No Iniciado</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background:#374151;"></div>
+                <span>Disponible</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // VERSION 2.2 - REPAIRED STRUCTURE - 2026-01-12
+
+
+        // ==================== DATA MANAGEMENT ====================
+        let lotesData = [];
+        let habitacionalesData = [];
+        let comercialesData = [];
+        let filteredData = [];
+        let selectedLotId = null;
+        let searchSelectedLotId = null; // Lot selected via search dropdown
+
+        // Layer visibility state (independent from other filters)
+        let layerVisibility = {
+            Habitacional: true,
+            Comercial: true,
+            Institucional: true,
+            Infraestructura: true
+        };
+
+        // Load CSV using XMLHttpRequest (works with file:// protocol)
+        function loadCSV(url) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.onload = function () {
+                    if (xhr.status === 200 || xhr.status === 0) {
+                        resolve(xhr.responseText);
+                    } else {
+                        reject(new Error(`Failed to load ${url}: ${xhr.status}`));
+                    }
+                };
+                xhr.onerror = function () {
+                    reject(new Error(`Network error loading ${url}`));
+                };
+                xhr.send();
+            });
+        }
+
+        // Load all CSV data sources
+        async function loadLotesData() {
+            try {
+                // Load lotesv2.csv (new version with clean column names)
+                console.log('Loading lotesv2.csv...');
+                const lotesCsvText = await loadCSV('lotesv2.csv');
+                lotesData = parseCSV(lotesCsvText);
+                console.log(`Loaded ${lotesData.length} lotes from CSV`);
+
+                // Load Planilla Base Habitacionales.csv
+                try {
+                    console.log('Loading Planilla Base Habitacionales.csv...');
+                    const habCsvText = await loadCSV('Planilla Base Habitacionales.csv');
+                    habitacionalesData = parseHabitacionalesCSV(habCsvText);
+                    mergeLotesWithHabitacionales();
+                    console.log(`Loaded ${habitacionalesData.length} housing projects`);
+                } catch (habError) {
+                    console.warn('Planilla Base Habitacionales not available:', habError.message);
+                }
+
+                // Load Planilla general Comercial.csv
+                try {
+                    console.log('Loading Planilla general Comercial.csv...');
+                    const comCsvText = await loadCSV('Planilla general Comercial.csv');
+                    comercialesData = parseCSV(comCsvText);
+                    mergeLotesWithComerciales();
+                    console.log(`Loaded ${comercialesData.length} commercial records`);
+                } catch (comError) {
+                    console.warn('Planilla general Comercial not available:', comError.message);
+                }
+
+                filteredData = [...lotesData];
+
+                // Now populate UI
+                populateFilters();
+                updateStats();
+                renderTable();
+
+                // Re-setup SVG interactivity after data is loaded
+                setupSVGInteractivity();
+
+                // Initialize timelapse controls
+                initTimelapse();
+
+                // Initialize search dropdown with lot names
+                populateLotDropdown();
+                initSearchDropdown();
+
+                // Apply filters to ensure correct initial state (shows all lots)
+                applyFilters();
+
+                console.log('All data loaded and UI updated');
+            } catch (error) {
+                console.error('Error loading lotes.csv:', error);
+                alert('Error cargando datos. Por favor abra este archivo desde un servidor web local o verifique que los archivos CSV existen.');
+            }
+        }
+
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+
+            return lines.slice(1).filter(line => line.trim()).map(line => {
+                const values = parseCSVLine(line);
+                const obj = {};
+                headers.forEach((header, i) => {
+                    obj[header] = values[i] ? values[i].trim() : '';
+                });
+                return obj;
+            });
+        }
+
+        // Parse CSV line handling quoted fields with commas
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            return result;
+        }
+
+        // Parse Planilla Base CSV (has complex multi-line fields)
+        function parseHabitacionalesCSV(csvText) {
+            const lines = csvText.split('\n'); const headers = parseCSVLine(lines[0]).map(h =>
+                h.trim());
+            const records = [];
+
+            let currentRecord = null;
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i];
+                if (!line.trim()) continue;
+
+                const values = parseCSVLine(line);
+
+                // Check if this is a new record (has No. Carpeta)
+                if (values[0] && !isNaN(parseInt(values[0]))) {
+                    if (currentRecord) { records.push(currentRecord); }
+                    currentRecord = {};
+                    headers.forEach((header, idx) => {
+                        currentRecord[header] = values[idx] ? values[idx].trim() : '';
+                    });
+                }
+            }
+            if (currentRecord && currentRecord['Lote']) {
+                records.push(currentRecord);
+            }
+
+            return records;
+        }
+
+        // Merge housing project data into lotes
+        function mergeLotesWithHabitacionales() {
+            habitacionalesData.forEach(hab => {
+                const loteIds = (hab['Lote'] || '').split(',').map(id => id.trim());
+
+                loteIds.forEach(loteId => {
+                    const lote = lotesData.find(l => l.id === loteId);
+                    if (lote) {
+                        // Enrich lote with housing data
+                        lote.proyecto = hab['Nombre del Proyecto'] || '';
+                        lote.desarrollador = hab['Desarrollador'] || lote.desarrollador;
+                        lote.superficie_total = hab['Superficie Total (m²)'] || lote.area_m2;
+                        lote.cant_edificios = hab['Cant. Edificios'] || '';
+                        lote.viviendas_adjudicadas = hab['VIVIENDAS ADJUDICADAS'] || '';
+                        lote.total_apartamentos = hab['Total de Apartamentos planos arq.'] || '';
+                        lote.viviendas_reales = hab['VIVIENDAS REALES '] || '';
+                        lote.areas_verdes = hab['Áreas Verdes (m²)'] || '';
+                        lote.estacionamientos = hab['Total Estacionamientos'] || '';
+                        lote.estatus_proyecto = hab['Estatus'] || lote.estado;
+                        lote.fecha_entrega = hab['FECHA DE ENTREGA DE PROYECTO'] || '';
+                        lote.seguridad = hab['Seguridad'] || '';
+                        lote.infraestructura = hab['Infraestructura y Equipamiento'] || '';
+                        lote.es_habitacional = true;
+                    }
+                });
+            });
+        }
+
+        // Merge commercial project data into lotes
+        function mergeLotesWithComerciales() {
+            comercialesData.forEach(com => {
+                const loteId = (com['No. Lote'] || '').trim();
+                if (!loteId) return;
+
+                const lote = lotesData.find(l => l.id === loteId);
+                if (lote) {
+                    // Enrich lote with commercial data
+                    lote.proyecto_comercial = com['Nombre del Comercio'] || '';
+                    lote.tipo_comercio = com['Tipo de Comercio'] || '';
+                    lote.desarrollador = com['Desarrollador'] || lote.desarrollador;
+                    lote.cant_locales = com['Cantidad de Locales'] || '';
+                    lote.cant_niveles = com['Cantidad de Niveles'] || '';
+                    lote.cant_parqueos = com['Cantidad de Parqueos'] || '';
+                    lote.estatus_comercial = com['Status'] || lote.estado;
+                    lote.fecha_entrega_comercial = com['FECHA DE ENTREGA DE PROYECTO'] || '';
+                    lote.es_comercial = true;
+                }
+            });
+        }
+
+        // ==================== FILTERING ====================
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const etapa = document.getElementById('etapaFilter').value;
+            const estado = document.getElementById('estadoFilter').value;
+            const subtipo = document.getElementById('subtipoFilter').value;
+            const pilar = document.getElementById('pilarFilter').value;
+            const desarrollador = document.getElementById('desarrolladorFilter').value;
+            const cuadrante = document.getElementById('cuadranteFilter').value;
+
+            // Get checked tipos
+            const checkedTipos = Array.from(
+                document.querySelectorAll('input[data-filter="tipo"]:checked')
+            ).map(cb => cb.value);
+
+            filteredData = lotesData.filter(lote => {
+                // Search filter - search in ID, nombre, proyecto, and subtipo
+                if (searchTerm) {
+                    const searchFields = [
+                        lote.id || '',
+                        lote.nombre || '',
+                        lote.proyecto || '',
+                        lote.proyecto_comercial || '',
+                        lote.subtipo || ''
+                    ].join(' ').toLowerCase();
+                    if (!searchFields.includes(searchTerm)) {
+                        return false;
+                    }
+                }
+
+                // Type filter
+                if (!checkedTipos.includes(lote.tipo)) {
+                    return false;
+                }
+
+                // Etapa filter
+                if (etapa && lote.etapa !== etapa) {
+                    return false;
+                }
+
+                // Estado filter - only check estado field from lotesv2.csv
+                if (estado && lote.estado !== estado) {
+                    return false;
+                }
+
+                // Subtipo filter
+                if (subtipo && lote.subtipo !== subtipo) {
+                    return false;
+                }
+
+                // Pilar filter
+                if (pilar && lote.Pilar !== pilar) {
+                    return false;
+                }
+
+                // Desarrollador filter
+                if (desarrollador && lote.desarrollador !== desarrollador) {
+                    return false;
+                }
+
+                // Cuadrante filter
+                // Uses Cuadrante column OR falls back to parsing ID (Sector) if column is empty
+                const loteCuadrante = lote.Cuadrante || (lote.id ? lote.id.split('-')[0] : '');
+                if (cuadrante && loteCuadrante !== cuadrante) {
+                    return false;
+                }
+
+                return true;
+            });
+
+            updateStats();
+            renderTable();
+            highlightFilteredLots();
+        }
+
+        function populateFilters() {
+            // Helper to populate a select element
+            const populateSelect = (selectId, data, key) => {
+                const select = document.getElementById(selectId);
+                if (!select) return;
+
+                // Clear existing options except the first one (placeholder)
+                while (select.options.length > 1) {
+                    select.remove(1);
+                }
+
+                // Get unique, trimmed, sorted values
+                const values = [...new Set(data.map(item => {
+                    const val = item[key];
+                    return val ? String(val).trim() : null;
+                }).filter(Boolean))].sort();
+
+                values.forEach(val => {
+                    const option = document.createElement('option');
+                    option.value = val;
+                    option.textContent = val;
+                    select.appendChild(option);
+                });
+            };
+
+            populateSelect('etapaFilter', lotesData, 'etapa');
+            populateSelect('estadoFilter', lotesData, 'estado');
+            populateSelect('subtipoFilter', lotesData, 'subtipo');
+            populateSelect('pilarFilter', lotesData, 'Pilar');
+            populateSelect('desarrolladorFilter', lotesData, 'desarrollador');
+
+            // Populate Cuadrante dropdown
+            // Logic: Use 'Cuadrante' column if available, otherwise extract from ID
+            const cuadrantes = [...new Set(lotesData.map(l => {
+                return l.Cuadrante || (l.id ? l.id.split('-')[0] : '');
+            }).filter(Boolean))].sort();
+
+            const quadSelect = document.getElementById('cuadranteFilter');
+            if (quadSelect) {
+                cuadrantes.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c;
+                    option.textContent = `Sector ${c}`; // Add 'Sector' prefix for display
+                    quadSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Reset all filters
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('etapaFilter').value = '';
+            document.getElementById('estadoFilter').value = '';
+            document.getElementById('subtipoFilter').value = '';
+            document.getElementById('pilarFilter').value = '';
+            document.getElementById('desarrolladorFilter').value = '';
+            document.querySelectorAll('input[data-filter="tipo"]').forEach(cb => cb.checked = true);
+
+            // Reset search selection
+            searchSelectedLotId = null;
+
+            // Reset layer visibility
+            layerVisibility = {
+                Habitacional: true,
+                Comercial: true,
+                Institucional: true,
+                Infraestructura: true
+            };
+
+            applyFilters();
+        }
+
+        // ==================== FILTER HIGHLIGHTING ====================
+        function highlightFilteredLots() {
+            try {
+                const svgElement = window.svgElement || document.querySelector('#svgContainer svg');
+                if (!svgElement) return;
+
+                const filteredIds = filteredData.map(l => l.id);
+                // Check if we are actually filtering (subset) or showing all
+                // If filteredData has same length as lotesData (or close), treat as "Show All"
+                // (Using > 95% as threshold or exact match)
+                const isShowingAll = filteredData.length === lotesData.length;
+
+                const lotPattern = /^\d{2}-\d{2}-\d{2}$/;
+                let matchCount = 0;
+                let dimCount = 0;
+
+                // Helper to apply style to element and its children
+                const applyStyle = (el, opacity, filter, stroke, strokeWidth) => {
+                    const setStyle = (e) => {
+                        e.style.opacity = opacity;
+                        e.style.filter = filter;
+                        // Only set stroke if provided, otherwise clear it to let CSS rule
+                        if (stroke !== null) e.style.stroke = stroke;
+                        else e.style.stroke = '';
+                        if (strokeWidth !== null) e.style.strokeWidth = strokeWidth;
+                        else e.style.strokeWidth = '';
+
+                        e.style.transition = 'opacity 0.3s ease, filter 0.3s ease, stroke 0.3s ease, stroke-width 0.3s ease';
+                    };
+
+                    setStyle(el);
+                    el.querySelectorAll('path, polygon, polyline, rect, circle, ellipse').forEach(child => {
+                        setStyle(child);
+                    });
+                };
+
+                // Helper to reset style (remove inline)
+                const resetStyle = (el) => {
+                    const clear = (e) => {
+                        e.style.opacity = '';
+                        e.style.filter = '';
+                        e.style.stroke = '';
+                        e.style.strokeWidth = '';
+                        e.style.transition = 'all 0.3s ease';
+                    };
+                    clear(el);
+                    el.querySelectorAll('path, polygon, polyline, rect, circle, ellipse').forEach(child => clear(child));
+                };
+
+                svgElement.querySelectorAll('[id]').forEach(element => {
+                    const el = element;
+
+                    if (lotPattern.test(el.id)) {
+                        const lote = lotesData.find(l => l.id === el.id);
+
+                        if (lote) {
+                            // Priority 1: Search selection (Highest)
+                            if (searchSelectedLotId && el.id === searchSelectedLotId) {
+                                applyStyle(el, '1', 'brightness(1.5) drop-shadow(0 0 15px rgba(255, 215, 0, 1))', '#ffd700', '4');
+                                return;
+                            }
+
+                            // Priority 2: Selected Lot (Click)
+                            if (selectedLotId && el.id === selectedLotId) {
+                                applyStyle(el, '1', 'brightness(1.3)', '#00ff88', '3');
+                                return;
+                            }
+
+                            // Priority 3: Layer Visibility
+                            // Update layer visibility state from checkboxes (moved here from original position)
+                            document.querySelectorAll('input[data-filter="tipo"]').forEach(cb => {
+                                layerVisibility[cb.value] = cb.checked;
+                            });
+                            if (!layerVisibility[lote.tipo]) {
+                                applyStyle(el, '0.05', 'grayscale(100%)', '', '');
+                                return;
+                            }
+
+                            // Priority 4: Filter matching
+                            const isFiltered = filteredIds.includes(el.id);
+
+                            if (isFiltered) {
+                                if (isShowingAll) {
+                                    // Show neutral/subtle colors (no highlight) - lots visible but not "bright"
+                                    applyStyle(el, '0.85', '', '', '');
+                                } else {
+                                    // Highlight subset (when filter is active)
+                                    applyStyle(el, '1', 'brightness(1.3) drop-shadow(0 0 8px rgba(0, 212, 255, 0.8))', '#00d4ff', '2');
+                                }
+                                matchCount++;
+                            } else {
+                                // Non-matching lot - heavily dimmed
+                                applyStyle(el, '0.15', 'grayscale(100%) brightness(0.4)', '', '');
+                                dimCount++;
+                            }
+                        } else {
+                            // No data found in CSV for this SVG element
+                            if (isShowingAll) {
+                                // If showing all, make valid map elements visible even if missing data
+                                // Use 0.6 opacity and grayscale to indicate "present but unknown"
+                                applyStyle(el, '0.6', 'grayscale(100%)', '', '');
+                            } else {
+                                // If filtering, they definitely don't match -> hide
+                                applyStyle(el, '0.15', 'grayscale(100%)', '', '');
+                            }
+                        }
+                    }
+                });
+
+                console.log(`Filter highlighting applied: ${matchCount} matching (All=${isShowingAll}), ${dimCount}
+            dimmed`);
+            } catch (error) {
+                console.error('Error in highlightFilteredLots:', error);
+            }
+        }
+
+        // ==================== LAYER VISIBILITY ====================
+        function applyLayerVisibility() {
+            // Update layer visibility state from checkboxes
+            document.querySelectorAll('input[data-filter="tipo"]').forEach(cb => {
+                layerVisibility[cb.value] = cb.checked;
+            });
+
+            // Re-apply highlighting with new layer visibility
+            highlightFilteredLots();
+            console.log('Layer visibility updated:', layerVisibility);
+        }
+
+        // ==================== SEARCH DROPDOWN ====================
+        let allLotOptions = [];
+
+        function populateLotDropdown() {
+            const dropdown = document.getElementById('lotDropdown');
+            if (!dropdown) return;
+
+            // Build list of lot names with IDs
+            allLotOptions = lotesData
+                .filter(l => l.nombre || l.proyecto || l.proyecto_comercial)
+                .map(l => ({
+                    id: l.id,
+                    name: l.nombre || l.proyecto || l.proyecto_comercial || l.id,
+                    tipo: l.tipo
+                }))
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            // Add lots that only have ID (no name)
+            lotesData.forEach(l => {
+                if (!l.nombre && !l.proyecto && !l.proyecto_comercial) {
+                    allLotOptions.push({
+                        id: l.id,
+                        name: l.id,
+                        tipo: l.tipo
+                    });
+                }
+            });
+
+            renderDropdownOptions(allLotOptions);
+            console.log(`Lot dropdown populated with ${allLotOptions.length} options`);
+        }
+
+        function renderDropdownOptions(options) {
+            const dropdown = document.getElementById('lotDropdown');
+            if (!dropdown) return;
+
+            dropdown.innerHTML = options.slice(0, 50).map(opt => `
+            <div class="lot-dropdown-item" data-lot-id="${opt.id}" data-lot-name="${opt.name}">
+                ${opt.name}
+                <span class="lot-id">${opt.id}</span>
+            </div>
+            `).join('');
+
+            // Add click handlers
+            dropdown.querySelectorAll('.lot-dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const lotId = item.getAttribute('data-lot-id');
+                    const lotName = item.getAttribute('data-lot-name');
+                    selectLotFromDropdown(lotId, lotName);
+                });
+            });
+        }
+
+        function selectLotFromDropdown(lotId, lotName) {
+            const searchInput = document.getElementById('searchInput');
+            const dropdown = document.getElementById('lotDropdown');
+
+            searchInput.value = lotName;
+            searchSelectedLotId = lotId;
+            dropdown.classList.remove('visible');
+
+            // Select the lot and highlight only it
+            selectLot(lotId);
+            highlightFilteredLots();
+
+            console.log('Lot selected from dropdown:', lotId, lotName);
+        }
+
+        function initSearchDropdown() {
+            const searchInput = document.getElementById('searchInput');
+            const dropdown = document.getElementById('lotDropdown');
+
+            if (!searchInput || !dropdown) return;
+
+            // Show dropdown on focus
+            searchInput.addEventListener('focus', () => {
+                if (allLotOptions.length > 0) {
+                    dropdown.classList.add('visible');
+                }
+            });
+
+            // Filter dropdown as user types
+            searchInput.addEventListener('input', (e) => {
+                const value = e.target.value.toLowerCase().trim();
+
+                if (!value) {
+                    // Clear search selection
+                    searchSelectedLotId = null;
+                    renderDropdownOptions(allLotOptions);
+                    dropdown.classList.add('visible');
+                    highlightFilteredLots();
+                    return;
+                }
+
+                // Filter options
+                const filtered = allLotOptions.filter(opt =>
+                    opt.name.toLowerCase().includes(value) ||
+                    opt.id.toLowerCase().includes(value)
+                );
+                renderDropdownOptions(filtered);
+                dropdown.classList.add('visible');
+
+                // Check for exact match
+                const exactMatch = allLotOptions.find(opt =>
+                    opt.name.toLowerCase() === value || opt.id.toLowerCase() === value
+                );
+                if (exactMatch) {
+                    searchSelectedLotId = exactMatch.id;
+                    highlightFilteredLots();
+                } else {
+                    searchSelectedLotId = null;
+                    // Apply normal search filter
+                    applyFilters();
+                }
+            });
+
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.remove('visible');
+                }
+            });
+
+            // Handle keyboard navigation
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    dropdown.classList.remove('visible');
+                }
+            });
+        }
+
+
+
+        // ==================== STATS ====================
+        function updateStats() {
+            document.getElementById('totalLotes').textContent = lotesData.length.toLocaleString('es-DO');
+            document.getElementById('filteredLotes').textContent = filteredData.length.toLocaleString('es-DO');
+
+            const totalArea = filteredData.reduce((sum, l) => sum + (parseInt(l.area_m2) || 0), 0);
+            document.getElementById('totalArea').textContent = totalArea.toLocaleString('es-DO');
+
+            const totalUnidades = filteredData.reduce((sum, l) => sum + (parseInt(l.unidades_hab) || 0), 0);
+            document.getElementById('totalUnidades').textContent = totalUnidades.toLocaleString('es-DO');
+
+            // Update header KPIs dynamically
+            updateHeaderStats();
+        }
+
+        // ==================== HEADER KPI UPDATES ====================
+        function updateHeaderStats() {
+            // Calculate housing units for 2020 baseline (static) and current filtered
+            const baseline2020Viviendas = 4600;
+            const baseline2020Equipamientos = 37;
+
+            // Calculate current filtered housing units
+            const filteredViviendas = filteredData
+                .filter(l => l.tipo === 'Habitacional')
+                .reduce((sum, l) => sum + (parseInt(l.unidades_hab) || parseInt(l.unidades) || 0), 0);
+
+            // Calculate current filtered equipamientos (Equipamiento type lots)
+            const filteredEquipamientos = filteredData
+                .filter(l => l.tipo === 'Equipamiento').length;
+
+            // Calculate comerciales (Comercial type lots)
+            const totalComerciales = lotesData.filter(l => l.tipo === 'Comercial').length;
+            const filteredComerciales = filteredData.filter(l => l.tipo === 'Comercial').length;
+
+            // Update header elements
+            const elViviendas2020 = document.getElementById('headerViviendas2020');
+            const elViviendasCurrent = document.getElementById('headerViviendasCurrent');
+            const elEquip2020 = document.getElementById('headerEquip2020');
+            const elEquipCurrent = document.getElementById('headerEquipCurrent');
+            const elComTotal = document.getElementById('headerComTotal');
+            const elComCurrent = document.getElementById('headerComCurrent');
+
+            if (elViviendas2020) elViviendas2020.textContent = baseline2020Viviendas.toLocaleString('es-DO');
+            if (elViviendasCurrent) elViviendasCurrent.textContent = filteredViviendas.toLocaleString('es-DO');
+            if (elEquip2020) elEquip2020.textContent = baseline2020Equipamientos.toLocaleString('es-DO');
+            if (elEquipCurrent) elEquipCurrent.textContent = filteredEquipamientos.toLocaleString('es-DO');
+            if (elComTotal) elComTotal.textContent = totalComerciales.toLocaleString('es-DO');
+            if (elComCurrent) elComCurrent.textContent = filteredComerciales.toLocaleString('es-DO');
+        }
+
+        // ==================== TABLE RENDERING ====================
+        function renderTable() {
+            const tbody = document.getElementById('lotTableBody');
+            tbody.innerHTML = filteredData.map(lote => {
+                const estado = lote.estatus_proyecto || lote.estatus_comercial || lote.estado || '-';
+                return `
+            <tr onclick="selectLot('${lote.id}')" class="${selectedLotId === lote.id ? 'selected' : ''}">
+                <td>${lote.id}</td>
+                <td>${lote.subtipo || lote.tipo || '-'}</td>
+                <td>${estado}</td>
+            </tr>
+            `}).join('');
+        }
+
+        // ==================== LOT SELECTION ====================
+        function selectLot(lotId) {
+            selectedLotId = lotId;
+            const lote = lotesData.find(l => l.id === lotId);
+
+            if (!lote) return;
+
+            // Show details panel
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('lotDetails').classList.add('active');
+
+            // Populate header with ID and Status
+            document.getElementById('detailId').textContent = lote.id;
+
+            // Populate General Info section
+            const tipoEl = document.getElementById('detailTipo');
+            tipoEl.textContent = lote.tipo;
+            tipoEl.className = `lot-type-badge ${(lote.tipo || '').toLowerCase()}`;
+
+            document.getElementById('detailNombreProyecto').textContent = lote.nombre || '-';
+            document.getElementById('detailSubtipo').textContent = lote.subtipo || '-';
+
+            // NEW: Cuadrante and Pilar
+            const cuadrante = lote.Cuadrante || (lote.id ? lote.id.split('-')[0] : '-');
+            document.getElementById('detailCuadrante').textContent = cuadrante;
+            document.getElementById('detailPilar').textContent = lote.Pilar || '-';
+
+            // Metrics section
+            document.getElementById('detailArea').textContent = lote.area_m2 ? parseFloat(String(lote.area_m2).replace(/,/g, '')).toLocaleString('es-DO') : '-';
+            const unidades = lote.unidades_hab || lote.unidades || lote['Unidades terminadas'] || '-';
+            document.getElementById('detailUnidades').textContent = unidades !== '-' ? String(unidades).replace(/,/g, '').toLocaleString?.('es-DO') || unidades : '-';
+
+            // Developer section
+            document.getElementById('detailDesarrollador').textContent = lote.desarrollador || '-';
+            document.getElementById('detailEtapa').textContent = lote.etapa || '-';
+
+            // Estado/Estatus Badge (large version in header)
+            const estadoEl = document.getElementById('detailEstado');
+            const estatus = lote.estatus_proyecto || lote.estado || '-';
+            estadoEl.textContent = estatus;
+            estadoEl.className = 'status-badge-large';
+
+            // Status badge coloring
+            if (estatus.toLowerCase().includes('concluido') || estatus.toLowerCase().includes('terminado')) {
+                estadoEl.style.background = 'rgba(16, 185, 129, 0.2)';
+                estadoEl.style.color = '#10b981';
+            } else if (estatus.toLowerCase().includes('ejecucion') || estatus.toLowerCase().includes('construccion')) {
+                estadoEl.style.background = 'rgba(245, 158, 11, 0.2)';
+                estadoEl.style.color = '#f59e0b';
+            } else if (estatus.toLowerCase().includes('paralizado')) {
+                estadoEl.style.background = 'rgba(239, 68, 68, 0.2)';
+                estadoEl.style.color = '#ef4444';
+            } else if (estatus.toLowerCase().includes('no iniciado')) {
+                estadoEl.style.background = 'rgba(107, 114, 128, 0.2)';
+                estadoEl.style.color = '#6b7280';
+            } else {
+                estadoEl.style.background = 'rgba(59, 130, 246, 0.2)';
+                estadoEl.style.color = '#3b82f6';
+            }
+
+            // Observations
+            document.getElementById('detailObservaciones').textContent = lote.observaciones || '-';
+
+            // Housing Project Data (from Planilla Base)
+            const isHousing = lote.es_habitacional || lote.proyecto;
+
+            // Show/hide housing project section
+            const housingStats = document.getElementById('housingStats');
+            const groupProyecto = document.getElementById('groupProyecto');
+            const groupInfra = document.getElementById('groupInfra');
+            const groupSeguridad = document.getElementById('groupSeguridad');
+
+            if (isHousing && lote.proyecto) {
+                housingStats.style.display = 'block';
+                groupProyecto.style.display = 'block';
+
+                document.getElementById('detailProyecto').textContent = lote.proyecto;
+                document.getElementById('detailEdificios').textContent = lote.cant_edificios || '-';
+                document.getElementById('detailViviendasAdj').textContent = lote.viviendas_adjudicadas ?
+                    lote.viviendas_adjudicadas.replace(/,/g, '').toLocaleString('es-DO') : '-';
+                document.getElementById('detailTotalApts').textContent = lote.total_apartamentos ?
+                    lote.total_apartamentos.replace(/,/g, '').toLocaleString('es-DO') : '-';
+                document.getElementById('detailViviendasReales').textContent = lote.viviendas_reales || '-';
+                document.getElementById('detailEstacionamientos').textContent = lote.estacionamientos || '-';
+                document.getElementById('detailAreasVerdes').textContent = lote.areas_verdes || '-';
+
+                // Infraestructura
+                if (lote.infraestructura) {
+                    groupInfra.style.display = 'block';
+                    document.getElementById('detailInfra').textContent = lote.infraestructura;
+                } else {
+                    groupInfra.style.display = 'none';
+                }
+
+                // Seguridad
+                if (lote.seguridad) {
+                    groupSeguridad.style.display = 'block';
+                    document.getElementById('detailSeguridad').textContent = lote.seguridad;
+                } else {
+                    groupSeguridad.style.display = 'none';
+                }
+            } else {
+                housingStats.style.display = 'none';
+                groupProyecto.style.display = 'none';
+                groupInfra.style.display = 'none';
+                groupSeguridad.style.display = 'none';
+            }
+
+            // Highlight in SVG map
+            highlightLotInMap(lotId);
+
+            // Update table selection
+            renderTable();
+        }
+
+        function highlightLotInMap(lotId) {
+            // Updated to use document since SVG is inline
+            const svgContainer = document.getElementById('svgContainer');
+            if (!svgContainer) return;
+
+            // Remove previous selection
+            svgContainer.querySelectorAll('.lote.selected').forEach(el => {
+                el.classList.remove('selected');
+                el.style.filter = '';
+                el.style.stroke = '';
+                el.style.strokeWidth = '';
+            });
+
+            // Add selection to new lot
+            const lotElement = document.getElementById(lotId);
+            if (lotElement) {
+                lotElement.classList.add('selected');
+                lotElement.style.filter = 'brightness(1.3)';
+                lotElement.style.stroke = '#00ff88';
+                lotElement.style.strokeWidth = '3';
+            }
+        }
+
+
+
+        // ==================== EXPORT ====================
+        function exportFilteredData() {
+            const headers = Object.keys(lotesData[0] || {});
+            const csvContent = [
+                headers.join(','),
+                ...filteredData.map(lote => headers.map(h => lote[h] || '').join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `lotes_filtrados_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // ==================== TIMELAPSE (MULTI-SELECT) ====================
+        let timelapseActive = false;
+        let timelapseInterval = null;
+        let timelapseYears = [];
+        let selectedYears = []; // Array of currently selected years
+
+        // Helper function to extract year from date string (handles M/D/YYYY format)
+        function extractYear(dateStr) {
+            if (!dateStr || typeof dateStr !== 'string') return null;
+            dateStr = dateStr.trim();
+
+            // Try M/D/YYYY format
+            const mdyMatch = dateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (mdyMatch) return parseInt(mdyMatch[3]);
+
+            // Try just a year
+            const yearMatch = dateStr.match(/^(\d{4})$/);
+            if (yearMatch) return parseInt(yearMatch[1]);
+
+            return null;
+        }
+
+        // Helper to get delivery date from lote
+        function getEntregaYear(lote) {
+            // Use the new clean column name 'Fecha entrega'
+            const dateStr = lote['Fecha entrega'] || lote['aÃ±o_entrega'] || lote['año_entrega'] || '';
+            return extractYear(dateStr);
+        }
+
+        function initTimelapse() {
+            // Extract unique years from data
+            timelapseYears = [...new Set(
+                lotesData
+                    .map(l => getEntregaYear(l))
+                    .filter(y => y !== null && y >= 2013 && y <= 2026))].sort((a, b) => a - b);
+
+            console.log(`Found ${timelapseYears.length} delivery years:`, timelapseYears);
+
+            // Default range if no data
+            if (timelapseYears.length === 0) {
+                timelapseYears = [2020, 2021, 2022, 2023, 2024, 2025];
+            }
+
+            // Ensure 2020-2025 range is at least present for the specific request
+            const requiredYears = [2020, 2021, 2022, 2023, 2024, 2025];
+            requiredYears.forEach(y => {
+                if (!timelapseYears.includes(y)) timelapseYears.push(y);
+            });
+            timelapseYears.sort((a, b) => a - b);
+
+            const container = document.getElementById('timelapseContainer');
+            container.innerHTML = '';
+
+            timelapseYears.forEach(year => {
+                const btn = document.createElement('div');
+                btn.className = 'year-pill';
+                btn.textContent = year;
+                btn.dataset.year = year;
+                btn.onclick = () => toggleYear(year);
+                container.appendChild(btn);
+            });
+
+            // Initial state: No selection (Show All)
+            selectedYears = [];
+            updateButtons();
+            updateTimelapseCount();
+
+            // Play button
+            document.getElementById('timelapsePlay').addEventListener('click', toggleTimelapsePlay);
+
+            // Reset button
+            document.getElementById('timelapseReset').addEventListener('click', resetTimelapse);
+
+            console.log(`Timelapse initialized with ${timelapseYears.length} years`);
+        }
+
+        function toggleYear(year) {
+            year = parseInt(year);
+            const index = selectedYears.indexOf(year);
+
+            if (index === -1) {
+                // Select
+                selectedYears.push(year);
+            } else {
+                // Deselect
+                selectedYears.splice(index, 1);
+            }
+
+            updateButtons();
+            applyTimelapse();
+        }
+
+        function updateButtons() {
+            document.querySelectorAll('.year-pill').forEach(btn => {
+                const y = parseInt(btn.dataset.year);
+                if (selectedYears.includes(y)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function applyTimelapse() {
+            // If no years selected, reset to default view (show all)
+            if (selectedYears.length === 0) {
+                // Call highlightFilteredLots to respect other filters (or reset if none)
+                highlightFilteredLots();
+                updateTimelapseCount();
+                return;
+            }
+
+            const svgElement = window.svgElement || document.querySelector('#svgContainer svg');
+            if (!svgElement) return;
+
+            const lotPattern = /^\d{2}-\d{2}-\d{2}$/;
+            let visibleCount = 0;
+
+            svgElement.querySelectorAll('[id]').forEach(el => {
+                if (lotPattern.test(el.id)) {
+                    const lote = lotesData.find(l => l.id === el.id);
+                    if (lote) {
+                        const entregaYear = getEntregaYear(lote);
+
+                        // Check if delivered in selected years
+                        // Removed restriction requiring 'terminado' status 
+                        const isMatch = selectedYears.includes(entregaYear);
+
+                        if (isMatch) {
+                            // High visibility for matched
+                            el.style.opacity = '1';
+                            el.style.filter = 'brightness(1.1)';
+                            visibleCount++;
+                        } else {
+                            // Dimmed
+                            el.style.opacity = '0.15';
+                            el.style.filter = 'grayscale(100%)';
+                        }
+                    } else {
+                        // No data
+                        el.style.opacity = '0.15';
+                        el.style.filter = 'grayscale(100%)';
+                    }
+                }
+            });
+            document.getElementById('timelapseCount').textContent = visibleCount;
+        }
+
+        function updateTimelapseCount() {
+            if (selectedYears.length === 0) {
+                // "When no years are selected, show all lots". So maybe show total count.
+                const total = lotesData.length;
+                document.getElementById('timelapseCount').textContent = total;
+            } else {
+                // Count ALL lots delivered in the selected year(s)
+                // Removed restriction requiring 'terminado' status
+                const count = lotesData.filter(l => {
+                    const y = getEntregaYear(l);
+                    return selectedYears.includes(y);
+                }).length;
+                document.getElementById('timelapseCount').textContent = count;
+            }
+        }
+
+        function toggleTimelapsePlay() {
+            const playBtn = document.getElementById('timelapsePlay');
+
+            if (timelapseActive) {
+                // Stop
+                clearInterval(timelapseInterval);
+                timelapseActive = false;
+                playBtn.innerHTML = '▶️ Play';
+                playBtn.classList.remove('playing');
+            } else {
+                // Start
+                timelapseActive = true;
+                playBtn.innerHTML = '⏸️ Pause';
+                playBtn.classList.add('playing');
+
+                // Play logic: Cycle through years one by one
+                // First clear current selection
+                selectedYears = [];
+                let yearIndex = 0;
+
+                // Find start index
+                const minYear = 2020;
+                const maxYear = 2025;
+                let currentYear = minYear;
+
+                // Helper to step
+                const step = () => {
+                    if (currentYear > maxYear) {
+                        clearInterval(timelapseInterval);
+                        timelapseActive = false;
+                        playBtn.innerHTML = '▶️ Play';
+                        playBtn.classList.remove('playing');
+                        // Optional: Reset or leave at end? Leave at end (2025)
+                        return;
+                    }
+
+                    // Specific logic for Play: Cumulative or Single?
+                    // Timelapse usually implies Cumulative.
+                    // "In 2021, we have 2020+2021".
+                    // If I use the buttons, I should probably simulate "clicking 2020", then "clicking 2021" (adding to selection)
+                    // OR just selecting the single year?
+                    // Let's do Single Year for now to match the "buttons as categories" paradigm,
+                    // BUT cumulative makes more sense for "Growth".
+                    // Let's do Cumulative for Play: 2020 -> 2020,2021 -> 2020,2021,2022...
+
+                    // Actually, simpler: Select just the current year button to show what was delivered THAT year.
+                    // This highlights the "new" stuff.
+                    selectedYears = [currentYear];
+                    updateButtons();
+                    applyTimelapse();
+
+                    currentYear++;
+                };
+
+                step(); // Immediate first step
+                timelapseInterval = setInterval(step, 1500);
+            }
+        }
+
+        function resetTimelapse() {
+            // Stop animation if running
+            if (timelapseActive) {
+                toggleTimelapsePlay(); // This will stop it
+            }
+
+            selectedYears = [];
+            updateButtons();
+
+            // Show all lots (via highlightFilteredLots to respect other filters)
+            highlightFilteredLots();
+            updateTimelapseCount();
+        }
+
+        // ==================== SVG MAP LOADING ====================
+        let svgLoadComplete = false;
+
+        function loadSVGMap() {
+            const container = document.getElementById('svgContainer');
+
+            // Load SVG via XMLHttpRequest and insert inline
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', 'MASTER PLAN CIUDAD JUAN BOSCH COMPLETO CON ID 2.svg', true);
+            xhr.onload = function () {
+                if (xhr.status === 200 || xhr.status === 0) {
+                    // Insert SVG into container
+                    container.innerHTML = xhr.responseText;
+
+                    // Get the SVG element
+                    const svgElement = container.querySelector('svg');
+                    if (svgElement) {
+                        // Make SVG responsive
+                        svgElement.style.width = '100%';
+                        svgElement.style.height = '100%';
+                        svgElement.style.maxWidth = '100%';
+                        svgElement.style.maxHeight = '100%';
+
+                        // Store reference
+                        window.svgElement = svgElement;
+                        svgLoadComplete = true;
+
+                        console.log('SVG loaded inline successfully');
+
+                        // Setup interactivity if data is already loaded
+                        if (lotesData.length > 0) {
+                            setupSVGInteractivity();
+                        }
+                    } else {
+                        console.error('No SVG element found in response');
+                        document.getElementById('mapPlaceholder').style.display = 'flex';
+                    }
+                } else {
+                    console.error('Failed to load SVG:', xhr.status);
+                    document.getElementById('mapPlaceholder').style.display = 'flex';
+                }
+            };
+            xhr.onerror = function () {
+                console.error('Error loading SVG file');
+                document.getElementById('mapPlaceholder').style.display = 'flex';
+                container.innerHTML = '<p style="color: #ef4444; text-align: center; padding: 20px;">Error cargando el mapa SVG</p>';
+            };
+            xhr.send();
+        }
+
+        // Setup interactivity on SVG elements (call after data is loaded)
+        function setupSVGInteractivity() {
+            // Use inline SVG element
+            const svgElement = window.svgElement || document.querySelector('#svgContainer svg');
+            if (!svgElement) {
+                console.log('SVG element not yet available');
+                return;
+            }
+
+            // Auto-detect lot elements by ID pattern (XX-XX-XX)
+            const lotPattern = /^\d{2}-\d{2}-\d{2}$/;
+            let lotCount = 0;
+
+            // Query within the SVG element
+            svgElement.querySelectorAll('[id]').forEach(el => {
+                if (lotPattern.test(el.id)) {
+                    // Mark as interactive lot
+                    el.classList.add('lote');
+                    el.style.cursor = 'pointer';
+                    el.style.transition = 'all 0.3s ease';
+
+                    // Make sure element is clickable by adding pointer-events
+                    el.style.pointerEvents = 'all';
+
+                    lotCount++;
+
+                    // Add type class based on data
+                    const lote = lotesData.find(l => l.id === el.id);
+                    if (lote && lote.tipo) {
+                        el.classList.add(lote.tipo.toLowerCase());
+                    }
+
+                    // Add click handler directly
+                    el.onclick = function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Lot clicked:', el.id);
+                        handleLotClick(el);
+                    };
+
+                    // Add hover effects (subtle, no brightness change)
+                    el.onmouseenter = function () {
+                        if (!el.classList.contains('selected')) {
+                            el.style.stroke = '#00d4ff';
+                            el.style.strokeWidth = '2';
+                        }
+                    };
+
+                    el.onmouseleave = function () {
+                        if (!el.classList.contains('selected')) {
+                            el.style.stroke = '';
+                            el.style.strokeWidth = '';
+                        }
+                    };
+                }
+            });
+
+            console.log(`SVG interactivity setup complete: ${lotCount} interactive lots`);
+        }
+
+        // Handle clicks on lot polygons (supports both single and grouped lots)
+        function handleLotClick(element) {
+            // Check if this is a grouped lot (has data-lotes attribute)
+            const dataLotes = element.getAttribute('data-lotes');
+
+            if (dataLotes) {
+                // Multiple lots in one shape
+                const lotIds = dataLotes.split(',').map(id => id.trim());
+                // Check if already selected - toggle off
+                if (element.classList.contains('selected')) {
+                    deselectLot();
+                } else {
+                    selectMultipleLots(lotIds, element);
+                }
+            } else {
+                // Single lot - check if already selected to toggle
+                if (selectedLotId === element.id) {
+                    deselectLot();
+                } else {
+                    selectLot(element.id);
+                }
+            }
+        }
+
+        // Deselect the currently selected lot
+        function deselectLot() {
+            selectedLotId = null;
+
+            // Remove visual selection from SVG
+            const svgContainer = document.getElementById('svgContainer');
+            if (svgContainer) {
+                svgContainer.querySelectorAll('.lote.selected').forEach(el => {
+                    el.classList.remove('selected');
+                    el.style.filter = '';
+                    el.style.stroke = '';
+                    el.style.strokeWidth = '';
+                });
+            }
+
+            // Hide details panel and show empty state
+            document.getElementById('lotDetails').classList.remove('active');
+            document.getElementById('emptyState').style.display = 'block';
+
+            // Update table to remove selection highlight
+            renderTable();
+
+            console.log('Lot deselected');
+        }
+
+        // Select and display multiple lots from a grouped polygon
+        function selectMultipleLots(lotIds, element) {
+            // Find all matching lots from data
+            const matchingLotes = lotesData.filter(l => lotIds.includes(l.id));
+
+            if (matchingLotes.length === 0) {
+                console.warn('No matching lots found for:', lotIds);
+                return;
+            }
+
+            // Highlight the polygon
+            document.querySelectorAll('#lotMap .lote.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            element.classList.add('selected');
+
+            // Show details panel with multiple lots
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('lotDetails').classList.add('active');
+
+            if (matchingLotes.length === 1) {
+                // Just one lot, show normal details
+                showSingleLotDetails(matchingLotes[0]);
+            } else {
+                // Multiple lots - show grouped view
+                showGroupedLotDetails(matchingLotes, element.id || 'GRUPO');
+            }
+        }
+
+        // Show details for a single lot
+        function showSingleLotDetails(lote) {
+            const tipoEl = document.getElementById('detailTipo');
+            tipoEl.textContent = lote.tipo;
+            tipoEl.className = `lot-type-badge ${lote.tipo.toLowerCase()}`;
+
+            document.getElementById('detailId').textContent = lote.id;
+            document.getElementById('detailNombre').textContent = lote.nombre || '-';
+            document.getElementById('detailEtapa').textContent = lote.etapa || '-';
+            document.getElementById('detailDesarrollador').textContent = lote.desarrollador || '-';
+            document.getElementById('detailArea').textContent = lote.area_m2 ? parseInt(lote.area_m2).toLocaleString('es-DO') : '-';
+            document.getElementById('detailUnidades').textContent = lote.unidades_hab || '-';
+
+            const estadoEl = document.getElementById('detailEstado');
+            estadoEl.textContent = lote.estado || '-';
+            estadoEl.className = `status-badge ${(lote.estado || '').toLowerCase().replace(' ', '-')}`;
+
+            document.getElementById('detailAnoAsignacion').textContent = lote.año_asignacion || '-';
+            document.getElementById('detailAnoEntrega').textContent = lote.año_entrega || '-';
+            document.getElementById('detailPropietario').textContent = lote.propietario || '-';
+            document.getElementById('detailObservaciones').textContent = lote.observaciones || '-';
+        }
+
+        // Show details for grouped lots
+        function showGroupedLotDetails(lotes, groupId) {
+            const tipoEl = document.getElementById('detailTipo');
+            tipoEl.textContent = 'GRUPO';
+            tipoEl.className = 'lot-type-badge';
+            tipoEl.style.background = 'rgba(168, 85, 247, 0.2)';
+            tipoEl.style.color = '#a855f7';
+
+            document.getElementById('detailId').textContent = `${groupId} (${lotes.length} lotes)`;
+            document.getElementById('detailNombre').textContent = lotes.map(l => l.id).join(', ');
+            document.getElementById('detailEtapa').textContent = [...new Set(lotes.map(l => l.etapa))].join(', ') || '-';
+            document.getElementById('detailDesarrollador').textContent = [...new Set(lotes.map(l => l.desarrollador))].join(', ') || '-';
+
+            const totalArea = lotes.reduce((sum, l) => sum + (parseInt(l.area_m2) || 0), 0);
+            document.getElementById('detailArea').textContent = totalArea.toLocaleString('es-DO') + ' (total)';
+
+            const totalUnidades = lotes.reduce((sum, l) => sum + (parseInt(l.unidades_hab) || 0), 0);
+            document.getElementById('detailUnidades').textContent = totalUnidades.toLocaleString('es-DO') + ' (total)';
+
+            const estados = [...new Set(lotes.map(l => l.estado))];
+            const estadoEl = document.getElementById('detailEstado');
+            estadoEl.textContent = estados.join(', ') || '-';
+            estadoEl.className = 'status-badge';
+
+            document.getElementById('detailAnoAsignacion').textContent = [...new Set(lotes.map(l =>
+                l.año_asignacion))].join(', ') || '-';
+            document.getElementById('detailAnoEntrega').textContent = [...new Set(lotes.map(l =>
+                l.año_entrega))].join(', ') || '-';
+            document.getElementById('detailPropietario').textContent = [...new Set(lotes.map(l =>
+                l.propietario).filter(Boolean))].join(', ') || '-';
+            document.getElementById('detailObservaciones').textContent = `Grupo de ${lotes.length} lotes:
+                    ${lotes.map(l => l.id).join(', ')}`;
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        // Note: searchInput has custom handling in initSearchDropdown()
+        document.getElementById('etapaFilter').addEventListener('change', applyFilters);
+        document.getElementById('estadoFilter').addEventListener('change', applyFilters);
+        document.getElementById('subtipoFilter').addEventListener('change', applyFilters);
+        document.getElementById('pilarFilter').addEventListener('change', applyFilters);
+        document.getElementById('desarrolladorFilter').addEventListener('change', applyFilters);
+        document.querySelectorAll('input[data-filter="tipo"]').forEach(cb => {
+            cb.addEventListener('change', applyFilters);
+        });
+
+        // ==================== ZOOM CONTROLS ====================
+        let currentZoom = 1;
+        let panX = 0;
+        let panY = 0;
+        let isPanning = false;
+        let startPanX = 0;
+        let startPanY = 0;
+
+        function initZoomControls() {
+            const zoomIn = document.getElementById('zoomIn');
+            const zoomOut = document.getElementById('zoomOut');
+            const zoomReset = document.getElementById('zoomReset');
+            const mapContainer = document.getElementById('mapContainer');
+
+            if (zoomIn) {
+                zoomIn.addEventListener('click', () => {
+                    currentZoom = Math.min(currentZoom * 1.3, 5);
+                    applyZoom();
+                });
+            }
+
+            if (zoomOut) {
+                zoomOut.addEventListener('click', () => {
+                    currentZoom = Math.max(currentZoom / 1.3, 0.5);
+                    applyZoom();
+                });
+            }
+
+            if (zoomReset) {
+                zoomReset.addEventListener('click', () => {
+                    currentZoom = 1;
+                    panX = 0;
+                    panY = 0;
+                    applyZoom();
+                });
+            }
+
+            // Mouse wheel zoom
+            if (mapContainer) {
+                mapContainer.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    if (e.deltaY < 0) { currentZoom = Math.min(currentZoom * 1.1, 5); } else {
+                        currentZoom = Math.max(currentZoom / 1.1, 0.5);
+                    } applyZoom();
+                }); // Pan controls
+                mapContainer.addEventListener('mousedown', (e) => {
+                    if (e.target.closest('.zoom-controls')) return;
+                    isPanning = true;
+                    startPanX = e.clientX - panX;
+                    startPanY = e.clientY - panY;
+                    mapContainer.style.cursor = 'grabbing';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isPanning) return;
+                    panX = e.clientX - startPanX;
+                    panY = e.clientY - startPanY;
+                    applyZoom();
+                });
+
+                document.addEventListener('mouseup', () => {
+                    isPanning = false;
+                    if (mapContainer) mapContainer.style.cursor = 'grab';
+                });
+            }
+        }
+
+        function applyZoom() {
+            const svgContainer = document.getElementById('svgContainer');
+            if (svgContainer) {
+                svgContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+                svgContainer.style.transformOrigin = 'center center';
+            }
+            document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+        }
+
+        // ==================== INITIALIZATION ====================
+        loadLotesData();
+        loadSVGMap();
+        initZoomControls();
+
+        // ==================== THEME TOGGLE ====================
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            localStorage.setItem('cjb-theme', isLight ? 'light' : 'dark');
+            updateThemeIcon();
+        }
+
+        function updateThemeIcon() {
+            const btn = document.getElementById('themeToggle');
+            if (!btn) return;
+            const isLight = document.body.classList.contains('light-mode');
+            btn.textContent = isLight ? '☀️' : '🌙';
+        }
+
+        function loadSavedTheme() {
+            const saved = localStorage.getItem('cjb-theme');
+            if (saved === 'light') {
+                document.body.classList.add('light-mode');
+            }
+            updateThemeIcon();
+        }
+
+        // Load theme on page load
+        loadSavedTheme();
+
+        // ==================== NEW FEATURES IMPLEMENTATION ====================
+
+        let supervisionMode = false;
+
+        function toggleSection(id) {
+            const section = document.getElementById(id);
+            if (section) section.classList.toggle('collapsed');
+        }
+
+        function toggleFilterChip(chip, type, value) {
+            chip.classList.toggle('active');
+            applyFilters();
+        }
+
+        // TAREA 2: Toggle function for new filter buttons (Grid 2x2)
+        function toggleFilterBtn(btn) {
+            btn.classList.toggle('active');
+            applyFilters();
+        }
+
+        // Get active filter button values
+        function getActiveFilterBtnValues() {
+            const btns = document.querySelectorAll('.filter-btn.active');
+            return Array.from(btns).map(btn => btn.dataset.tipo);
+        }
+
+        function toggleSupervisionMode() {
+            supervisionMode = document.getElementById('supervisionToggle').checked;
+            applyFilters(); // Re-render map coloring
+
+            const legend = document.getElementById('mapLegend');
+            if (legend) legend.style.display = supervisionMode ? 'block' : 'none';
+        }
+
+        function toggleLegend() {
+            const legend = document.getElementById('mapLegend');
+            if (legend) legend.classList.toggle('minimized');
+        }
+
+        function getActiveChipValues(type) {
+            const chips = document.querySelectorAll(`.filter-chip.active[onclick*="'${type}'"]`);
+            return Array.from(chips).map(chip => chip.textContent.trim());
+        }
+
+        // ENHANCED APPLY FILTERS
+        // Overwriting the previous applyFilters function
+        function applyFilters() {
+            // Get values from new UI - support both chips and buttons
+            const activeTypesFromBtns = getActiveFilterBtnValues();
+            const activeTypesFromChips = getActiveChipValues('tipo');
+            const activeTypes = activeTypesFromBtns.length > 0 ? activeTypesFromBtns : activeTypesFromChips;
+
+            const etapa = document.getElementById('etapaFilter').value;
+            const estado = document.getElementById('estadoFilter').value;
+            const subtipo = document.getElementById('subtipoFilter').value;
+            const desarrollador = document.getElementById('desarrolladorFilter').value;
+            const cuadrante = document.getElementById('cuadranteFilter').value;
+
+            const yearStart = parseInt(document.getElementById('yearStart').value) || 2000;
+            const yearEnd = parseInt(document.getElementById('yearEnd').value) || 2030;
+
+            filteredData = lotesData.filter(lote => {
+                // Type Filter (Chips)
+                // If using chips, we check if valid types are selected
+                if (activeTypes.length > 0) {
+                    const tipoMatch = activeTypes.some(type => lote.tipo && lote.tipo.includes(type));
+                    if (!tipoMatch) return false;
+                }
+
+                // Standard Filters
+                if (etapa && lote.etapa !== etapa) return false;
+                if (estado && lote.estado !== estado) return false;
+                if (subtipo && lote.subtipo !== subtipo) return false;
+                if (desarrollador && lote.desarrollador !== desarrollador) return false;
+
+                // New: Quadrante Filter
+                // Assuming ID format XX-YY-ZZ where XX is sector/cuadrante
+                if (cuadrante) {
+                    const sector = lote.id.split('-')[0];
+                    if (sector !== cuadrante) return false;
+                }
+
+                // New: Date Range Filter (Fecha Entrega)
+                if (lote.fecha_entrega) {
+                    const year = new Date(lote.fecha_entrega).getFullYear();
+                    // Basic check if date is valid
+                    if (!isNaN(year)) {
+                        if (year < yearStart || year > yearEnd) return false;
+                    }
+                }
+
+                return true;
+            });
+
+            updateStats();
+            updateDashboard(); // New dashboard logic
+            renderTable();
+            highlightFilteredLots();
+        }
+
+        function updateDashboard() {
+            const dashboardAlerts = document.getElementById('dashboardAlerts');
+            const alertContainer = document.getElementById('alertContainer');
+            const globalProgressBar = document.getElementById('globalProgressBar');
+            const globalProgressPercent = document.getElementById('globalProgressPercent');
+            const progressDelivered = document.getElementById('progressDelivered');
+            const progressTotal = document.getElementById('progressTotal');
+
+            if (!globalProgressBar) return;
+
+            // 1. Calculate Progress
+            const total = filteredData.length;
+            if (total === 0) {
+                globalProgressBar.style.width = '0%';
+                globalProgressPercent.textContent = '0%';
+                return;
+            }
+
+            const delivered = filteredData.filter(l => {
+                const s = (l.estado || '').toLowerCase();
+                return s.includes('terminado') || s.includes('concluido') || s.includes('entregado');
+            }).length;
+
+            const percent = Math.round((delivered / total) * 100);
+
+            globalProgressBar.style.width = `${percent}%`;
+            globalProgressPercent.textContent = `${percent}%`;
+            progressDelivered.textContent = `${delivered} Entr.`;
+            progressTotal.textContent = `${total} Total`;
+
+            // 2. Identify Stalled Projects (Paralizados)
+            const stalled = filteredData.filter(l =>
+                (l.estado && l.estado.toLowerCase().includes('paralizado')) ||
+                (l.estatus_detallado && l.estatus_detallado.toLowerCase().includes('paralizado'))
+            );
+
+            // Manual check for specific halted projects mentioned in analysis
+            const knownStalledIds = ['08-23-01', '09-28-02'];
+            const foundStalled = filteredData.filter(l => knownStalledIds.includes(l.id));
+
+            // Deduplicate
+            const allStalledMap = new Map();
+            [...stalled, ...foundStalled].forEach(item => allStalledMap.set(item.id, item));
+            const allStalled = Array.from(allStalledMap.values());
+
+            if (allStalled.length > 0) {
+                if (dashboardAlerts) dashboardAlerts.style.display = 'flex';
+                if (alertContainer) {
+                    alertContainer.innerHTML = '';
+                    allStalled.forEach(l => {
+                        const div = document.createElement('div');
+                        div.className = 'alert-item';
+                        div.innerHTML = `<span>🛑 ${l.proyecto || 'Lote ' + l.id}</span>`;
+                        div.onclick = () => selectLot(l.id);
+                        alertContainer.appendChild(div);
+                    });
+                }
+            } else {
+                if (dashboardAlerts) dashboardAlerts.style.display = 'none';
+            }
+        }
+
+        // ==================== INITIALIZATION & EVENTS ====================
+
+        function setupEventListeners() {
+            // Debounce search input
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                let debounceTimer;
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        applyFilters();
+                    }, 300);
+                });
+            }
+
+            // Filter Dropdowns
+            ['etapaFilter', 'estadoFilter', 'subtipoFilter', 'pilarFilter', 'desarrolladorFilter', 'cuadranteFilter']
+                .forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.addEventListener('change', applyFilters);
+                });
+
+            // Date Inputs
+            ['yearStart', 'yearEnd'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', applyFilters);
+            });
+
+            // Supervision Toggle
+            const supToggle = document.getElementById('supervisionToggle');
+            if (supToggle) supToggle.addEventListener('change', toggleSupervisionMode);
+        }
+
+        // Initialize map and data
+        window.addEventListener('load', () => {
+            loadLotesData();
+            setupEventListeners();
+        });
+
+    </script>
+</body>
+
+</html>

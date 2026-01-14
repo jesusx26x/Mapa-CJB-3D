@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciudad Juan Bosch - Evolución 2020 → 2026</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* ============ EVOLUTION PAGE STYLES ============ */
+        .evolution-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            height: calc(100vh - var(--header-height));
+            margin-top: var(--header-height);
+        }
+
+        .panel-left {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 12px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.recibido {
+            background: #6366f1;
+        }
+
+        .legend-dot.construido {
+            background: #10b981;
+        }
+
+        .legend-dot.proyectado {
+            background: #f59e0b;
+        }
+
+        .legend-dot.inactivo {
+            background: #374151;
+        }
+
+        .panel-center {
+            position: relative;
+            background: var(--bg-primary);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .map-wrapper {
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-wrapper svg {
+            max-width: 95%;
+            max-height: 95%;
+            transition: transform 0.3s ease;
+        }
+
+        /* SVG Lot Styles - Dynamic highlighting */
+        .map-wrapper svg [id] {
+            transition: opacity 0.5s ease, filter 0.5s ease;
+        }
+
+        .map-wrapper svg .lote-inactivo {
+            opacity: 0.15;
+            filter: grayscale(100%);
+        }
+
+        .map-wrapper svg .lote-activo {
+            opacity: 1;
+            filter: brightness(1.2);
+        }
+
+        .map-wrapper svg .lote-nuevo {
+            animation: pulseNew 1s ease-in-out;
+        }
+
+        @keyframes pulseNew {
+
+            0%,
+            100% {
+                filter: brightness(1.2);
+            }
+
+            50% {
+                filter: brightness(1.8) drop-shadow(0 0 10px #10b981);
+            }
+        }
+
+        /* Timeline Bar */
+        .timeline-bar {
+            position: relative;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 20px 40px;
+            z-index: 20;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .timeline-year {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .timeline-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--success), #059669);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5);
+        }
+
+        .fullscreen-btn {
+            width: 44px;
+            height: 44px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .timeline-track {
+            position: relative;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .timeline-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .timeline-markers {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .year-marker {
+            padding: 6px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .year-marker:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--primary);
+        }
+
+        .year-marker.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .year-marker.baseline {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: #6366f1;
+            color: #6366f1;
+        }
+
+        .year-marker.projected {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #f59e0b;
+            color: #f59e0b;
+        }
+
+        /* Right Panel */
+        .panel-right {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .year-display {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(0, 168, 255, 0.1), rgba(0, 102, 204, 0.05));
+            border: 1px solid rgba(0, 168, 255, 0.2);
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+        }
+
+        .year-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .year-big {
+            font-size: 56px;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+        }
+
+        .year-status {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        .year-status.baseline {
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+        }
+
+        .year-status.construido {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+        }
+
+        .year-status.proyectado {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .comparison-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .comparison-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .comparison-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .comparison-badge {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 10px;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .comparison-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .comparison-detail {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .comparison-bar {
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .comparison-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .comparison-fill.viviendas {
+            background: linear-gradient(90deg, #00a8ff, #0066cc);
+        }
+
+        .comparison-fill.equipamientos {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+
+        .comparison-fill.comerciales {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .cumulative-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .section-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .mini-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+        }
+
+        .mini-stat:last-child {
+            border-bottom: none;
+        }
+
+        .mini-stat-label {
+            color: var(--text-secondary);
+        }
+
+        .mini-stat-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Fullscreen Mode */
+        .fullscreen-mode {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            z-index: 9999 !important;
+            background: var(--bg-primary) !important;
+        }
+
+        .fullscreen-mode .panel-left,
+        .fullscreen-mode .panel-right,
+        .fullscreen-mode .header {
+            display: none !important;
+        }
+
+        .fullscreen-mode .evolution-layout {
+            grid-template-columns: 1fr !important;
+            margin-top: 0 !important;
+            height: 100vh !important;
+        }
+
+        .fullscreen-mode .timeline-bar {
+            padding: 40px 80px 30px;
+        }
+
+        .fullscreen-mode .timeline-year {
+            font-size: 72px;
+        }
+
+        .fullscreen-overlay {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: none;
+        }
+
+        .fullscreen-mode .fullscreen-overlay {
+            display: block;
+        }
+
+        .exit-fullscreen {
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .year-stats-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            min-width: 280px;
+            display: none;
+        }
+
+        .fullscreen-mode .year-stats-overlay {
+            display: block;
+        }
+
+        /* ============ FLOATING LEGEND BUTTON ============ */
+        .legend-floating-btn {
+            position: fixed;
+            bottom: 200px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
+            z-index: 1000;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .legend-floating-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.7);
+        }
+
+        .legend-floating-btn span {
+            font-size: 28px;
+        }
+
+        /* ============ LEGEND MODAL ============ */
+        .legend-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 10001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .legend-modal-overlay.active {
+            display: flex;
+        }
+
+        .legend-modal {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .legend-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .legend-modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-modal-title span {
+            font-size: 26px;
+        }
+
+        .legend-modal-close {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .legend-modal-close:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .legend-modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .legend-modal-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .legend-modal-item:hover {
+            transform: translateX(5px);
+            border-color: var(--primary);
+        }
+
+        .legend-modal-color {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        .legend-modal-color.recibido {
+            background: linear-gradient(135deg, #6366f1, #818cf8);
+        }
+
+        .legend-modal-color.construido {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .legend-modal-color.proyectado {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        }
+
+        .legend-modal-color.inactivo {
+            background: linear-gradient(135deg, #374151, #4b5563);
+        }
+
+        .legend-modal-color.habitacional {
+            background: linear-gradient(135deg, #00a8ff, #0066cc);
+        }
+
+        .legend-modal-color.comercial {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .legend-modal-color.institucional {
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+        }
+
+        .legend-modal-info {
+            flex: 1;
+        }
+
+        .legend-modal-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .legend-modal-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .legend-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-logo">
+            <div class="logo-box"><span class="logo-icon">📈</span></div>
+            <div class="logo-text">
+                <h1>Ciudad<br>Juan<br>Bosch</h1>
+                <p class="logo-subtitle">Evolución<br>2020 → 2026</p>
+            </div>
+        </div>
+
+        <div class="header-kpis">
+            <div class="kpi-comparison-card">
+                <div class="kpi-title">🏗️ RECIBIDO 2020</div>
+                <div class="kpi-values">
+                    <div class="kpi-current">
+                        <span class="kpi-year">VBC</span>
+                        <span class="kpi-number">4,600</span>
+                    </div>
+                </div>
+            </div>
+            <div class="kpi-comparison-card">
+                <div class="kpi-title">🏠 CONSTRUIDO 2021-2025</div>
+                <div class="kpi-values">
+                    <div class="kpi-current">
+                        <span class="kpi-year">NUEVO</span>
+                        <span class="kpi-number highlight">+9,600</span>
+                    </div>
+                </div>
+            </div>
+            <div class="kpi-comparison-card">
+                <div class="kpi-title">📊 PROYECTADO 2026</div>
+                <div class="kpi-values">
+                    <div class="kpi-current">
+                        <span class="kpi-year">META</span>
+                        <span class="kpi-number" style="color: #f59e0b;">+3,500</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-growth">
+            <div class="growth-badge">
+                <span class="growth-value">+209%</span>
+                <span class="growth-label">Crecimiento</span>
+            </div>
+        </div>
+
+        <nav class="header-nav">
+            <a href="timelapse.html" class="nav-link">Timelapse</a>
+            <a href="evolucion.html" class="nav-link active">Evolución</a>
+            <a href="index.html" class="nav-link">Mapa<br>de<br>Lotes</a>
+        </nav>
+
+        <div class="header-actions">
+            <button class="btn-icon-only" id="themeToggle">🌙</button>
+        </div>
+    </header>
+
+    <!-- MAIN LAYOUT -->
+    <main class="evolution-layout" id="evolutionLayout">
+        <!-- LEFT PANEL -->
+        <aside class="panel-left">
+            <h3 class="panel-title">📊 Leyenda</h3>
+
+            <div class="legend-item">
+                <span class="legend-dot recibido"></span>
+                <span>Recibido por VBC (2020)</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot construido"></span>
+                <span>Construido (2021-2025)</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot proyectado"></span>
+                <span>Proyectado (2026)</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-dot inactivo"></span>
+                <span>No entregado aún</span>
+            </div>
+
+            <h3 class="panel-title" style="margin-top: 24px;">⚙️ Controles</h3>
+
+            <div style="margin-bottom: 12px;">
+                <label class="filter-label">Velocidad de Animación</label>
+                <select class="filter-select" id="speedSelect" style="width: 100%; margin-top: 6px;">
+                    <option value="2500">Lento (2.5s)</option>
+                    <option value="1500" selected>Normal (1.5s)</option>
+                    <option value="1000">Rápido (1s)</option>
+                </select>
+            </div>
+
+            <h3 class="panel-title" style="margin-top: 24px;">📋 Resumen Total</h3>
+            <div class="mini-stat">
+                <span class="mini-stat-label">Base 2020 (VBC)</span>
+                <span class="mini-stat-value">4,600</span>
+            </div>
+            <div class="mini-stat">
+                <span class="mini-stat-label">Terminadas 2025</span>
+                <span class="mini-stat-value" style="color: var(--success);">14,200</span>
+            </div>
+            <div class="mini-stat">
+                <span class="mini-stat-label">Meta 2026</span>
+                <span class="mini-stat-value" style="color: #f59e0b;">17,700</span>
+            </div>
+        </aside>
+
+        <!-- CENTER - MAP -->
+        <section class="panel-center">
+            <div class="map-wrapper" id="mapWrapper">
+                <!-- SVG loaded here -->
+            </div>
+
+            <!-- Year Stats Overlay (for fullscreen) -->
+            <div class="year-stats-overlay" id="yearStatsOverlay">
+                <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">AÑO ACTUAL</div>
+                <div style="font-size: 42px; font-weight: 800; color: var(--primary);" id="overlayYear">2020</div>
+                <div style="margin-top: 16px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+                        <span style="color: var(--text-muted);">Viviendas Acumuladas:</span>
+                        <span style="font-weight: 700; font-size: 18px;" id="overlayViviendas">4,600</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px;">
+                        <span style="color: var(--text-muted);">Entregadas este año:</span>
+                        <span style="font-weight: 600; color: var(--success);" id="overlayNuevas">+0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 14px;">
+                        <span style="color: var(--text-muted);">Crecimiento vs 2020:</span>
+                        <span style="font-weight: 600; color: var(--success);" id="overlayGrowth">+0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Bar -->
+            <div class="timeline-bar">
+                <div class="timeline-header">
+                    <div class="timeline-year" id="currentYearDisplay">2020</div>
+                    <div class="timeline-controls">
+                        <button class="play-btn" id="playBtn" title="Reproducir Evolución">▶</button>
+                        <button class="fullscreen-btn" id="fullscreenBtn" title="Pantalla Completa">⛶</button>
+                    </div>
+                </div>
+                <div class="timeline-track">
+                    <div class="timeline-progress" id="timelineProgress" style="width: 0%"></div>
+                </div>
+                <div class="timeline-markers">
+                    <button class="year-marker baseline active" data-year="2020">2020<br><small>Base
+                            VBC</small></button>
+                    <button class="year-marker" data-year="2021">2021</button>
+                    <button class="year-marker" data-year="2022">2022</button>
+                    <button class="year-marker" data-year="2023">2023</button>
+                    <button class="year-marker" data-year="2024">2024</button>
+                    <button class="year-marker" data-year="2025">2025</button>
+                    <button class="year-marker projected" data-year="2026">2026<br><small>Proyección</small></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL -->
+        <aside class="panel-right">
+            <div class="year-display">
+                <div class="year-label">Año Seleccionado</div>
+                <div class="year-big" id="yearBig">2020</div>
+                <span class="year-status baseline" id="yearStatus">Base VBC</span>
+            </div>
+
+            <div class="comparison-box">
+                <div class="comparison-header">
+                    <span class="comparison-title">🏠 Viviendas Acumuladas</span>
+                    <span class="comparison-badge" id="vivBadge">+0%</span>
+                </div>
+                <div class="comparison-value" id="vivValue">4,600</div>
+                <div class="comparison-detail" id="vivDetail">Recibido del Fideicomiso VBC</div>
+                <div class="comparison-bar">
+                    <div class="comparison-fill viviendas" id="vivBar" style="width: 26%"></div>
+                </div>
+            </div>
+
+            <div class="comparison-box">
+                <div class="comparison-header">
+                    <span class="comparison-title">🆕 Entregadas Este Año</span>
+                </div>
+                <div class="comparison-value" id="nuevasValue" style="color: var(--success);">+0</div>
+                <div class="comparison-detail" id="nuevasDetail">Nuevas unidades habitacionales</div>
+            </div>
+
+            <div class="comparison-box">
+                <div class="comparison-header">
+                    <span class="comparison-title">🏢 Equipamientos</span>
+                </div>
+                <div class="comparison-value" id="equipValue">37</div>
+                <div class="comparison-detail">Institucionales terminados</div>
+            </div>
+
+            <div class="cumulative-section">
+                <div class="section-label">📊 Desglose por Período</div>
+                <div class="mini-stat">
+                    <span class="mini-stat-label">Pre-VBC (hasta 2020)</span>
+                    <span class="mini-stat-value">4,600</span>
+                </div>
+                <div class="mini-stat">
+                    <span class="mini-stat-label">Construido 2021-2025</span>
+                    <span class="mini-stat-value" style="color: var(--success);" id="construidoTotal">+9,600</span>
+                </div>
+                <div class="mini-stat">
+                    <span class="mini-stat-label">Proyección 2026</span>
+                    <span class="mini-stat-value" style="color: #f59e0b;">+3,500</span>
+                </div>
+            </div>
+
+            <div class="cumulative-section">
+                <div class="section-label">👥 Población Estimada</div>
+                <div style="font-size: 28px; font-weight: 700; color: var(--primary);" id="popValue">16,100</div>
+                <div style="font-size: 11px; color: var(--text-muted);">habitantes (3.5 por vivienda)</div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Fullscreen Exit Button -->
+    <div class="fullscreen-overlay">
+        <button class="exit-fullscreen" id="exitFullscreen">✕ Salir de Pantalla Completa</button>
+    </div>
+
+    <!-- Floating Legend Button -->
+    <button class="legend-floating-btn" id="legendBtn" title="Ver Leyenda del Mapa">
+        <span>🎨</span>
+    </button>
+
+    <!-- Legend Modal -->
+    <div class="legend-modal-overlay" id="legendModal">
+        <div class="legend-modal">
+            <div class="legend-modal-header">
+                <h3 class="legend-modal-title"><span>🗺️</span> Leyenda del Mapa</h3>
+                <button class="legend-modal-close" id="legendModalClose">✕</button>
+            </div>
+            <div class="legend-modal-body">
+                <div class="legend-section-title">Por Período de Entrega</div>
+
+                <div class="legend-modal-item">
+                    <div class="legend-modal-color recibido"></div>
+                    <div class="legend-modal-info">
+                        <div class="legend-modal-label">Recibido VBC (2020)</div>
+                        <div class="legend-modal-desc">4,600 viviendas heredadas del fideicomiso</div>
+                    </div>
+                </div>
+
+                <div class="legend-modal-item">
+                    <div class="legend-modal-color construido"></div>
+                    <div class="legend-modal-info">
+                        <div class="legend-modal-label">Construido (2021-2025)</div>
+                        <div class="legend-modal-desc">+9,600 nuevas unidades terminadas</div>
+                    </div>
+                </div>
+
+                <div class="legend-modal-item">
+                    <div class="legend-modal-color proyectado"></div>
+                    <div class="legend-modal-info">
+                        <div class="legend-modal-label">Proyectado (2026)</div>
+                        <div class="legend-modal-desc">+3,500 unidades en desarrollo</div>
+                    </div>
+                </div>
+
+                <div class="legend-modal-item">
+                    <div class="legend-modal-color inactivo"></div>
+                    <div class="legend-modal-info">
+                        <div class="legend-modal-label">No Entregado</div>
+                        <div class="legend-modal-desc">Lotes pendientes o en fase temprana</div>
+                    </div>
+                </div>
+
+                <div class="legend-section-title">Por Tipo de Uso</div>
+
+                <div class="legend-modal-item">
+                    <div class="legend-modal-color habitacional"></div>
+                    <div class="legend-modal-info">
+                        <div class="legend-modal-label">Habitacional</div>
+                        <div class="legend-modal-desc">Residencias y apartamentos</div>
+                    </div>
+                </div>
+
+                <div class="legend-modal-item">
+                    <div class="legend-modal-color comercial"></div>
+                    <div class="legend-modal-info">
+                        <div class="legend-modal-label">Comercial</div>
+                        <div class="legend-modal-desc">Tiendas, plazas y negocios</div>
+                    </div>
+                </div>
+
+                <div class="legend-modal-item">
+                    <div class="legend-modal-color institucional"></div>
+                    <div class="legend-modal-info">
+                        <div class="legend-modal-label">Institucional</div>
+                        <div class="legend-modal-desc">Escuelas, hospitales y servicios</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATOS REALES basados en CSV - Viviendas terminadas acumuladas por año
+        // 2020 = 4,600 (base recibida por VBC)
+        // Construido después: según datos reales de fecha de entrega
+        const evolutionData = {
+            2020: {
+                viviendas: 4600,
+                nuevas: 0,
+                equipamientos: 37,
+                status: 'baseline',
+                statusText: 'Base VBC',
+                detail: 'Recibido del Fideicomiso VBC'
+            },
+            2021: {
+                viviendas: 5936,
+                nuevas: 1336,  // Sembrador II (936), Habitat I (272), etc
+                equipamientos: 42,
+                status: 'construido',
+                statusText: 'Construido',
+                detail: '+1,336 nuevas unidades'
+            },
+            2022: {
+                viviendas: 7056,
+                nuevas: 1120,  // Antares III (528), Plaza Riu Mall, etc
+                equipamientos: 48,
+                status: 'construido',
+                statusText: 'Construido',
+                detail: '+1,120 nuevas unidades'
+            },
+            2023: {
+                viviendas: 9496,
+                nuevas: 2440,  // Sembrador III (1776), Palmera III (336), 1933 (208), etc
+                equipamientos: 55,
+                status: 'construido',
+                statusText: 'Construido',
+                detail: '+2,440 nuevas unidades'
+            },
+            2024: {
+                viviendas: 10128,
+                nuevas: 632,   // Habitat II (128), testigos jehova, etc
+                equipamientos: 62,
+                status: 'construido',
+                statusText: 'Construido',
+                detail: '+632 nuevas unidades'
+            },
+            2025: {
+                viviendas: 14200,
+                nuevas: 4072,  // Dos Amigos (772), Camino Verde (528), Sembrador VII-VIII, 5ta Residence, etc
+                equipamientos: 72,
+                status: 'construido',
+                statusText: 'Actual',
+                detail: '+4,072 nuevas unidades'
+            },
+            2026: {
+                viviendas: 17700,
+                nuevas: 3500,  // Proyección: Marquesa II, Habitat III, Terrazol I-II, Palmera IV, etc
+                equipamientos: 85,
+                status: 'proyectado',
+                statusText: 'Proyección',
+                detail: '+3,500 proyectadas'
+            }
+        };
+
+        // Lotes por año de entrega (basado en CSV real)
+        const lotesPorAnio = {
+            2013: ['02-07-01', '07-35-01'],
+            2017: ['05-18-01', '05-20-01', '07-30-03', '08-22-01', '09-28-01', '05-19-04', '07-35-05', '07-35-07', '05-20-08'],
+            2018: ['06-25-01', '06-25-02', '07-30-01', '05-20-04', '03-09-07', '09-27-02', '08-22-05', '07-35-04', '06-26-03'],
+            2019: ['05-19-01', '08-23-02', '01-02-02', '01-02-03', '07-31-04', '09-27-03', '00-29-01'],
+            2020: ['02-04-01', '03-09-04', '05-19-07', '01-03-02', '05-17-01', '05-18-04', '05-20-03', '09-28-05', '06-26-02', '09-32-03', '02-06-03'],
+            2021: ['03-08-01', '03-08-02', '09-32-01', '03-09-01', '05-18-02', '09-28-04'],
+            2022: ['05-17-03', '05-17-02', '05-18-08', '02-06-04'],
+            2023: ['01-03-01', '03-09-03', '04-16-01', '07-31-03', '08-22-04'],
+            2024: ['03-09-08', '05-20-02', '05-20-07', '00-21-01', '00-33-03', '00-34-01', '00-34-02', '00-34-03'],
+            2025: ['02-04-02', '02-04-03', '02-07-02', '02-07-03', '03-09-02', '06-26-01', '07-31-01', '07-31-02', '07-31-05', '09-27-01', '04-12-04', '02-06-01', '00-24-01', '00-24-02', '00-24-03', '00-10-03', '05-19-03'],
+            2026: ['01-01-01', '01-01-09', '01-02-05', '01-02-08', '01-02-09', '04-12-05', '04-13-01', '04-13-03', '04-13-04', '05-17-04', '05-17-05', '03-09-05', '08-22-02', '08-23-04']
+        };
+
+        const baseline = evolutionData[2020];
+        const years = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
+        let currentYear = 2020;
+        let isPlaying = false;
+        let playInterval;
+        let playSpeed = 1500;
+        let isFullscreen = false;
+        let lotesData = [];
+
+        // Load CSV data
+        async function loadLotesData() {
+            try {
+                const response = await fetch('data/lotesv2.csv');
+                const text = await response.text();
+                const lines = text.split('\n');
+                const headers = lines[0].split(',');
+
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const values = lines[i].split(',');
+                    const lote = {};
+                    headers.forEach((h, idx) => {
+                        lote[h.trim()] = values[idx]?.trim() || '';
+                    });
+                    if (lote.id) lotesData.push(lote);
+                }
+                console.log('Loaded', lotesData.length, 'lotes');
+            } catch (e) {
+                console.error('Error loading lotes:', e);
+            }
+        }
+
+        // Get year from date string like "1/1/2020" or "6/1/2026"
+        function getYearFromDate(dateStr) {
+            if (!dateStr || dateStr.trim() === '') return null;
+            const parts = dateStr.split('/');
+            if (parts.length >= 3) {
+                return parseInt(parts[2]);
+            }
+            return null;
+        }
+
+        // Highlight lots in SVG based on year
+        function highlightLotsByYear(targetYear, animate = false) {
+            const svg = document.querySelector('#mapWrapper svg');
+            if (!svg) return;
+
+            // Get all lots that should be visible up to this year
+            let visibleLotes = new Set();
+            let newLotes = new Set();
+
+            // Collect all lotes from data
+            lotesData.forEach(lote => {
+                const entregaYear = getYearFromDate(lote['Fecha entrega']);
+                if (entregaYear && entregaYear <= targetYear) {
+                    visibleLotes.add(lote.id);
+                    if (entregaYear === targetYear && animate) {
+                        newLotes.add(lote.id);
+                    }
+                }
+            });
+
+            // Also add from our static mapping for lotes not in CSV
+            for (let year = 2013; year <= targetYear; year++) {
+                if (lotesPorAnio[year]) {
+                    lotesPorAnio[year].forEach(id => {
+                        visibleLotes.add(id);
+                        if (year === targetYear && animate) {
+                            newLotes.add(id);
+                        }
+                    });
+                }
+            }
+
+            // Apply styling to all elements in SVG
+            svg.querySelectorAll('[id]').forEach(el => {
+                const id = el.id;
+
+                // Check if this is a lot ID (format XX-XX-XX)
+                if (/^\d{2}-\d{2}-\d{2}$/.test(id)) {
+                    el.classList.remove('lote-activo', 'lote-inactivo', 'lote-nuevo');
+
+                    if (visibleLotes.has(id)) {
+                        el.classList.add('lote-activo');
+                        if (newLotes.has(id)) {
+                            el.classList.add('lote-nuevo');
+                        }
+                    } else {
+                        el.classList.add('lote-inactivo');
+                    }
+                }
+            });
+        }
+
+        // Update UI for selected year
+        function updateYear(year, animate = false) {
+            currentYear = year;
+            const data = evolutionData[year];
+            const yearIndex = years.indexOf(year);
+            const progress = (yearIndex / (years.length - 1)) * 100;
+
+            // Update displays
+            document.getElementById('currentYearDisplay').textContent = year;
+            document.getElementById('yearBig').textContent = year;
+            document.getElementById('overlayYear').textContent = year;
+
+            // Update progress bar
+            document.getElementById('timelineProgress').style.width = progress + '%';
+
+            // Update year markers
+            document.querySelectorAll('.year-marker').forEach(m => {
+                m.classList.remove('active');
+                if (parseInt(m.dataset.year) === year) m.classList.add('active');
+            });
+
+            // Update status badge
+            const statusEl = document.getElementById('yearStatus');
+            statusEl.textContent = data.statusText;
+            statusEl.className = 'year-status ' + data.status;
+
+            // Update stats
+            document.getElementById('vivValue').textContent = data.viviendas.toLocaleString('es-DO');
+            document.getElementById('vivDetail').textContent = data.detail;
+            document.getElementById('nuevasValue').textContent = data.nuevas > 0 ? '+' + data.nuevas.toLocaleString('es-DO') : '0';
+            document.getElementById('nuevasDetail').textContent = data.nuevas > 0 ? 'Nuevas unidades este año' : 'Base recibida';
+            document.getElementById('equipValue').textContent = data.equipamientos;
+
+            // Update overlay
+            document.getElementById('overlayViviendas').textContent = data.viviendas.toLocaleString('es-DO');
+            document.getElementById('overlayNuevas').textContent = data.nuevas > 0 ? '+' + data.nuevas.toLocaleString('es-DO') : '0';
+
+            // Calculate growth vs 2020
+            const vivGrowth = Math.round(((data.viviendas - baseline.viviendas) / baseline.viviendas) * 100);
+            document.getElementById('vivBadge').textContent = vivGrowth >= 0 ? `+${vivGrowth}%` : `${vivGrowth}%`;
+            document.getElementById('overlayGrowth').textContent = vivGrowth >= 0 ? `+${vivGrowth}%` : `${vivGrowth}%`;
+
+            // Update bar (max at 2026 projection)
+            const maxViv = evolutionData[2026].viviendas;
+            document.getElementById('vivBar').style.width = (data.viviendas / maxViv * 100) + '%';
+
+            // Update constructed total up to this year
+            let construido = 0;
+            for (let y = 2021; y <= Math.min(year, 2025); y++) {
+                construido += evolutionData[y].nuevas;
+            }
+            document.getElementById('construidoTotal').textContent = '+' + construido.toLocaleString('es-DO');
+
+            // Update population
+            document.getElementById('popValue').textContent = Math.round(data.viviendas * 3.5).toLocaleString('es-DO');
+
+            // Highlight lots on map
+            highlightLotsByYear(year, animate);
+        }
+
+        // Play/Pause animation
+        function togglePlay() {
+            const btn = document.getElementById('playBtn');
+
+            if (isPlaying) {
+                clearInterval(playInterval);
+                btn.textContent = '▶';
+                isPlaying = false;
+            } else {
+                // Enter fullscreen mode on play
+                if (!isFullscreen) toggleFullscreen();
+
+                // Reset to 2020
+                updateYear(2020, false);
+
+                btn.textContent = '⏸';
+                isPlaying = true;
+
+                let yearIndex = 0;
+
+                playInterval = setInterval(() => {
+                    yearIndex++;
+                    if (yearIndex >= years.length) {
+                        clearInterval(playInterval);
+                        btn.textContent = '▶';
+                        isPlaying = false;
+                        return;
+                    }
+                    updateYear(years[yearIndex], true);
+                }, playSpeed);
+            }
+        }
+
+        // Toggle fullscreen
+        function toggleFullscreen() {
+            isFullscreen = !isFullscreen;
+            document.body.classList.toggle('fullscreen-mode', isFullscreen);
+        }
+
+        // Load SVG
+        async function loadSVG() {
+            try {
+                const response = await fetch('assets/mapa.svg');
+                const svgText = await response.text();
+                document.getElementById('mapWrapper').innerHTML = svgText;
+
+                const svg = document.querySelector('#mapWrapper svg');
+                if (svg) {
+                    svg.style.maxWidth = '95%';
+                    svg.style.maxHeight = '95%';
+
+                    // Initial state - all lots inactive
+                    highlightLotsByYear(2020, false);
+                }
+            } catch (e) {
+                console.error('Error loading SVG:', e);
+                document.getElementById('mapWrapper').innerHTML = '<p style="color: var(--text-muted); text-align: center;">Error cargando el mapa SVG</p>';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadLotesData();
+            await loadSVG();
+            updateYear(2020, false);
+
+            // Year markers
+            document.querySelectorAll('.year-marker').forEach(marker => {
+                marker.addEventListener('click', () => {
+                    updateYear(parseInt(marker.dataset.year), true);
+                });
+            });
+
+            // Play button
+            document.getElementById('playBtn').addEventListener('click', togglePlay);
+
+            // Fullscreen button
+            document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+
+            // Exit fullscreen
+            document.getElementById('exitFullscreen').addEventListener('click', () => {
+                isFullscreen = false;
+                document.body.classList.remove('fullscreen-mode');
+            });
+
+            // Speed selector
+            document.getElementById('speedSelect').addEventListener('change', (e) => {
+                playSpeed = parseInt(e.target.value);
+            });
+
+            // Theme toggle
+            document.getElementById('themeToggle')?.addEventListener('click', () => {
+                document.body.classList.toggle('light-mode');
+                document.getElementById('themeToggle').textContent =
+                    document.body.classList.contains('light-mode') ? '☀️' : '🌙';
+            });
+
+            // Legend Modal
+            document.getElementById('legendBtn').addEventListener('click', () => {
+                document.getElementById('legendModal').classList.add('active');
+            });
+
+            document.getElementById('legendModalClose').addEventListener('click', () => {
+                document.getElementById('legendModal').classList.remove('active');
+            });
+
+            document.getElementById('legendModal').addEventListener('click', (e) => {
+                if (e.target.id === 'legendModal') {
+                    document.getElementById('legendModal').classList.remove('active');
+                }
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+                if (e.key === 'Escape' && isFullscreen) { toggleFullscreen(); }
+                if (e.key === 'ArrowRight') {
+                    const idx = years.indexOf(currentYear);
+                    if (idx < years.length - 1) updateYear(years[idx + 1], true);
+                }
+                if (e.key === 'ArrowLeft') {
+                    const idx = years.indexOf(currentYear);
+                    if (idx > 0) updateYear(years[idx - 1], true);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

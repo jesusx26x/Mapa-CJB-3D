@@ -1,0 +1,8 @@
+id,tipo,subtipo,etapa,desarrollador,nombre,area_m2,unidades_hab,estado,año_asignacion,año_entrega,propietario,observaciones
+HAB-E1-01,Habitacional,Unifamiliar,Etapa 1-B,BISONÓ,Bloque 01,500,50,Terminado,2016,2018,,Ejemplo - reemplazar con datos reales
+HAB-E1-02,Habitacional,Unifamiliar,Etapa 1-B,BISONÓ,Bloque 02,500,50,Terminado,2016,2018,,
+HAB-E1-03,Habitacional,Unifamiliar,Etapa 1-C,CONAMEX,Bloque 03,600,60,Terminado,2017,2019,,
+COM-001,Comercial,Plaza,N/A,CODELPA,Plaza Central,2500,0,Terminado,2019,2021,,
+COM-002,Comercial,Comercio,N/A,DOS AMIGOS,Centro Comercial Norte,1800,0,En Construcción,2022,2025,,
+INST-001,Institucional,Educativo,N/A,Gobierno,Escuela Primaria #1,800,0,Terminado,2018,2019,,
+INST-002,Institucional,Deportivo,N/A,Gobierno,Polideportivo Central,3000,0,En Progreso,2022,2025,,

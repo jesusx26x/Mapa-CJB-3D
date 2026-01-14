@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*.2025_*
+
+# Large video files (optional - remove if needed)
+*.mp4
+
+# Temporary files
+*.tmp
+~$*

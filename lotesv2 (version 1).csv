@@ -1,0 +1,225 @@
+﻿id,tipo,subtipo,etapa,desarrollador,nombre,area_m2,unidades,estado,Fecha adjudicacion,Fecha entrega,propietario,observaciones,Pilar,Cuadrante,Unidades terminadas,Column3,Column4
+01-01-01,Institucional,Planta de tratamiento,,CONSTRUCTORA BISONO S.A,Planta de Tratamiento de Aguas Residuales No. 2,34623.98, ,Terminado,1/1/2025,2/1/2026,,,Servicios Básicos,,,01-01-01, 
+01-01-02,Institucional,terminal de autobus,,,Terminal de Autobuses Omsa,13314.93, ,No Iniciado,,,,,Infraestructura y Movilidad,,,, 
+01-01-03,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,N/A,27055.42,384,No Iniciado, , ,,Adjudicado recientemente a Constructora Bisonó,Vivienda,,,,384
+01-01-04,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador IX - X,34409.55,504,En Construcción, , ,,Proyecto en proceso de permisologia aprobado recientemente,Vivienda,,,,504
+01-01-05,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador IX - X,34409.55,0,En Construcción, , ,,Proyecto en proceso de permisologia aprobado recientemente,Vivienda,,,,0
+01-01-06,Comercial,Comercial,,,,32997.47, ,Disponible,,,, ,Economía,,,, 
+01-01-07,Habitacional,Habitacional,,Promotora Pradera Verde,Singular,55781,944,En Construcción, , ,,,Vivienda,,,,944
+01-01-08,Comercial,estacion de combustible,, ,Estación de Combustible,11654.43, ,Disponible, , ,, ,Economía,,,, 
+01-01-09,Habitacional,Habitacional,,Construcciones Planificadas,Res La Marquesa II,23683.68,328,Terminado, ,6/1/2026,,,Vivienda,,,,328
+01-01-10,Comercial,Comercial,,,,22771.83, ,Disponible,,,, ,Economía,,,, 
+01-02-01,Institucional,area verde,,,Plaza Deportiva y Recreativa Etapa 2,2074.88, ,En Construcción,1/1/2023,,,,Medio Ambiente,,,, 
+01-02-02,Institucional,Seguridad,,,Destacamento Policial Tipo II,1636.19, ,Terminado,,1/1/2019,,,Seguridad,,,, 
+01-02-03,Institucional,Seguridad,,,Estación de Bomberos Tipo I,2493.71, ,Terminado,,1/1/2019,,,Seguridad,,,, 
+01-02-04,Habitacional,Habitacional,,RYZEK (Promotora Pradera Verde),Por Definir,80173.71,1176,No Iniciado, , ,,Reasignado a Promotora Pradera Verde(RIZEK),Vivienda,,,,1176
+01-02-05,Institucional,Pendiente,,,Funeraria CJB,2106.4, ,Terminado,1/1/2025,5/1/2026,,,,,,, 
+01-02-06,Institucional,area verde,,,Cisterna de Agua No. 8,2279.93, ,Terminado,,1/1/2023,,alimenta de agua Habitat III y Sembrador II,Medio Ambiente,,,, 
+01-02-07,Institucional,Hidrosanitario,,,Cisterna de Agua No. 7,0, ,Terminado,,1/1/2019,,,Servicios Básicos,,,, 
+01-02-08,Habitacional,Habitacional,,Consorcio Ingasa-Risek,Habitad III,10000.56,144,Terminado, ,6/1/2026,,,Vivienda,,,,144
+01-02-09,Institucional,Hidrosanitario,,,Tanque de Agua No. 3,8764.62, ,Terminado,1/1/2024,4/1/2026,,,Educación,,,, 
+01-03-01,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador III,141828.6,1776,Terminado, ,1/1/2023,,,Vivienda,,,,1776
+01-03-02,Institucional,Estancia infantil,,,CAIPI II,4099.86, ,Terminado,,1/1/2020,,,Educación,,,, 
+01-03-03,Comercial,Comercial,,Adventista lote iglesia,Adventista lote iglesia,3160.08, ,Disponible,,,, ,Economía,,,, 
+01-03-04,Comercial,Comercial,,San Remo Valores,Plaza Riu Mall  II,2108.62, ,Disponible,,,, ,Economía,,,, 
+02-04-01,Habitacional,Habitacional,,Consorcio Mota-Engil Dominicana,Res. Las Flores,32965.38,504,Terminado, ,1/1/2020,,,Vivienda,,,,504
+02-04-02,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador VII A & B,24233.85,0,Terminado, ,5/1/2025,,,Vivienda,,,,0
+02-04-03,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador VII A & B,24233.85,328,Terminado, ,5/1/2025,,,Vivienda,,,,328
+02-05-01,Institucional,Instituto Educativo,,,Politecnico La Mañosa,8363.04, ,En Construcción,1/1/2024,,,,Educación,,,, 
+02-05-02,Institucional,Instituto Educativo,, , ,8147.27, ,Disponible, , ,, ,Educación,,,, 
+02-05-03,Comercial,Comercial,,Hermanos Maldonados,Dumas Center III,557.89,9,Disponible,,,, ,Economía,,,,9
+02-05-04,Institucional,Pendiente,, , ,1787.29, ,Disponible, , ,, ,,,,, 
+02-06-01,Institucional,Instalación Deportiva,,,Parque Deportivo Algarrobo No. 22 Etapa 1,65344.7, ,Terminado,1/1/2023,12/30/2025,,,Deportes y Recreación,,,, 
+02-06-02,Institucional,Instituto Educativo,,,Parque de Educación Vial Infantil,8652.82, ,Terminado,,1/1/2020,,,Infraestructura y Movilidad,,,, 
+02-06-03,Institucional,Seguridad,,,Oficinas DIGESETT,1325.77, ,No Iniciado,,,,,Seguridad,,,, 
+02-06-04,Institucional,Seguridad,,,DNCD,752.18, ,Terminado,,1/1/2022,,,Seguridad,,,, 
+02-06-05,Institucional,Instalación Deportiva,,,Oficina Administrativa Complejo Deportivo,2698.81, ,Disponible,,,,,Deportes y Recreación,,,, 
+02-06-06,Institucional,Pendiente,,,Instalación Escolar,5422.58, ,No Iniciado,,,,,Deportes y Recreación,,,, 
+02-06-07,Comercial,Comercial,,"Inversiones Reyes Caceres, SRL.",Plaza La Mañosa,1485.96,22,Disponible,,,, ,Economía,,,,22
+02-06-08,Comercial,Comercial,,Constructora Nagir Ventura Srl,Plaza Bohío,2371.38,32,Disponible,,,, ,Economía,,,,32
+02-06-09,Comercial,Comercial,,,,1689.72, ,Adjudicado,,,, ,Economía,,,, 
+02-07-01,Habitacional,Habitacional,,Constructora OV,Res. 1909,31582.53,416,Terminado, ,9/1/2013,,,Vivienda,,,,416
+02-07-02,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador VIII A & B,23527.56,0,Terminado, ,4/1/2025,,,Vivienda,,,,0
+02-07-03,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador VIII A & B,23527.56,328,Terminado, ,5/1/2025,,,Vivienda,,,,328
+03-08-01,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador II,71979.31,936,Terminado, ,4/1/2021,,,Vivienda,,,,936
+03-08-02,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador II,71979.31,0,Terminado, ,4/1/2021,,,Vivienda,,,,0
+03-08-03,Comercial,Comercial,,,,2317.26, ,En Construcción,1/1/2025,,,,Economía,,,, 
+03-08-04,Comercial,Comercial,,,Adventista lote iglesia,1800.05, ,Disponible,,,, ,Economía,,,, 
+03-08-05,Comercial,Comercial,,,Adventista lote iglesia,1534.08, ,Disponible,,,, ,Economía,,,, 
+03-09-01,Habitacional,Habitacional,,Consorcio Rio Grande,Res. Rio Grande,29450.42,100,Terminado,,8/1/2021,,,Vivienda,,100,,404
+03-09-02,Habitacional,Habitacional,,Consorcio Conabesa Bello & Diaz,Res. 5ta Residence,16298.9,88,Terminado,,1/8/2025,,,Vivienda,,88,,240
+03-09-03,Habitacional,Habitacional,,Constructora OV,Res. 1933,16088.72,208,Terminado,,11/1/2023,,,Vivienda,,,,208
+03-09-04,Habitacional,Habitacional,,Consorcio Pequeño Burgues,Res. Pequeño Burgues,16721.11,248,Terminado,,2/1/2020,,,Vivienda,,,,248
+03-09-05,Comercial,Comercial,,Constructora Quezbel,Camino Real Center,1412.79,24,Terminado,,12/1/2026,, ,Economía,,,,24
+03-09-06,Institucional,Centro de Salud,,,Centro de Atención Primaria,2041.14, ,No Iniciado,,,,,Educación,,,, 
+03-09-07,Institucional,Instituto Educativo,,,Escuela Primaria Gabriela Mistral,9823, ,Terminado,,1/1/2018,,,Infraestructura y Movilidad,,,, 
+03-09-08,Habitacional,Habitacional,,Consorcio Ingasa-Risek,Habitad II,9082.36,128,Terminado, ,5/1/2024,,,Vivienda,,,,128
+03-09-09,Comercial,,, , ,2094.19, ,Disponible,,,, ,Servicios Básicos,,,, 
+04-11-01,Institucional,Pendiente,,,Lote Institucional,1977.53, ,Disponible,,,,,,,,, 
+04-11-02,Institucional,Instituto Educativo,,,Centro Educativo,8656.36, ,No Iniciado,,,,,Educación,,,, 
+04-11-03,Institucional,area verde,,,Área Verde No. 17,9146.64, ,No Iniciado,,,,,Medio Ambiente,,,, 
+04-11-04,Comercial,Comercial,,,,5121.16, ,Disponible,,,, ,Economía,,,, 
+04-11-05,Institucional,Instituto Educativo,,,Centro Educativo,8633.82, ,No Iniciado,,,,,Educación,,,, 
+04-11-06,Comercial,Comercial,,,,667.04, ,Adjudicado,,,, ,Economía,,,, 
+04-11-07,Infraestructura,Telecomunicaciones,, , ,412.31, ,Disponible,,,, ,Servicios Básicos,,,, 
+04-12-01,Comercial,Comercial,,,,4364.19, ,Adjudicado,,,, ,Economía,,,, 
+04-12-02,Institucional,area verde,,,Área Verde No. 18,7258.71, ,No Iniciado,,,,,Medio Ambiente,,,, 
+04-12-04,Habitacional,Habitacional,,Grupo Inmobiliario Terrazas GIT,Terrazol I,14201,224,Terminado,,12/5/2025,, ,Vivienda,,,,224
+04-12-05,Habitacional,Habitacional,,Constructora OV,Casa Coral,50815.58,752,No Iniciado, , ,,,Vivienda,,,,752
+04-13-01,Institucional,area verde,,,Parque Ecológico Río Verde,134483.94, ,Terminado,1/1/2024,11/1/2026,,,Medio Ambiente,,,, 
+04-13-03,Habitacional,Habitacional,,RJN-Proconstruccion,Terrazol II,44877.4,656,Terminado, ,6/1/2026,,,Vivienda,,,,656
+04-13-04,Institucional,Hidrosanitario,,,Planta de Tratamiento de Aguas No. 3,9188.96, ,Terminado,1/1/2025,7/1/2026,,,Servicios Básicos,,,, 
+04-15-01,Habitacional,Habitacional,,Consorcio Ingasa-Risek,Por definir,36633.45,600,No Iniciado,,,,,Vivienda,,,,600
+04-16-01,Habitacional,Habitacional,,Constructora del Pais CODELPA,Palmera III,23704.06,336,Terminado, ,2/1/2023,,,Vivienda,,,,336
+04-39-01,Habitacional,Habitacional,,Consorcio Conabesa Bello & Diaz,Por definir,22719.85,352,No Iniciado, ,,,Proceso de aprobación de master plan,Vivienda,,,,352
+04-39-02,Comercial,Comercial,,,,11310.92, ,Disponible,,,, ,Economía,,,, 
+04-40-01,Habitacional,Habitacional,,Servinsco,Residencial Sol del Este,121447.47,1520,No Iniciado,,,,Proceso de aprobación de master plan,Vivienda,,,,1520
+04-40-02,Comercial,Comercial,,,,30029.1, ,Adjudicado,,,, ,Economía,,,, 
+05-17-01,Institucional,Instituto Educativo,,,Liceo Francisco Alberto Caamaño Deño,9321.96, ,Terminado,,1/1/2020,,,Educación,,,, 
+05-17-02,Comercial,Comercial,,San Remo Valores,Plaza Riu Mall  I,2167.66,60,Terminado,,4/1/2022,, ,Economía,,,,60
+05-17-03,Habitacional,Habitacional,,Estrella,Res. Antares III,38656.58,528,Terminado,,4/1/2022,,,Vivienda,,,,528
+05-17-04,Comercial,Comercial,,ARQGE ARQUITECTOS SRL,Bazar Center,1211.98,22,Terminado,,9/1/2026,, ,Economía,,,,22
+05-17-05,Habitacional,Habitacional,,Constructora del Pais CODELPA,Res. Palmera IV,47738.52,656,Terminado, ,6/1/2026,,,Vivienda,,,,656
+05-18-01,Habitacional,Habitacional,,Estrella,Res. Antares II,75736.18,1008,Terminado, ,7/1/2017,,,Vivienda,,,,1008
+05-18-02,Institucional,area verde,,,Cisterna de Agua,586.35, ,Terminado,,1/1/2021,,Pendiente Remozamiento,Medio Ambiente,,,, 
+05-18-03,Institucional,Pendiente,,,Destacamento Militar CJB,599.9, ,En Construcción,1/1/2025,,,,Cultural,,,, 
+05-18-04,Institucional,Centro de Salud,,,Centro Integral Para Aldultos Mayores,8446.96, ,Terminado,,1/1/2020,,,Salud,,,, 
+05-18-05,Comercial,Comercial,,,,1188.1, ,Disponible,,,, ,Economía,,,, 
+05-18-06,Institucional,area verde,,,Parque Deportivo-Recreativo No. 13,1000.25, ,En Construcción,,,,Cancha de Tenis,Medio Ambiente,,,, 
+05-18-07,Comercial,Comercial,,Construcciones Planificadas,La Marquesa Town Center 1,2145.84,89,Disponible,,,, ,Economía,,,,89
+05-18-08,Comercial,Comercial,,Construcciones Planificadas,La Marquesa Town Center 1,2965.55,89,Terminado,,1/1/2022,, ,Economía,,,,89
+05-19-01,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador IV,35073.2,464,Terminado, ,2/1/2019,,,Vivienda,,,,464
+05-19-02,Comercial,Comercial,,Construcciones Planificadas,La Marquesa Town Center 2,2562,45,Terminado,,,, ,Economía,,,,45
+05-19-03,Institucional,area verde,,,Parque Infantil No. 12,1184.08, ,Terminado,1/1/2025,1/1/2025,,,Medio Ambiente,,,, 
+05-19-04,Comercial,Comercial,,,Supermercado Olé,12955.31,13,Terminado,,1/1/2017,, ,Economía,,,,13
+05-19-05,Comercial,Comercial,,,,8368.46, ,Disponible,,,, ,Economía,,,, 
+05-19-06,Comercial,Comercial,,,,11617, ,Disponible,,,, ,Economía,,,, 
+05-19-07,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador V,71506.36,704,Terminado, ,6/1/2020,,,Vivienda,,,,704
+05-20-01,Habitacional,Habitacional,,Estrella,Res. Antares I,37793.15,640,Terminado, ,11/1/2017,,,Vivienda,,,,640
+05-20-02,Comercial,Comercial,,,Testigo de Jehova,1200.18,1,Terminado,,1/1/2024,, ,Economía,,,,1
+05-20-03,Institucional,Centro de Salud,,,Centro de Atención para Personas con Discapacidad,9353.24, ,Terminado,,1/1/2020,,,Salud,,,, 
+05-20-04,Institucional,Centro de Salud,,,Hospital Ciudad Juan Bosch,6451.15, ,Terminado,,1/1/2018,,,Salud,,,, 
+05-20-07,Institucional,Estancia infantil,,,CAIPI III,3656.77, ,Terminado,,1/1/2024,,,Educación,,,, 
+05-20-08,Institucional,Instituto Educativo,,,Escuela Básica Prof. Juan Bosch,11138.23, ,Terminado,,1/1/2017,,,Educación,,,, 
+06-25-01,Habitacional,Habitacional,,Constructora del Pais CODELPA,Ciudad Palmera I,29909.38,368,Terminado, ,1/1/2018,,,Vivienda,,,,368
+06-25-02,Habitacional,Habitacional,,Constructora del Pais CODELPA,Ciudad Palmera II,30566.21,480,Terminado, ,8/1/2018,,,Vivienda,,,,480
+06-25-03,Comercial,Comercial,,Ingenieros CP Arquitectos,Fragata Center,3500.27,37,En Construcción,,,, ,Economía,,,,37
+06-25-04,Institucional,Pendiente,,,Lote Institucional,1050.11, ,Disponible,,,,Sin uso destinado,,,,, 
+06-26-01,Habitacional,Habitacional,,Consorcio Dos Amigos,Res. Dos Amigos,99884.04,772,Terminado,,1/8/2025,,"Proyecto en ejecucion, hasta el momento se levantaron 656 viviendas ",Vivienda,,772,,1320
+06-26-02,Institucional,Instituto Educativo,,,Politecnico Fray Balbino,8343.9, ,Terminado,,1/1/2020,,,Educación,,,, 
+06-26-03,Institucional,area verde,,,Parque No. 5 (Cisterna),2275.46, ,Terminado,,1/1/2018,,Pendiente Remozamiento,Medio Ambiente,,,, 
+06-26-04,Institucional,Pendiente,,,Sociedad Iglesia,2275.46, ,No Iniciado,,,,,Cultural,,,, 
+07-30-01,Habitacional,Habitacional,,Tecnoamerica,Res. Rio Verde,17626.36,280,Terminado,,5/1/2018,,,Vivienda,,,,280
+07-30-02,Habitacional,Habitacional,,Crisfer Inmobiliaria S.A.,Res. Crisfer,15860.48,240,Terminado,,3/1/2017,,,Vivienda,,,,240
+07-30-03,Comercial,Comercial,, , ,900.22, ,Disponible,, ,, ,Economía,,,, 
+07-30-04,Comercial,Comercial,,,Plaza Médica CJB,2018.2, ,Disponible,,,, ,Economía,,,, 
+07-30-05,Comercial,Comercial,,,,675.65, ,Disponible,,,, ,Economía,,,, 
+07-31-01,Habitacional,Habitacional,,Consorcio Pequeño Burgues,La Maravilla,59513.68,80,Terminado,,10/1/2025,,,Vivienda,,80,,196
+07-31-02,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador VI,59516.61,80,Terminado,,10/1/2025,,,Vivienda,,80,,544
+07-31-03,Institucional,Centro de Salud,,,Centro de Diagnóstico Médico,0, ,Terminado,,1/1/2023,,,Salud,,,, 
+07-31-04,Institucional,area verde,,,Parque No. 3 (Cisterna),1049.93, ,Terminado,,1/1/2019,,Cisterna 5,Medio Ambiente,,,, 
+07-31-05,Institucional,Instituto Educativo,,,Escuela Básica Orlando Martinez,8650.01, ,Terminado,,1/1/2025,,,Educación,,,, 
+07-31-06,Institucional,area verde,,,Parque Deportivo No. 5,3058.15, ,Disponible,,,,,Medio Ambiente,,,, 
+07-35-01,Habitacional,Habitacional,,Construcciones Planificadas,Res. La Marquesa I,18277.92,280,Terminado,,6/1/2013,,,Vivienda,,,,280
+07-35-02,Comercial,Comercial,,,,8118.54, ,Disponible,,,, ,Economía,,,, 
+07-35-03,Comercial,Comercial,,,,5337.05, ,Disponible,,,, ,Economía,,,, 
+07-35-04,Institucional,Hidrosanitario,,,Tanque de Agua No. 1,3245.29, ,Terminado,,1/1/2018,,,Servicios Básicos,,,, 
+07-35-05,Institucional,Seguridad,,,Destacamento Policial,1455.02, ,Terminado,,1/1/2017,,,Seguridad,,,, 
+07-35-06,Institucional,area verde,,,Parque Infantil No. 4,4139.24, ,Disponible,,,,,Medio Ambiente,,,, 
+07-35-07,Institucional,Seguridad,,,Estación de Bomberos Tipo II,2301.38, ,Terminado,,1/1/2017,,,Seguridad,,,, 
+08-22-01,Habitacional,Habitacional,,CONSTRUCTORA BISONO S.A,Sembrador I,102140.77,1176,Terminado, ,1/1/2017,,,Vivienda,,,,1176
+08-22-02,Comercial,Comercial,,Hermanos Maldonados,Dumas Center II,988.63,58,Terminado,,1/1/2026,, ,Economía,,,,58
+08-22-03,Institucional,area verde,,,Parque Infantil No. 7,1020.89, ,Disponible,,,,,Medio Ambiente,,,, 
+08-22-04,Institucional,Instituto Educativo,,,Politecnico Evangelina Santos de Berges,8470.96, ,Terminado,,1/1/2023,,,Educación,,,, 
+08-22-05,Institucional,area verde,,,Parque de Bolsillo La Gaviota,1050.63, ,Terminado,,1/1/2018,,,Medio Ambiente,,,, 
+08-23-01,Habitacional,Habitacional,,Consorcio Antillano,La Gaviota,29073.46,320,Paralizado, , ,,Planos solicitados,Vivienda,,,,320
+08-23-02,Habitacional,Habitacional,,Consorcio Futuro-Amina,Res. La Mañosa,31629.38,456,Terminado, ,5/1/2019,,,Vivienda,,,,456
+08-23-03,Institucional,Pendiente,,,Lote Institucional,1049.93, ,Disponible,,,,Sin uso destinado,,,,, 
+08-23-04,Comercial,Comercial,,Hermanos Maldonados,Dumas Center I,3500.17,29,Terminado,,3/1/2026,, ,Economía,,,,29
+09-27-01,Habitacional,Habitacional,,"Consorcio AGK-SI , SRL",Camino Verde,86841.29,528,Terminado, ,10/1/2025,,,Vivienda,,528,,1200
+09-27-02,Institucional,Estancia infantil,,,CAIPI I,3500.24, ,Terminado,,1/1/2018,,,Educación,,,, 
+09-27-03,Institucional,Instituto Educativo,,,Escuela Básica Hermanas Mirabal,8564.53, ,Terminado,,1/1/2019,,,Educación,,,, 
+09-28-01,Habitacional,Habitacional,,Consorcio Dominico Español,Res. Florazahar,17093.92,224,Terminado,,7/1/2017,,,Vivienda,,,,224
+09-28-02,Habitacional,Habitacional,,"GTME DOMINICANA, S.A.S",Residencial Camino Real,15335.02,272,Paralizado,, ,,Cumple con los retiros y normativas establecidas,Vivienda,,,,272
+09-28-03,Comercial,Comercial,,Consorcio Rio Grande,La Trinitaria,2099.87,24,Terminado,,1/1/2021,, ,Economía,,,,24
+09-28-04,Institucional,Pendiente,,,Lote Institucional,1224.98, ,Disponible,,,,,,,,, 
+09-28-05,Institucional,area verde,,,Parque Rosa de Bayahibe (Cisterna),1388.86, ,Terminado,,1/1/2020,,Cisterna 3,Medio Ambiente,,,, 
+09-32-01,Habitacional,Habitacional,2-A,CONSORCIO INGASA - RIZEK,Habitat I ,18285.52,272,Terminado,,8/1/2021,, ,Vivienda,,,,272
+09-32-02,Comercial,Comercial,,,,5629.41, ,Disponible,,,, ,Economía,,,, 
+09-32-03,Institucional,Centro de Salud,,,Centro de Atención Primaria,12737.52, ,Terminado,,1/1/2020,,,Salud,,,, 
+09-32-04,Comercial,Comercial,,,,5054.95, ,Disponible,,,, ,Economía,,,, 
+09-32-05,Comercial,Comercial,,,,2387.99, ,Disponible,,,, ,Economía,,,, 
+09-32-06,Infraestructura,Telecomunicaciones,, , ,432.02, ,Disponible,, ,, ,Servicios Básicos,,,, 
+09-32-07,Institucional,Seguridad,,,Unidad del 911,0, ,No Iniciado,,,,,Seguridad,,,, 
+10-36-01,Comercial,Zona Industrial,, , ,250000.46, ,Disponible,,,, ,Economía,,,, 
+00-10-01,Institucional,Pendiente,,,Edificio Gubernamental VBC,5688.26, ,Disponible,,,,,Pendiente,,,, 
+00-10-02,Comercial,Comercial,,Patio Capital Partners,Patio Bosch III,4733.34,37,En Construcción,,,, ,Economía,,,,37
+00-10-03,Institucional,area verde,, ,Plaza Constitucion ,7794.11, ,Terminado,,12/15/2025,, ,Medio Ambiente,,,, 
+00-10-04,Comercial,Comercial,,Patio Capital Partners,Patio Bosch II,9792.44,30,En Construcción,,,, ,Economía,,,,30
+00-14-01,Institucional,Pendiente,,,Iglesia Católica,3186.86, ,En Construcción,1/1/2025,,,,Cultural,,,, 
+00-14-02,Comercial,Comercial,,Patio Capital Partners,Patio Bosch I,3410.29,14,En Construcción,,,, ,Economía,,,,14
+00-14-03,Institucional,area verde,,,Plaza Constitución 1963 (Urbana),569.69, ,Terminado,1/1/2023,12/15/2025,,,Medio Ambiente,,,, 
+00-14-04,Comercial,Comercial,,,,11462.88, ,Adjudicado,,,, ,Economía,,,, 
+00-14-05,Comercial,Comercial,,,Terraza Park,9892.49, ,Adjudicado,,,, ,Economía,,,, 
+00-14-06,Institucional,Pendiente,,,Edificio Gubernamental VBC,10429.79, ,Disponible,,,,,,,,, 
+00-14-07,Institucional,Religioso,, , ,3186.86, ,Disponible, , ,, ,Economía,,,, 
+00-21-01,Institucional,Instituto Educativo,,,INFOTEP,9937.95, ,Terminado,,1/1/2024,,,Educación,,,, 
+00-21-02,Institucional,Parqueo Publico,,,Estacionamiento Público No. 11,2364.62, ,No Iniciado,,,,,Medio Ambiente,,,, 
+00-24-01,Institucional,Instalación Cultural,,,Anfiteatro La Gaviota,19620.65, ,Terminado,1/1/2023,12/1/2025,,,Cultural,,,, 
+00-24-02,Institucional,area verde,, , ,8495.48, ,Terminado, ,12/15/2025,, ,Medio Ambiente,,,, 
+00-24-03,Institucional,area verde,, ,Plaza Anfiteatro La Gaviota ,10671.18,,Terminado, ,12/15/2025,, ,Medio Ambiente,,,,
+00-29-01,Institucional,Instituto Educativo,,,Parque Temático de Energías Renovables,23378.77, ,Terminado,,1/1/2019,,,Medio Ambiente,,,, 
+00-33-01,Comercial,Comercial,,,,4255.13, ,Adjudicado,,,, ,Economía,,,, 
+00-33-02,Institucional,area verde,, ,Plaza Camino Real ,1779.22, ,Terminado, ,1/1/2024,, ,Recreacion,,,, 
+00-33-03,Comercial,Comercial,,,,4234.68, ,Adjudicado,,,, ,Economía,,,, 
+00-34-01,Institucional,area verde,, ,Plaza Camino Real ,1287.17, ,Terminado, ,1/1/2024,, ,Medio Ambiente,,,, 
+00-34-02,Institucional,area verde,, ,Plaza Camino Real ,6883.2, ,Terminado, ,1/1/2024,, ,Medio Ambiente,,,, 
+00-34-03,Institucional,area verde,,,Plaza Camino Real,1272.03, ,Terminado,,1/1/2024,,,Medio Ambiente,,,, 
+00-34-04,Comercial,Comercial,,,,9658.4, ,Disponible,,,, ,Economía,,,, 
+00-34-05,Comercial,Comercial,,,,9624.69, ,Disponible,,,, ,Economía,,,, 
+03-09-11,Infraestructura,Telecomunicaciones,, , ,389.09, ,Disponible, , ,, ,Servicios Básicos,,,, 
+03-09-10,Infraestructura,Telecomunicaciones,, , ,640.65, ,Disponible, , ,, ,Servicios Básicos,,,, 
+03-08-06,Infraestructura,Telecomunicaciones,, , ,401.12, ,Disponible, , ,, ,Servicios Básicos,,,, 
+02-06-10,Infraestructura,Telecomunicaciones,, , ,380, ,Disponible, , ,, ,Servicios Básicos,,,, 
+01-00-00,Habitacional,Habitacional,,Constructora del Pais CODELPA,Residencial Palmera del Este V,,336,En Construcción,,,,,Servicios Básicos,,,,336
+15-01-01,Infraestructura,Víal,,,Avenida La Gaviota Tramo 1,1400,,Terminado,,3/1/2020,,,Infraestructura y Movilidad,,,1704.1409,
+15-01-02,Infraestructura,Víal,,,Calle Cayo Confites,416.134,,Terminado,,10/1/2025,,,Infraestructura y Movilidad,,,416.134,
+15-01-03,Infraestructura,Víal,,,Calle Rey David,782.8022,,Terminado,,1/15/2024,,,Infraestructura y Movilidad,,,782.8022,
+15-01-04,Infraestructura,Víal,,,Calle Dos Amigos,327.4831,,Terminado,,1/15/2024,,,Infraestructura y Movilidad,,,327.4831,
+15-01-05,Infraestructura,Víal,,,Calle la muchacha de la Guaira,562.9761,,Terminado,,10/1/2025,,,Infraestructura y Movilidad,,,562.9761,
+15-01-06,Infraestructura,Víal,,,Avenida El Sembrador,3429.11,,Terminado,,1/1/2024,,,Infraestructura y Movilidad,,,3429.11,
+15-01-07,Infraestructura,Víal,,,Calle Manuel Sicuri,448.7187,,Terminado,,1/15/2024,,,Infraestructura y Movilidad,,,448.7187,
+15-01-08,Infraestructura,Víal,,,Paseo Rio Verde,737.01,,Terminado,,1/8/2025,,,Infraestructura y Movilidad,,,737.01,
+15-01-09,Infraestructura,Víal,,,Calle Rio Verde,265.65,,Terminado,,1/8/2025,,,Infraestructura y Movilidad,,,265.65,
+15-01-10,Infraestructura,Víal,,,Avenida Camino Real Sur Oeste,563.1704,,Terminado,,10/17/2019,,,Infraestructura y Movilidad,,,0,
+15-01-11,Infraestructura,Víal,,,Calle Los Amos,244.1859,,Terminado,,10/1/2025,,,Infraestructura y Movilidad,,,244.1859,
+15-01-12,Infraestructura,Víal,,,Calle Papa Juan,1411.5511,,Terminado,,1/8/2025,,,Infraestructura y Movilidad,,,1411.5511,
+15-01-13,Infraestructura,Víal,,,Calle La Mancha Indeliable,124.633,,Terminado,,1/8/2025,,,Infraestructura y Movilidad,,,124.633,
+15-01-14,Infraestructura,Víal,,,Calle Angela Gavino,529.0995,,Terminado,,1/8/2025,,,Infraestructura y Movilidad,,,529.0995,
+15-01-15,Infraestructura,Víal,,,Calle Luis Pie,627.8595,,Terminado,,,,,Infraestructura y Movilidad,,,627.8595,
+15-01-16,Infraestructura,Víal,,,Calle Carmen Quidiello De Bosch,452.7318,,Terminado,,9/23/2019,,,Infraestructura y Movilidad,,,1509.106,
+15-01-17,Infraestructura,Víal,,,Boulevard La Mujer,1090.144,,Terminado,,5/1/2019,,,Infraestructura y Movilidad,,,1090.144,
+15-01-18,Infraestructura,Víal,,,Calle Encarnacion Mendoza,952.2732,,Terminado,,5/1/2019,,,Infraestructura y Movilidad,,,952.2732,
+15-01-19,Infraestructura,Víal,,,Boulevard el Oro y la Paz,1109.1219,,Terminado,,5/1/2019,,,Infraestructura y Movilidad,,,1109.1219,
+15-01-20,Infraestructura,Víal,,,Calle La mañosa oeste,370.3666,,Terminado,,10/17/2019,,,Infraestructura y Movilidad,,,370.3666,
+15-01-21,Infraestructura,Víal,,,Calle Fragata,795.2449,,Terminado,,10/17/2019,,,Infraestructura y Movilidad,,,795.2449,
+15-01-22,Infraestructura,Víal,,,Calle Navidad Este,180.836,,Terminado,,3/31/2020,,,Infraestructura y Movilidad,,,180.836,
+15-01-23,Infraestructura,Víal,,,Calle La Mañosa Este,277.2454,,Terminado,,10/17/2019,,,Infraestructura y Movilidad,,,277.2454,
+15-01-24,Infraestructura,Víal,,,Calle Prof. Juan Bosch,1265.4903,,Terminado,,9/6/2016,,,Infraestructura y Movilidad,,,1265.4903,
+15-01-25,Infraestructura,Víal,,,Calle La Vega,568.243,,Terminado,,1/8/2025,,,Infraestructura y Movilidad,,,568.243,
+15-01-26,Infraestructura,Víal,,,Calle Navidad Este,163.3307,,Terminado,,3/31/2020,,,Infraestructura y Movilidad,,,163.3307,
+15-01-27,Infraestructura,Víal,,,Avenida Camino Real Sur Este,563.1704,,Terminado,,10/17/2019,,,Infraestructura y Movilidad,,,0,
+15-01-28,Infraestructura,Víal,,,Avenida Camino Real Nor Oeste,804.52917,,Terminado,,10/17/2019,,,Infraestructura y Movilidad,,,0,
+15-01-29,Infraestructura,Víal,,,Avenida Camino Real Nor Este,3000,,Terminado,,10/1/2025,,,Infraestructura y Movilidad,,,0,
+15-01-30,Infraestructura,Víal,,,Avenida La Gaviota Tramo 2,304.1409,,Terminado,,1/1/2025,,,Infraestructura y Movilidad,,,,
+15-01-31,Infraestructura,Víal,,,Calle Carmen Quidiello De Bosch Tramo 2,1056,,Terminado,,2/1/2026,,,Infraestructura y Movilidad,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,

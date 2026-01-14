@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciudad Juan Bosch - Timelapse Satelital</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .timelapse-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            height: calc(100vh - var(--header-height));
+            margin-top: var(--header-height);
+        }
+
+        .image-section {
+            position: relative;
+            background: var(--bg-primary);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .timelapse-image {
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            min-height: 0;
+            object-fit: contain;
+            border-radius: var(--radius);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.5s ease;
+        }
+
+        .timeline-controls {
+            position: relative;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .play-btn {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--success), #059669);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .timeline-slider {
+            width: 400px;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .timeline-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .speed-control {
+            display: flex;
+            gap: 8px;
+        }
+
+        .speed-btn {
+            padding: 6px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .speed-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .sidebar {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .date-display {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(0, 168, 255, 0.1), rgba(0, 102, 204, 0.05));
+            border: 1px solid rgba(0, 168, 255, 0.2);
+            border-radius: var(--radius);
+        }
+
+        .date-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .date-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .thumbnail {
+            aspect-ratio: 16/9;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .thumbnail:hover {
+            border-color: var(--primary);
+        }
+
+        .thumbnail.active {
+            border-color: var(--success);
+            box-shadow: 0 0 15px var(--success-glow);
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 4px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .info-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .info-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-logo">
+            <div class="logo-box"><span class="logo-icon">🛰️</span></div>
+            <div class="logo-text">
+                <h1>Ciudad<br>Juan<br>Bosch</h1>
+                <p class="logo-subtitle">Timelapse<br>Satelital</p>
+            </div>
+        </div>
+        <div class="header-kpis">
+            <div class="kpi-comparison-card">
+                <div class="kpi-title">📅 PERÍODO</div>
+                <div class="kpi-values">
+                    <div class="kpi-baseline"><span class="kpi-year">INICIO</span><span class="kpi-number">2015</span>
+                    </div>
+                    <span class="kpi-arrow">→</span>
+                    <div class="kpi-current"><span class="kpi-year">ACTUAL</span><span
+                            class="kpi-number highlight">2025</span></div>
+                </div>
+            </div>
+            <div class="kpi-comparison-card">
+                <div class="kpi-title">🏠 VIVIENDAS</div>
+                <div class="kpi-values">
+                    <div class="kpi-baseline"><span class="kpi-year">2020</span><span class="kpi-number">4,600</span>
+                    </div>
+                    <span class="kpi-arrow">→</span>
+                    <div class="kpi-current"><span class="kpi-year">2025</span><span
+                            class="kpi-number highlight">14,200</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="header-growth">
+            <div class="growth-badge">
+                <span class="growth-value">+209%</span>
+                <span class="growth-label">Crecimiento</span>
+            </div>
+        </div>
+        <nav class="header-nav">
+            <a href="timelapse.html" class="nav-link active">Timelapse</a>
+            <a href="evolucion.html" class="nav-link">Evolución</a>
+            <a href="index.html" class="nav-link">Mapa<br>de<br>Lotes</a>
+        </nav>
+        <div class="header-actions">
+            <button class="btn-icon-only" id="themeToggle">🌙</button>
+        </div>
+    </header>
+
+    <main class="timelapse-layout">
+        <section class="image-section">
+            <img class="timelapse-image" id="mainImage" src="assets/2015-10-15.jpg" alt="Satellite">
+            <div class="timeline-controls">
+                <button class="play-btn" id="playBtn">▶</button>
+                <input type="range" class="timeline-slider" id="timelineSlider" min="0" max="10" value="0">
+                <div class="speed-control">
+                    <button class="speed-btn" data-speed="2000">1x</button>
+                    <button class="speed-btn active" data-speed="1000">2x</button>
+                    <button class="speed-btn" data-speed="500">4x</button>
+                </div>
+            </div>
+        </section>
+        <aside class="sidebar">
+            <div class="date-display">
+                <div class="date-label">Fecha de Captura</div>
+                <div class="date-value" id="currentDate">Oct 2015</div>
+            </div>
+            <div class="section-title">📸 Galería</div>
+            <div class="thumbnail-grid" id="thumbnailGrid"></div>
+            <div class="info-box">
+                <div class="info-title">Fuente</div>
+                <div class="info-value">Google Earth / Satélite</div>
+            </div>
+        </aside>
+    </main>
+
+    <script>
+        const timelineImages = [
+            { file: '2015-10-15.jpg', date: 'Oct 2015' },
+            { file: '2016-01-15.jpg', date: 'Ene 2016' },
+            { file: '2017-04-13.jpg', date: 'Abr 2017' },
+            { file: '2018-05-23.jpg', date: 'May 2018' },
+            { file: '2019-08-24.jpg', date: 'Ago 2019' },
+            { file: '2020-04-19.jpg', date: 'Abr 2020' },
+            { file: '2021-08-31.jpg', date: 'Ago 2021' },
+            { file: '2022-12-12.jpg', date: 'Dic 2022' },
+            { file: '2024-01-15.jpg', date: 'Ene 2024' },
+            { file: '2025-01-08.jpg', date: 'Ene 2025' },
+            { file: '2025-10-03.jpg', date: 'Oct 2025' }
+        ];
+
+        let currentIndex = 0, isPlaying = false, playInterval, playSpeed = 1000;
+
+        function initThumbnails() {
+            const grid = document.getElementById('thumbnailGrid');
+            grid.innerHTML = timelineImages.map((img, idx) =>
+                `<div class="thumbnail ${idx === 0 ? 'active' : ''}" data-index="${idx}">
+                    <img src="assets/${img.file}" alt="${img.date}" loading="lazy">
+                    <div class="thumbnail-label">${img.date}</div>
+                </div>`
+            ).join('');
+            grid.querySelectorAll('.thumbnail').forEach(t => t.addEventListener('click', () => goToImage(+t.dataset.index)));
+        }
+
+        function updateImage(index) {
+            currentIndex = index;
+            const img = timelineImages[index];
+            document.getElementById('mainImage').src = `assets/${img.file}`;
+            document.getElementById('currentDate').textContent = img.date;
+            document.getElementById('timelineSlider').value = index;
+            document.querySelectorAll('.thumbnail').forEach((t, i) => t.classList.toggle('active', i === index));
+        }
+
+        function goToImage(index) { if (index >= 0 && index < timelineImages.length) updateImage(index); }
+
+        function togglePlay() {
+            const btn = document.getElementById('playBtn');
+            if (isPlaying) { clearInterval(playInterval); btn.textContent = '▶'; isPlaying = false; }
+            else {
+                btn.textContent = '⏸'; isPlaying = true;
+                playInterval = setInterval(() => {
+                    if (currentIndex >= timelineImages.length - 1) currentIndex = -1;
+                    goToImage(currentIndex + 1);
+                }, playSpeed);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initThumbnails();
+            updateImage(0);
+            document.getElementById('playBtn').addEventListener('click', togglePlay);
+            document.getElementById('timelineSlider').addEventListener('input', e => goToImage(+e.target.value));
+            document.querySelectorAll('.speed-btn').forEach(btn => btn.addEventListener('click', () => {
+                playSpeed = +btn.dataset.speed;
+                document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                if (isPlaying) { clearInterval(playInterval); playInterval = setInterval(() => { if (currentIndex >= timelineImages.length - 1) currentIndex = -1; goToImage(currentIndex + 1); }, playSpeed); }
+            }));
+            document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') goToImage(currentIndex + 1); if (e.key === 'ArrowLeft') goToImage(currentIndex - 1); if (e.key === ' ') { e.preventDefault(); togglePlay(); } });
+            document.getElementById('themeToggle')?.addEventListener('click', () => { document.body.classList.toggle('light-mode'); document.getElementById('themeToggle').textContent = document.body.classList.contains('light-mode') ? '☀️' : '🌙'; });
+        });
+    </script>
+</body>
+
+</html>
