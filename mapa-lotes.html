@@ -2115,6 +2115,87 @@
                 .close-menu:hover {
                     opacity: 1;
                 }
+
+                /* ==================== QA AUDIT FIXES: CSS OPTIMIZATION ==================== */
+
+                /* 1. Optimized Gold Pulse (GPU Friendly) */
+                @keyframes gold-pulse-optimized {
+
+                    0%,
+                    100% {
+                        transform: scale(1);
+                        opacity: 0.85;
+                        /* box-shadow doesn't work well on SVG paths, handled via stroke */
+                    }
+
+                    50% {
+                        transform: scale(1.02);
+                        opacity: 1;
+                    }
+                }
+
+                @keyframes gold-stroke-pulse {
+
+                    0%,
+                    100% {
+                        stroke: #ffd700;
+                        stroke-width: 2;
+                        stroke-opacity: 0.8;
+                    }
+
+                    50% {
+                        stroke: #ffec8b;
+                        stroke-width: 4;
+                        stroke-opacity: 1;
+                    }
+                }
+
+                .gold-pulse {
+                    /* Applied to the group or path */
+                    animation: gold-pulse-optimized 2s ease-in-out infinite;
+                    will-change: transform, opacity;
+                    transform-box: fill-box;
+                    transform-origin: center;
+                }
+
+                .gold-pulse path,
+                .gold-pulse polygon {
+                    animation: gold-stroke-pulse 2s ease-in-out infinite;
+                    vector-effect: non-scaling-stroke;
+                }
+
+                /* Light Mode High Contrast Fix */
+                body.light-mode .gold-pulse path,
+                body.light-mode .gold-pulse polygon {
+                    stroke: #b8860b !important;
+                    stroke-width: 3px !important;
+                    animation: none;
+                    /* Static strong highlight in light mode */
+                    filter: drop-shadow(0 0 4px rgba(184, 134, 11, 0.6));
+                }
+
+                /* 2. Mobile Tooltip Styles */
+                @media (pointer: coarse) {
+                    .map-tooltip {
+                        /* Positioned fixed on mobile to avoid off-screen */
+                        position: fixed !important;
+                        top: 50% !important;
+                        left: 50% !important;
+                        transform: translate(-50%, -50%) !important;
+                        width: 280px !important;
+                        max-width: 90vw !important;
+                        z-index: 9999;
+                        box-shadow: 0 0 0 100vh rgba(0, 0, 0, 0.5);
+                        /* Dim background */
+                        pointer-events: none;
+                        /* Let taps pass through to close? No, touchstart handles it */
+                    }
+                }
+
+                /* 3. Screenshot Button Loading */
+                #screenshotLoading {
+                    animation: fadeIn 0.3s ease;
+                }
     </style>
 </head>
 
@@ -2956,6 +3037,14 @@
             document.getElementById('subtipoFilter').value = '';
             document.getElementById('pilarFilter').value = '';
             document.getElementById('desarrolladorFilter').value = '';
+            document.getElementById('cuadranteFilter').value = '';
+            document.getElementById('yearStart').value = '';
+            document.getElementById('yearEnd').value = '';
+
+            // Reset filter buttons (Type categories)
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.add('active');
+            });
             document.querySelectorAll('input[data-filter="tipo"]').forEach(cb => cb.checked = true);
 
             // Reset search selection
@@ -2969,7 +3058,19 @@
                 Infraestructura: true
             };
 
+            // ✅ FIX: Reset Elite Features (Heatmap, Opportunity Layer, Neighbors)
+            if (typeof App !== 'undefined' && App.Elite && App.Elite.resetAll) {
+                App.Elite.resetAll();
+            }
+
+            // Reset timelapse
+            if (typeof resetTimelapse === 'function') {
+                resetTimelapse();
+            }
+
             applyFilters();
+
+            console.log('🧹 Todos los filtros y capas reseteados');
         }
 
         // ==================== FILTER HIGHLIGHTING ====================
@@ -3747,6 +3848,13 @@
                 console.log('SVG element not yet available');
                 return;
             }
+
+            // ✅ FIX: Guard against duplicate listeners (QA Audit Fix 2.1)
+            if (svgElement.dataset.interactivitySetup === 'true') {
+                console.log('SVG interactivity already setup, skipping');
+                return;
+            }
+            svgElement.dataset.interactivitySetup = 'true';
 
             // Auto-detect lot elements by ID pattern (XX-XX-XX)
             const lotPattern = /^\d{2}-\d{2}-\d{2}$/;

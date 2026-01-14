@@ -92,34 +92,91 @@ App.Data.loadStats = async function () {
 };
 
 // ------------------------------------
-// MAP EXTENSIONS - OPPORTUNITY LAYER
+// UI EXTENSIONS - TOAST
 // ------------------------------------
-App.Map.opportunityLayerActive = false;
+App.UI.showToast = function (message, type = 'info') {
+    let toast = document.getElementById('elite-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'elite-toast';
+        toast.className = 'elite-info-toast';
+        toast.style.display = 'none';
+        document.body.appendChild(toast);
+    }
+
+    const icon = type === 'error' ? '❌' : (type === 'success' ? '✅' : 'ℹ️');
+
+    toast.innerHTML = `
+        <div class="elite-info-toast-header">
+            <span class="elite-info-toast-title">${icon} Notificación</span>
+            <button class="elite-info-toast-close" onclick="this.parentElement.parentElement.style.display='none'">✕</button>
+        </div>
+        <div class="elite-info-toast-body">${message}</div>
+    `;
+
+    toast.style.display = 'block';
+    toast.style.animation = 'toastSlide 0.3s ease';
+
+    setTimeout(() => {
+        if (toast.style.display === 'block') {
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                toast.style.display = 'none';
+                toast.style.opacity = '1';
+            }, 300);
+        }
+    }, 4000);
+};
 
 App.Map.toggleOpportunityLayer = function () {
-    this.opportunityLayerActive = !this.opportunityLayerActive;
+    // If turning ON, check logic
+    if (!this.opportunityLayerActive) {
+        // Respect filters
+        const filteredIds = new Set(
+            (App.State.filtered || App.State.getAll()).map(l => l.id)
+        );
 
-    const allAvailable = [
+        const visibleAvailable = [
+            ...AVAILABLE_LOTS.comerciales,
+            ...AVAILABLE_LOTS.institucionales
+        ].filter(id => filteredIds.has(id));
+
+        if (visibleAvailable.length === 0) {
+            App.UI.showToast('No hay oportunidades disponibles con los filtros actuales.', 'error');
+            return;
+        }
+
+        console.log(`🔶 Activando Capa de Oportunidad para ${visibleAvailable.length} lotes visibles`);
+    }
+
+    this.opportunityLayerActive = !this.opportunityLayerActive;
+    document.body.classList.toggle('opportunity-mode', this.opportunityLayerActive);
+
+    const btn = document.getElementById('btnOpportunity');
+    if (btn) btn.classList.toggle('active', this.opportunityLayerActive);
+
+    const filteredIds = new Set(
+        (App.State.filtered || App.State.getAll()).map(l => l.id)
+    );
+
+    const allAvailable = new Set([
         ...AVAILABLE_LOTS.comerciales,
         ...AVAILABLE_LOTS.institucionales
-    ];
+    ]);
 
-    allAvailable.forEach(id => {
-        const el = App.State.svgElementsMap.get(id);
-        if (el) {
-            if (this.opportunityLayerActive) {
+    App.State.svgElementsMap.forEach((el, id) => {
+        if (this.opportunityLayerActive) {
+            if (allAvailable.has(id) && filteredIds.has(id)) {
                 el.classList.add('gold-pulse');
             } else {
                 el.classList.remove('gold-pulse');
             }
+        } else {
+            el.classList.remove('gold-pulse');
         }
     });
 
-    // Update button state
-    const btn = document.getElementById('btnOpportunity');
-    if (btn) btn.classList.toggle('active', this.opportunityLayerActive);
-
-    console.log(`🔶 Capa de Oportunidad: ${this.opportunityLayerActive ? 'ACTIVA' : 'DESACTIVADA'} (${allAvailable.length} lotes)`);
+    console.log(`🔶 Capa de Oportunidad: ${this.opportunityLayerActive ? 'ACTIVA' : 'DESACTIVADA'}`);
 };
 
 // ------------------------------------
@@ -142,20 +199,35 @@ App.Map.renderDensityHeatmap = function () {
         return;
     }
 
-    // Calculate max values for normalization
-    const habitacionales = App.State.getAll().filter(l => l.tipo === 'Habitacional');
-    const maxUnidades = Math.max(...habitacionales.map(l =>
+    // ✅ FIX: Respect active filters
+    const filteredIds = new Set(
+        (App.State.filtered || App.State.getAll()).map(l => l.id)
+    );
+
+    // Calculate max values ONLY from filtered habitacionales
+    const habitacionales = App.State.getAll().filter(l =>
+        l.tipo === 'Habitacional' && filteredIds.has(l.id)
+    );
+    const maxUnidades = Math.max(1, ...habitacionales.map(l =>
         parseInt(l['Unidades terminadas']) || parseInt(l.unidades) || 0
     ));
-    const maxArea = Math.max(...habitacionales.map(l => l._parsedArea || 0));
 
     // Apply heatmap colors
     App.State.svgElementsMap.forEach((el, id) => {
         const lote = App.State.lotesMap.get(id);
 
+        // ✅ FIX: Dim non-filtered lots completely
+        if (!filteredIds.has(id)) {
+            el.style.opacity = '0.08';
+            el.style.fill = '#1f2937';
+            el.style.filter = 'grayscale(100%)';
+            return;
+        }
+
         if (!lote || lote.tipo !== 'Habitacional') {
-            el.style.opacity = '0.15';
+            el.style.opacity = '0.2';
             el.style.fill = '#374151';
+            el.style.filter = '';
             return;
         }
 
@@ -169,9 +241,10 @@ App.Map.renderDensityHeatmap = function () {
 
         el.style.fill = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
         el.style.opacity = 0.5 + (intensity * 0.5);
+        el.style.filter = '';
     });
 
-    console.log(`🌡️ Heatmap: ACTIVO (Max unidades: ${maxUnidades})`);
+    console.log(`🌡️ Heatmap: ACTIVO (${habitacionales.length} lotes, Max: ${maxUnidades})`);
 };
 
 // ------------------------------------
@@ -367,12 +440,58 @@ App.Map.showTooltip = function (e, id) {
     this.showSmartTooltip(e, id);
 };
 
-// Add mousemove tracking for tooltip
+// Add mousemove tracking for tooltip with touch support
 App.Map.setupSmartTooltip = function () {
     const container = document.getElementById('mapContainer');
-    container.addEventListener('mousemove', (e) => {
-        this.updateTooltipPosition(e);
-    });
+    const tooltip = document.getElementById('mapTooltip');
+    if (!container || !tooltip) return;
+
+    // ✅ FIX: Detect touch device
+    const isTouchDevice = ('ontouchstart' in window) ||
+        (navigator.maxTouchPoints > 0);
+
+    if (isTouchDevice) {
+        // TOUCH MODE: Show on tap, auto-hide after 3s
+        let touchTimeout = null;
+
+        container.addEventListener('touchstart', (e) => {
+            const target = e.target.closest('.lote');
+            if (target && target.id) {
+                const touch = e.touches[0];
+                this.showSmartTooltip({ pageX: touch.pageX, pageY: touch.pageY }, target.id);
+
+                // Clear previous timeout
+                if (touchTimeout) clearTimeout(touchTimeout);
+
+                // Auto-hide after 3 seconds
+                touchTimeout = setTimeout(() => {
+                    tooltip.style.display = 'none';
+                }, 3000);
+            } else {
+                tooltip.style.display = 'none';
+                if (touchTimeout) clearTimeout(touchTimeout);
+            }
+        }, { passive: true });
+
+        console.log('📱 Tooltip: Touch mode enabled');
+    } else {
+        // MOUSE MODE: Throttled tracking
+        let lastUpdate = 0;
+        const THROTTLE_MS = 33; // ~30fps
+
+        container.addEventListener('mousemove', (e) => {
+            const now = Date.now();
+            if (now - lastUpdate < THROTTLE_MS) return;
+            lastUpdate = now;
+            this.updateTooltipPosition(e);
+        }, { passive: true });
+
+        container.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+        });
+
+        console.log('🖱️ Tooltip: Mouse mode enabled (throttled)');
+    }
 };
 
 // ------------------------------------
@@ -897,3 +1016,445 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
 });
+
+// ==============================================================
+// BLOQUE 3: NUEVOS MÓDULOS - Persistence & Screenshot
+// ==============================================================
+
+// ------------------------------------
+// PERSISTENCE MODULE - localStorage
+// ------------------------------------
+App.Persistence = {
+    STORAGE_KEY: 'CJB_MAP_STATE_V1',
+
+    // Debounce helper
+    debounce(fn, delay) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(this, args), delay);
+        };
+    },
+
+    // Save current state
+    save() {
+        try {
+            const state = {
+                version: 1,
+                timestamp: Date.now(),
+
+                // Filters
+                filters: {
+                    search: document.getElementById('searchInput')?.value || '',
+                    etapa: document.getElementById('etapaFilter')?.value || '',
+                    estado: document.getElementById('estadoFilter')?.value || '',
+                    subtipo: document.getElementById('subtipoFilter')?.value || '',
+                    pilar: document.getElementById('pilarFilter')?.value || '',
+                    desarrollador: document.getElementById('desarrolladorFilter')?.value || '',
+                    cuadrante: document.getElementById('cuadranteFilter')?.value || '',
+                    yearStart: document.getElementById('yearStart')?.value || '',
+                    yearEnd: document.getElementById('yearEnd')?.value || '',
+                },
+
+                // Active type buttons
+                activeTypes: Array.from(
+                    document.querySelectorAll('.filter-btn.active')
+                ).map(btn => btn.dataset.tipo).filter(Boolean),
+
+                // View state
+                view: {
+                    zoom: App.Map.transform?.scale || 1,
+                    panX: App.Map.transform?.x || 0,
+                    panY: App.Map.transform?.y || 0
+                },
+
+                // Elite features state
+                elite: {
+                    heatmapActive: App.Map.heatmapActive || false,
+                    opportunityActive: App.Map.opportunityLayerActive || false,
+                },
+
+                // Theme
+                theme: document.body.classList.contains('light-mode') ? 'light' : 'dark',
+
+                // Selected lot
+                selectedLotId: App.State.selectedId || null
+            };
+
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
+            console.log('💾 Estado guardado');
+        } catch (e) {
+            console.warn('Error guardando estado:', e);
+        }
+    },
+
+    // Load saved state
+    load() {
+        try {
+            const saved = localStorage.getItem(this.STORAGE_KEY);
+            if (!saved) return null;
+
+            const state = JSON.parse(saved);
+
+            // Check version compatibility
+            if (state.version !== 1) return null;
+
+            // Check if saved within last 7 days
+            const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            if (state.timestamp < weekAgo) {
+                this.clear();
+                return null;
+            }
+
+            return state;
+        } catch (e) {
+            console.warn('Error cargando estado guardado:', e);
+            return null;
+        }
+    },
+
+    // Apply saved state
+    apply(state) {
+        if (!state) return;
+
+        try {
+            // Apply filters
+            if (state.filters) {
+                const filterMap = {
+                    'search': 'searchInput',
+                    'etapa': 'etapaFilter',
+                    'estado': 'estadoFilter',
+                    'subtipo': 'subtipoFilter',
+                    'pilar': 'pilarFilter',
+                    'desarrollador': 'desarrolladorFilter',
+                    'cuadrante': 'cuadranteFilter',
+                    'yearStart': 'yearStart',
+                    'yearEnd': 'yearEnd'
+                };
+
+                Object.entries(state.filters).forEach(([key, value]) => {
+                    const elementId = filterMap[key];
+                    const el = document.getElementById(elementId);
+                    if (el && value) el.value = value;
+                });
+            }
+
+            // Apply active types
+            if (state.activeTypes && state.activeTypes.length > 0) {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    const tipo = btn.dataset.tipo;
+                    if (state.activeTypes.includes(tipo)) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+
+            // Apply view (zoom/pan)
+            if (state.view && App.Map.transform) {
+                App.Map.transform.scale = state.view.zoom;
+                App.Map.transform.x = state.view.panX;
+                App.Map.transform.y = state.view.panY;
+
+                const svg = document.querySelector('#svgContainer svg, #mapContainer svg');
+                if (svg) {
+                    svg.style.transform = `translate(${state.view.panX}px, ${state.view.panY}px) scale(${state.view.zoom})`;
+                }
+            }
+
+            // Apply theme
+            if (state.theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+
+            // Apply elite features after delay (data must load first)
+            setTimeout(() => {
+                if (state.elite?.heatmapActive && !App.Map.heatmapActive) {
+                    App.Map.renderDensityHeatmap();
+                }
+                if (state.elite?.opportunityActive && !App.Map.opportunityLayerActive) {
+                    App.Map.toggleOpportunityLayer();
+                }
+                if (state.selectedLotId) {
+                    App.UI.selectLot(state.selectedLotId);
+                }
+            }, 1500);
+
+            // Trigger filter application
+            if (typeof applyFilters === 'function') {
+                applyFilters();
+            }
+
+            console.log('📂 Estado restaurado exitosamente');
+        } catch (e) {
+            console.warn('Error aplicando estado:', e);
+        }
+    },
+
+    // Clear saved state
+    clear() {
+        localStorage.removeItem(this.STORAGE_KEY);
+        console.log('🗑️ Estado limpiado');
+    },
+
+    // Initialize auto-save
+    init() {
+        // Debounced save function
+        const saveDebounced = this.debounce(() => this.save(), 2000);
+
+        // Listen to filter changes
+        document.querySelectorAll('select, input').forEach(el => {
+            el.addEventListener('change', saveDebounced);
+        });
+
+        // Listen to zoom/pan
+        document.getElementById('mapContainer')?.addEventListener('wheel', saveDebounced);
+
+        // Save before leaving page
+        window.addEventListener('beforeunload', () => this.save());
+
+        // Check for saved state
+        const saved = this.load();
+        if (saved) {
+            // Auto-restore without prompting for better UX
+            this.apply(saved);
+        }
+
+        console.log('💾 Persistence module initialized');
+    }
+};
+
+// ------------------------------------
+// SCREENSHOT MODULE - html2canvas
+// ------------------------------------
+App.UI.captureScreenshot = async function () {
+    const mapContainer = document.getElementById('mapContainer');
+    if (!mapContainer) {
+        console.error('Map container not found');
+        return;
+    }
+
+    // Elements to hide during capture
+    const elementsToHide = [
+        '.zoom-controls',
+        '.elite-toolbar',
+        '.heatmap-legend',
+        '.map-legend',
+        '#mapTooltip',
+        '.elite-info-toast'
+    ];
+
+    // Store original display values
+    const originalStyles = new Map();
+
+    try {
+        // Show loading indicator
+        const loadingToast = document.createElement('div');
+        loadingToast.id = 'screenshotLoading';
+        loadingToast.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 12px;
+            z-index: 10000;
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+        `;
+        loadingToast.textContent = '📷 Capturando imagen...';
+        document.body.appendChild(loadingToast);
+
+        // Hide UI elements
+        elementsToHide.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => {
+                originalStyles.set(el, el.style.display);
+                el.style.display = 'none';
+            });
+        });
+
+        // Wait for DOM update
+        await new Promise(r => setTimeout(r, 100));
+
+        // Check if html2canvas is available
+        if (typeof html2canvas === 'undefined') {
+            // Load dynamically
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            document.head.appendChild(script);
+            await new Promise((resolve, reject) => {
+                script.onload = resolve;
+                script.onerror = reject;
+            });
+        }
+
+        // Capture
+        const canvas = await html2canvas(mapContainer, {
+            backgroundColor: '#0a1628',
+            scale: 2, // High resolution
+            useCORS: true,
+            logging: false,
+            allowTaint: true
+        });
+
+        // Generate filename with date
+        const date = new Date().toISOString().split('T')[0];
+        const filename = `CJB_Mapa_${date}.png`;
+
+        // Download
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        console.log('📸 Screenshot saved:', filename);
+
+        // Show success toast
+        loadingToast.textContent = '✅ Imagen guardada';
+        setTimeout(() => loadingToast.remove(), 1500);
+
+    } catch (error) {
+        console.error('Error capturing screenshot:', error);
+        alert('Error al capturar la imagen. Intente de nuevo.');
+        document.getElementById('screenshotLoading')?.remove();
+    } finally {
+        // Restore UI elements
+        originalStyles.forEach((display, el) => {
+            el.style.display = display || '';
+        });
+    }
+};
+
+// ------------------------------------
+// RESET ALL ELITE FEATURES
+// ------------------------------------
+App.Elite.resetAll = function () {
+    // Turn off Heatmap
+    if (App.Map.heatmapActive) {
+        App.Map.renderDensityHeatmap(); // Toggle off
+    }
+
+    // Turn off Opportunity Layer
+    if (App.Map.opportunityLayerActive) {
+        App.Map.toggleOpportunityLayer(); // Toggle off
+    }
+
+    // Clear neighbor highlights
+    App.Map.clearNeighborHighlights();
+    App.Map.neighborsActive = false;
+    document.getElementById('btnNeighbors')?.classList.remove('active');
+
+    // Hide info toast
+    App.UI.hideInfoToast();
+
+    // Close BI Modal if open
+    App.UI.closeBIModal();
+
+    console.log('🧹 Elite features reset');
+};
+
+// ------------------------------------
+// ENHANCED TOOLBAR WITH SCREENSHOT BUTTON
+// ------------------------------------
+const _originalCreateEliteToolbar = App.UI.createEliteToolbar;
+App.UI.createEliteToolbar = function () {
+    const mapPanel = document.querySelector('.panel-map, .map-container, #mapContainer');
+    if (!mapPanel || document.getElementById('eliteToolbar')) return;
+
+    const toolbar = document.createElement('div');
+    toolbar.id = 'eliteToolbar';
+    toolbar.className = 'elite-toolbar';
+
+    toolbar.innerHTML = `
+        <button class="elite-btn" id="btnOpportunity" title="Capa de Oportunidad">💰</button>
+        <button class="elite-btn" id="btnHeatmap" title="Mapa de Calor">🌡️</button>
+        <button class="elite-btn" id="btnNeighbors" title="Ver Vecinos">🏘️</button>
+        <button class="elite-btn" id="btnDashboard" title="Dashboard BI">📊</button>
+        <button class="elite-btn" id="btnScreenshot" title="Captura de Pantalla">📷</button>
+    `;
+
+    mapPanel.appendChild(toolbar);
+
+    // Bind events
+    document.getElementById('btnOpportunity').addEventListener('click', () => {
+        App.Map.toggleOpportunityLayer();
+        if (App.Map.opportunityLayerActive) {
+            App.UI.showInfoToast('💰', 'Capa de Oportunidad', 'Resalta en dorado los lotes comerciales e institucionales disponibles.');
+        } else {
+            App.UI.hideInfoToast();
+        }
+    });
+
+    document.getElementById('btnHeatmap').addEventListener('click', () => {
+        App.Map.renderDensityHeatmap();
+        if (App.Map.heatmapActive) {
+            App.UI.showInfoToast('🌡️', 'Mapa de Calor', 'Visualiza la densidad basada en unidades habitacionales. Azul=baja, Rojo=alta.');
+        } else {
+            App.UI.hideInfoToast();
+        }
+    });
+
+    document.getElementById('btnNeighbors').addEventListener('click', () => {
+        const btn = document.getElementById('btnNeighbors');
+        if (App.Map.neighborsActive) {
+            App.Map.clearNeighborHighlights();
+            App.Map.neighborsActive = false;
+            btn.classList.remove('active');
+            App.UI.hideInfoToast();
+            return;
+        }
+        if (App.State.selectedId) {
+            App.Map.highlightNeighbors(App.State.selectedId);
+            App.Map.neighborsActive = true;
+            btn.classList.add('active');
+            App.UI.showInfoToast('🏘️', 'Lotes Vecinos', `Muestra los lotes adyacentes a ${App.State.selectedId}.`);
+        } else {
+            App.UI.showInfoToast('🏘️', 'Lotes Vecinos', 'Primero selecciona un lote en el mapa.');
+        }
+    });
+
+    document.getElementById('btnDashboard').addEventListener('click', () => {
+        App.UI.hideInfoToast();
+        App.UI.openBIModal();
+    });
+
+    // ✅ NEW: Screenshot button
+    document.getElementById('btnScreenshot').addEventListener('click', () => {
+        App.UI.captureScreenshot();
+    });
+};
+
+// ------------------------------------
+// ENHANCED INIT - Include Persistence
+// ------------------------------------
+const _originalEliteInit = App.Elite.init;
+App.Elite.init = async function () {
+    console.log('🚀 Inicializando Elite Features v2.0...');
+
+    // Load historical stats
+    await App.Data.loadStats();
+
+    // Create UI elements
+    App.UI.createEliteToolbar();
+    App.UI.createHeatmapLegend();
+    App.UI.renderBIDashboard();
+
+    // Setup smart tooltip
+    App.Map.setupSmartTooltip();
+
+    // Enhance search
+    this.enhanceSearch();
+
+    // Enable manual zoom input
+    this.enhanceZoomInput();
+
+    // ✅ NEW: Initialize persistence
+    App.Persistence.init();
+
+    console.log('✅ Elite Features v2.0 activados');
+};

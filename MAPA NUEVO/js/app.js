@@ -1,8 +1,8 @@
 const CONFIG = {
     paths: {
         lotes: 'data/lotesv2.csv',
-        habitacional: 'data/Planilla Base Habitacionales.csv',
-        comercial: 'data/Planilla general Comercial.csv',
+        habitacional: 'data/Planilla%20Base%20Habitacionales.csv',
+        comercial: 'data/Planilla%20general%20Comercial.csv',
         svg: 'assets/mapa.svg'
     },
     baseline: {
@@ -44,16 +44,24 @@ const App = {
     Data: {
         async init() {
             try {
-                // Load secondary CSVs first to build index
-                const [habText, comText] = await Promise.all([
+                // Load secondary CSVs first (using allSettled to prevent total failure)
+                console.log('Loading secondary CSVs...');
+                const results = await Promise.allSettled([
                     this.fetchCSV(CONFIG.paths.habitacional),
                     this.fetchCSV(CONFIG.paths.comercial)
                 ]);
 
-                this.indexSecondaryData(habText, App.State.habitacionalMap);
-                this.indexSecondaryData(comText, App.State.comercialMap);
+                const habText = results[0].status === 'fulfilled' ? results[0].value : null;
+                const comText = results[1].status === 'fulfilled' ? results[1].value : null;
+
+                if (results[0].status === 'rejected') console.warn('⚠️ Could not load Habitacional CSV:', results[0].reason);
+                if (results[1].status === 'rejected') console.warn('⚠️ Could not load Comercial CSV:', results[1].reason);
+
+                if (habText) this.indexSecondaryData(habText, App.State.habitacionalMap);
+                if (comText) this.indexSecondaryData(comText, App.State.comercialMap);
 
                 // Load main CSV
+                console.log('Loading main Lotes CSV...');
                 const mainText = await this.fetchCSV(CONFIG.paths.lotes);
                 const lotes = this.parseCSV(mainText);
 
@@ -196,6 +204,14 @@ const App = {
         setupInteraction() {
             // CORRECTED ID SELECTOR
             const svg = document.querySelector('#mapContainer svg');
+            if (!svg) return;
+
+            // ✅ FIX: Guard against duplicate listeners (QA Audit Fix 2.1)
+            if (svg.dataset.interactivitySetup === 'true') {
+                console.log('SVG interactivity already setup, skipping');
+                return;
+            }
+            svg.dataset.interactivitySetup = 'true';
 
             svg.querySelectorAll('path, polygon, rect, circle').forEach(el => {
                 const id = el.id;
@@ -512,6 +528,11 @@ const App = {
         },
 
         reset() {
+            // Reset Elite Features (Heatmap, Opportunity, Neighbors)
+            if (typeof App !== 'undefined' && App.Elite && App.Elite.resetAll) {
+                App.Elite.resetAll();
+            }
+
             App.State.filters.types = [];
             App.State.selectedId = null;
             App.State.filters.multipleIds = [];
@@ -529,6 +550,8 @@ const App = {
 
             this.apply();
             App.UI.renderDetails(null);
+
+            console.log('🧹 Filtros y capas reseteados (MAPA NUEVO)');
         }
     },
 
