@@ -1,0 +1,21 @@
+/* ================================================== */
+/* SVG INTERACTIVITY STYLES                           */
+/* ================================================== */
+
+/* All lot elements should be clickable */
+svg .lote {
+    cursor: pointer;
+}
+
+/* Hover effect for lots */
+svg .lote:hover {
+    opacity: 0.85 !important;
+    filter: brightness(1.1);
+}
+
+/* Selected lot highlight */
+svg .highlighted {
+    stroke: #ffffff !important;
+    stroke-width: 3px !important;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
+}

@@ -372,7 +372,9 @@ body.heatmap-mode .heatmap-legend {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 16px;
+    padding: 20px;
+    min-height: 280px;
+    overflow: visible;
 }
 
 .bi-chart-title {
@@ -387,15 +389,22 @@ body.heatmap-mode .heatmap-legend {
 .bar-chart {
     display: flex;
     align-items: flex-end;
-    gap: 8px;
-    height: 150px;
+    justify-content: center;
+    gap: 6px;
+    height: 200px;
+    padding: 35px 10px 15px 10px;
+    overflow: visible;
 }
 
 .bar-item {
     flex: 1;
+    max-width: 50px;
+    height: 100%;
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
     align-items: center;
+    position: relative;
 }
 
 .bar {
@@ -404,27 +413,28 @@ body.heatmap-mode .heatmap-legend {
     border-radius: 4px 4px 0 0;
     position: relative;
     transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    min-height: 4px;
+    min-height: 8px;
 }
 
 .bar:hover {
     filter: brightness(1.2);
+    transform: scaleX(1.1);
 }
 
 .bar-value {
     position: absolute;
-    top: -22px;
+    top: -20px;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     color: var(--text-primary);
     white-space: nowrap;
 }
 
 .bar-label {
-    margin-top: 8px;
-    font-size: 11px;
+    margin-top: 6px;
+    font-size: 10px;
     color: var(--text-muted);
     font-weight: 600;
 }
@@ -945,4 +955,285 @@ body.light-mode .tooltip-id {
         opacity: 1;
         transform: translateX(0);
     }
+}
+
+/* ============ BI CHARTS ROW (Side by Side Donuts) ============ */
+.bi-charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    grid-column: 1 / -1;
+}
+
+.bi-chart-half {
+    min-width: 0;
+}
+
+/* ============ ALERTS MODAL ============ */
+.alerts-modal {
+    max-width: 600px;
+}
+
+.alerts-modal .bi-modal-content {
+    display: block;
+    padding: 20px 24px;
+}
+
+.alerts-summary {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.alert-summary-item {
+    text-align: center;
+    padding: 12px 20px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    min-width: 80px;
+}
+
+.alert-summary-item.critical {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.alert-summary-item.warning {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.alert-summary-item.total {
+    border-color: var(--primary);
+    background: rgba(0, 168, 255, 0.1);
+}
+
+.alert-summary-count {
+    display: block;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.alert-summary-item.critical .alert-summary-count {
+    color: #ef4444;
+}
+
+.alert-summary-item.warning .alert-summary-count {
+    color: #f59e0b;
+}
+
+.alert-summary-item.total .alert-summary-count {
+    color: var(--primary);
+}
+
+.alert-summary-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Make alerts scrollable in modal */
+.alerts-modal .alerts-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* ============ ALERTS BUTTON STYLING ============ */
+.map-btn.alert-btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+}
+
+.map-btn.alert-btn:hover {
+    background: rgba(245, 158, 11, 0.2);
+    border-color: #f59e0b;
+}
+
+/* ============ INFRASTRUCTURE KM DISPLAY ============ */
+.infra-km {
+    font-size: 11px;
+    color: var(--primary);
+    font-weight: 600;
+    min-width: 50px;
+    text-align: right;
+}
+
+/* Light mode fixes for new elements */
+body.light-mode .alert-summary-item {
+    background: #ffffff;
+}
+
+body.light-mode .alert-summary-item.critical {
+    background: rgba(239, 68, 68, 0.08);
+}
+
+body.light-mode .alert-summary-item.warning {
+    background: rgba(245, 158, 11, 0.08);
+}
+
+body.light-mode .alert-summary-item.total {
+    background: rgba(0, 102, 204, 0.08);
+}
+
+body.light-mode .infra-km {
+    color: #0066cc;
+}
+
+/* ============ BI DASHBOARD KPI ROW ============ */
+.bi-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.bi-kpi-card {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+}
+
+.bi-kpi-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.bi-kpi-icon {
+    font-size: 28px;
+}
+
+.bi-kpi-info {
+    flex: 1;
+}
+
+.bi-kpi-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.bi-kpi-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* ============ HORIZONTAL BAR CHART ============ */
+.horizontal-bar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.h-bar-item {
+    display: grid;
+    grid-template-columns: 100px 1fr 80px;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.h-bar-item:hover {
+    background: var(--bg-card-hover);
+    transform: translateX(4px);
+}
+
+.h-bar-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.h-bar-track {
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.h-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease-out;
+}
+
+.h-bar-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-align: right;
+}
+
+.h-bar-percent {
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+/* ============ LEGEND PERCENT ============ */
+.legend-percent {
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.legend-item:hover {
+    background: var(--bg-card-hover);
+    border-radius: var(--radius-sm);
+    padding: 4px 6px;
+    margin: -4px -6px;
+}
+
+/* ============ BI MODAL ACTIONS ============ */
+.bi-modal-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.bi-filter-reset {
+    padding: 8px 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.bi-filter-reset:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--primary);
+    color: var(--text-primary);
+}
+
+/* Light mode fixes for new dashboard elements */
+body.light-mode .bi-kpi-card {
+    background: #f8fafc;
+}
+
+body.light-mode .h-bar-track {
+    background: #e2e8f0;
+}
+
+body.light-mode .bi-filter-reset {
+    background: #f1f5f9;
 }

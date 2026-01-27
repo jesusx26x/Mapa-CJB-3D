@@ -4,9 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ciudad Juan Bosch - Mapa Técnico de Lotes</title>
+    <title>Ciudad Presidente Antonio Guzmán - Mapa Técnico de Lotes</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#00a8ff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CPAG Mapa">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/elite-features.css">
+    <link rel="stylesheet" href="css/enterprise-modules.css">
+    <link rel="stylesheet" href="css/elite-theme.css">
+    <link rel="stylesheet" href="../premium-light-mode.css">
 </head>
 
 <body>
@@ -20,8 +33,8 @@
                 <span class="logo-icon">🏗️</span>
             </div>
             <div class="logo-text">
-                <h1>Ciudad<br>Juan<br>Bosch</h1>
-                <p class="logo-subtitle">Evolución 2020<br>→ 2025</p>
+                <h1>Ciudad<br>Pres. Antonio<br>Guzmán</h1>
+                <p class="logo-subtitle">Santiago<br>2025</p>
             </div>
         </div>
 
@@ -30,15 +43,18 @@
             <!-- Viviendas -->
             <div class="kpi-comparison-card">
                 <div class="kpi-title">🏠 VIVIENDAS</div>
-                <div class="kpi-values">
-                    <div class="kpi-baseline">
-                        <span class="kpi-year">2020</span>
-                        <span class="kpi-number" id="kpiViviendas2020">4,600</span>
+                <div class="kpi-dual-row">
+                    <div class="kpi-row">
+                        <span class="kpi-label">Lotes:</span>
+                        <span class="kpi-value" id="kpiViviendasLotesTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiViviendasLotesFiltered">0</span>
                     </div>
-                    <span class="kpi-arrow">→</span>
-                    <div class="kpi-current">
-                        <span class="kpi-year">FILTRADO</span>
-                        <span class="kpi-number highlight" id="kpiViviendasFiltered">14,200</span>
+                    <div class="kpi-row">
+                        <span class="kpi-label">Unidades:</span>
+                        <span class="kpi-value" id="kpiViviendasUnitsTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiViviendasUnitsFiltered">0</span>
                     </div>
                 </div>
             </div>
@@ -46,15 +62,18 @@
             <!-- Equipamientos -->
             <div class="kpi-comparison-card">
                 <div class="kpi-title">🏢 EQUIPAMIENTOS</div>
-                <div class="kpi-values">
-                    <div class="kpi-baseline">
-                        <span class="kpi-year">2020</span>
-                        <span class="kpi-number" id="kpiEquip2020">37</span>
+                <div class="kpi-dual-row">
+                    <div class="kpi-row">
+                        <span class="kpi-label">Lotes:</span>
+                        <span class="kpi-value" id="kpiEquipLotesTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiEquipLotesFiltered">0</span>
                     </div>
-                    <span class="kpi-arrow">→</span>
-                    <div class="kpi-current">
-                        <span class="kpi-year">FILTRADO</span>
-                        <span class="kpi-number highlight" id="kpiEquipFiltered">72</span>
+                    <div class="kpi-row">
+                        <span class="kpi-label">Unidades:</span>
+                        <span class="kpi-value" id="kpiEquipUnitsTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiEquipUnitsFiltered">0</span>
                     </div>
                 </div>
             </div>
@@ -62,15 +81,18 @@
             <!-- Comerciales -->
             <div class="kpi-comparison-card">
                 <div class="kpi-title">🏪 COMERCIALES</div>
-                <div class="kpi-values">
-                    <div class="kpi-baseline">
-                        <span class="kpi-year">TOTAL</span>
-                        <span class="kpi-number" id="kpiComTotal">0</span>
+                <div class="kpi-dual-row">
+                    <div class="kpi-row">
+                        <span class="kpi-label">Lotes:</span>
+                        <span class="kpi-value" id="kpiComLotesTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiComLotesFiltered">0</span>
                     </div>
-                    <span class="kpi-arrow">→</span>
-                    <div class="kpi-current">
-                        <span class="kpi-year">FILTRADO</span>
-                        <span class="kpi-number highlight" id="kpiComFiltered">0</span>
+                    <div class="kpi-row">
+                        <span class="kpi-label">Unidades:</span>
+                        <span class="kpi-value" id="kpiComUnitsTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiComUnitsFiltered">0</span>
                     </div>
                 </div>
             </div>
@@ -83,10 +105,10 @@
                 <div class="infra-row">
                     <span class="infra-label">Vial</span>
                     <div class="progress-bar-mini">
-                        <div class="progress-fill vial" id="infraVial" style="width: 52.83%"></div>
+                        <div class="progress-fill vial" id="infraVial" style="width: 0%"></div>
                     </div>
-                    <span class="infra-percent" id="infraVialText">52.83%</span>
-                    <span class="infra-target">→ 100%</span>
+                    <span class="infra-percent" id="infraVialText">0%</span>
+                    <span class="infra-km" id="infraVialKm">0 km</span>
                 </div>
                 <div class="infra-row">
                     <span class="infra-label">Eléctrica</span>
@@ -120,6 +142,8 @@
             <a href="timelapse.html" class="nav-link">Timelapse</a>
             <a href="evolucion.html" class="nav-link">Evolución</a>
             <a href="index.html" class="nav-link active">Mapa<br>de<br>Lotes</a>
+            <a href="../MAPA NUEVO - CJB/index.html" class="nav-link" title="Ver Ciudad Juan Bosch">🏘️</a>
+            <a href="../vista-combinada.html" class="nav-link" title="Ver ambos mapas">📊</a>
         </nav>
 
         <!-- Theme Toggle & Actions -->
@@ -146,7 +170,7 @@
             <div class="filter-group">
                 <div class="search-box">
                     <span class="search-icon">🔎</span>
-                    <input type="text" id="searchInput" placeholder="Buscar lote por ID o nombre...">
+                    <input type="text" id="searchInput" placeholder="Buscar por ID, nombre o subtipo...">
                 </div>
                 <div class="search-results" id="searchResults"></div>
             </div>
@@ -166,6 +190,9 @@
                     </button>
                     <button class="filter-btn active" data-tipo="Infraestructura">
                         <span class="dot infraestructura"></span> Infraestructura
+                    </button>
+                    <button class="filter-btn active" data-tipo="Área Verde">
+                        <span class="dot area-verde"></span> Área Verde
                     </button>
                 </div>
             </div>
@@ -276,6 +303,7 @@
                     title="Escribe un valor de zoom (ej: 150%)">
                 <button class="map-btn" id="zoomOut" title="Alejar">−</button>
                 <button class="map-btn" id="zoomReset" title="Restablecer">⟲</button>
+                <button class="map-btn alert-btn" id="btnAlerts" title="Ver Alertas">⚠️</button>
             </div>
             <div class="map-container" id="mapContainer">
                 <div class="map-loading" id="mapLoading">
@@ -372,8 +400,10 @@
     </main>
 
     <!-- JavaScript -->
+    <script src="../shared-core.js"></script>
     <script src="js/app.js"></script>
     <script src="js/elite-features.js"></script>
+    <script src="js/enterprise-modules.js"></script>
 </body>
 
 </html>

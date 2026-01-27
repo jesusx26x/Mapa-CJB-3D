@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciudad Juan Bosch - Mapa Técnico de Lotes</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#00a8ff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CJB Mapa">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/elite-features.css">
+    <link rel="stylesheet" href="css/enterprise-modules.css">
+    <link rel="stylesheet" href="css/elite-theme.css">
+    <link rel="stylesheet" href="../premium-light-mode.css">
+</head>
+
+<body>
+    <!-- =========================================== -->
+    <!-- HEADER: Enhanced with Comparison Cards      -->
+    <!-- =========================================== -->
+    <header class="header">
+        <!-- Logo Section -->
+        <div class="header-logo">
+            <div class="logo-box">
+                <span class="logo-icon">🏗️</span>
+            </div>
+            <div class="logo-text">
+                <h1>Ciudad<br>Juan<br>Bosch</h1>
+                <p class="logo-subtitle">Evolución 2020<br>→ 2025</p>
+            </div>
+        </div>
+
+        <!-- KPI Comparison Cards -->
+        <div class="header-kpis">
+            <!-- Viviendas -->
+            <div class="kpi-comparison-card">
+                <div class="kpi-title">🏠 VIVIENDAS</div>
+                <div class="kpi-dual-row">
+                    <div class="kpi-row">
+                        <span class="kpi-label">Lotes:</span>
+                        <span class="kpi-value" id="kpiViviendasLotesTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiViviendasLotesFiltered">0</span>
+                    </div>
+                    <div class="kpi-row">
+                        <span class="kpi-label">Unidades:</span>
+                        <span class="kpi-value" id="kpiViviendasUnitsTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiViviendasUnitsFiltered">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Equipamientos -->
+            <div class="kpi-comparison-card">
+                <div class="kpi-title">🏢 EQUIPAMIENTOS</div>
+                <div class="kpi-dual-row">
+                    <div class="kpi-row">
+                        <span class="kpi-label">Lotes:</span>
+                        <span class="kpi-value" id="kpiEquipLotesTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiEquipLotesFiltered">0</span>
+                    </div>
+                    <div class="kpi-row">
+                        <span class="kpi-label">Unidades:</span>
+                        <span class="kpi-value" id="kpiEquipUnitsTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiEquipUnitsFiltered">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comerciales -->
+            <div class="kpi-comparison-card">
+                <div class="kpi-title">🏪 COMERCIALES</div>
+                <div class="kpi-dual-row">
+                    <div class="kpi-row">
+                        <span class="kpi-label">Lotes:</span>
+                        <span class="kpi-value" id="kpiComLotesTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiComLotesFiltered">0</span>
+                    </div>
+                    <div class="kpi-row">
+                        <span class="kpi-label">Unidades:</span>
+                        <span class="kpi-value" id="kpiComUnitsTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiComUnitsFiltered">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Infrastructure Progress -->
+        <div class="header-infra">
+            <div class="infra-title">⚡ INFRAESTRUCTURA</div>
+            <div class="infra-bars">
+                <div class="infra-row">
+                    <span class="infra-label">Vial</span>
+                    <div class="progress-bar-mini">
+                        <div class="progress-fill vial" id="infraVial" style="width: 0%"></div>
+                    </div>
+                    <span class="infra-percent" id="infraVialText">0%</span>
+                    <span class="infra-km" id="infraVialKm">0 km</span>
+                </div>
+                <div class="infra-row">
+                    <span class="infra-label">Eléctrica</span>
+                    <div class="progress-bar-mini">
+                        <div class="progress-fill electrica" id="infraElectrica" style="width: 69%"></div>
+                    </div>
+                    <span class="infra-percent" id="infraElectricaText">69%</span>
+                    <span class="infra-target">→ 100%</span>
+                </div>
+                <div class="infra-row">
+                    <span class="infra-label">Hidrosanitaria</span>
+                    <div class="progress-bar-mini">
+                        <div class="progress-fill hidro" id="infraHidro" style="width: 52%"></div>
+                    </div>
+                    <span class="infra-percent" id="infraHidroText">52%</span>
+                    <span class="infra-target">→ 87%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Growth Badge -->
+        <div class="header-growth">
+            <div class="growth-badge">
+                <span class="growth-value">+209%</span>
+                <span class="growth-label">Crecimiento</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="header-nav">
+            <a href="timelapse.html" class="nav-link">Timelapse</a>
+            <a href="evolucion.html" class="nav-link">Evolución</a>
+            <a href="index.html" class="nav-link active">Mapa<br>de<br>Lotes</a>
+            <a href="../MAPA CPAG/index.html" class="nav-link" title="Ver CPAG">🏛️</a>
+            <a href="../vista-combinada.html" class="nav-link" title="Ver ambos mapas">📊</a>
+        </nav>
+
+        <!-- Theme Toggle & Actions -->
+        <div class="header-actions">
+            <button class="btn-icon-only" id="highContrastToggle" title="Alto Contraste (Obra)">☀️</button>
+            <button class="btn-icon-only" id="themeToggle" title="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+
+    <!-- =========================================== -->
+    <!-- MAIN LAYOUT: Filters | Map | Details        -->
+    <!-- =========================================== -->
+    <main class="main-layout">
+
+        <!-- PANEL IZQUIERDO: FILTROS -->
+        <aside class="panel panel-filters">
+            <div class="panel-header">
+                <h2>🔍 Filtros</h2>
+                <button class="btn-clear" id="btnReset">Limpiar</button>
+            </div>
+
+            <!-- Buscador -->
+            <div class="filter-group">
+                <div class="search-box">
+                    <span class="search-icon">🔎</span>
+                    <input type="text" id="searchInput" placeholder="Buscar por ID, nombre o subtipo...">
+                </div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+
+            <!-- Categorías Grid 2x2 -->
+            <div class="filter-group">
+                <label class="filter-label">Categoría</label>
+                <div class="filter-grid">
+                    <button class="filter-btn active" data-tipo="Habitacional">
+                        <span class="dot habitacional"></span> Habitacional
+                    </button>
+                    <button class="filter-btn active" data-tipo="Comercial">
+                        <span class="dot comercial"></span> Comercial
+                    </button>
+                    <button class="filter-btn active" data-tipo="Institucional">
+                        <span class="dot institucional"></span> Institucional
+                    </button>
+                    <button class="filter-btn active" data-tipo="Infraestructura">
+                        <span class="dot infraestructura"></span> Infraestructura
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cuadrante -->
+            <div class="filter-group">
+                <label class="filter-label">Cuadrante</label>
+                <select id="filterCuadrante" class="filter-select">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+
+            <!-- Pilar -->
+            <div class="filter-group">
+                <label class="filter-label">Pilar</label>
+                <select id="filterPilar" class="filter-select">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+
+            <!-- Estado -->
+            <div class="filter-group">
+                <label class="filter-label">Estado de Obra</label>
+                <select id="filterEstado" class="filter-select">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+
+            <!-- Año de Entrega - Range Slider -->
+            <div class="filter-group">
+                <label class="filter-label">Año de Entrega (hasta)</label>
+                <div class="year-slider-container">
+                    <input type="range" id="yearRangeSlider" class="year-slider" min="2013" max="2026" value="2026">
+                    <div class="year-slider-labels">
+                        <span id="yearMinLabel">2013</span>
+                        <span class="year-current" id="yearCurrentValue">2026</span>
+                        <span id="yearMaxLabel">2026</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros Adicionales -->
+            <details class="filter-details" open>
+                <summary>Más Filtros ▼</summary>
+                <div class="filter-group">
+                    <label class="filter-label">Etapa</label>
+                    <select id="filterEtapa" class="filter-select">
+                        <option value="">Todas</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">Desarrollador</label>
+                    <select id="filterDesarrollador" class="filter-select">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+
+                <!-- Area Range Filter (NEW) -->
+                <div class="filter-group">
+                    <label class="filter-label">Rango de Área (m²)</label>
+                    <div class="area-range-inputs">
+                        <input type="number" id="filterAreaMin" placeholder="Mínimo" class="filter-input-small">
+                        <span class="range-separator">—</span>
+                        <input type="number" id="filterAreaMax" placeholder="Máximo" class="filter-input-small">
+                    </div>
+                </div>
+
+                <!-- Multiple IDs Search (NEW) -->
+                <div class="filter-group">
+                    <label class="filter-label">Buscar Múltiples IDs</label>
+                    <textarea id="filterMultipleIds" class="filter-textarea"
+                        placeholder="Pegar IDs separados por coma o espacio&#10;Ej: 01-01-01, 02-04-03"></textarea>
+                </div>
+            </details>
+
+            <!-- Estadísticas -->
+            <div class="stats-box">
+                <h3>📊 Resumen Filtrado</h3>
+                <div class="stat-row">
+                    <span>Total Lotes</span>
+                    <span id="statTotal">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Filtrados</span>
+                    <span id="statFiltered" class="highlight">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Unidades Hab.</span>
+                    <span id="statUnidades">0</span>
+                </div>
+                <div class="stat-row stat-highlight">
+                    <span>Área Total</span>
+                    <span id="statAreaTotal">0 m²</span>
+                </div>
+            </div>
+
+            <!-- Export Button -->
+            <button class="btn-action btn-export" id="btnExport">
+                📥 Exportar CSV
+            </button>
+        </aside>
+
+        <!-- PANEL CENTRAL: MAPA SVG -->
+        <section class="panel panel-map">
+            <div class="map-controls">
+                <button class="map-btn" id="zoomIn" title="Acercar">+</button>
+                <input type="text" class="zoom-input" id="zoomLevel" value="100%"
+                    title="Escribe un valor de zoom (ej: 150%)">
+                <button class="map-btn" id="zoomOut" title="Alejar">−</button>
+                <button class="map-btn" id="zoomReset" title="Restablecer">⟲</button>
+                <button class="map-btn alert-btn" id="btnAlerts" title="Ver Alertas">⚠️</button>
+            </div>
+            <div class="map-container" id="mapContainer">
+                <div class="map-loading" id="mapLoading">
+                    <div class="spinner"></div>
+                    <p>Cargando mapa...</p>
+                </div>
+                <!-- SVG se inyecta aquí -->
+            </div>
+            <div class="map-tooltip" id="mapTooltip"></div>
+        </section>
+
+        <!-- PANEL DERECHO: DETALLES -->
+        <aside class="panel panel-details">
+            <h2>📋 Detalles del Lote</h2>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">📍</div>
+                <h3>Sin lote seleccionado</h3>
+                <p>Haz clic en cualquier lote del mapa para ver su ficha técnica.</p>
+            </div>
+
+            <!-- Detalles del Lote (oculto por defecto) -->
+            <div class="lot-details" id="lotDetails">
+                <!-- Header: Estado prominente + ID -->
+                <div class="detail-header-v2">
+                    <span class="status-badge-large" id="detailEstado">Estado</span>
+                    <span class="lot-id" id="detailId">00-00-00</span>
+                </div>
+
+                <!-- DATO CLAVE: Área Total (prominente) -->
+                <div class="area-primary-box">
+                    <span class="area-label">ÁREA TOTAL</span>
+                    <span class="area-value" id="detailAreaPrimary">0 m²</span>
+                </div>
+
+                <!-- Sección: General (compacta) -->
+                <div class="detail-section">
+                    <h4>📋 General</h4>
+                    <dl class="detail-grid">
+                        <dt>Tipo</dt>
+                        <dd id="detailTipo">-</dd>
+                        <dt>Subtipo</dt>
+                        <dd id="detailSubtipo">-</dd>
+                        <dt>Nombre</dt>
+                        <dd id="detailNombre">-</dd>
+                        <dt>Cuadrante</dt>
+                        <dd id="detailCuadrante">-</dd>
+                        <dt>Pilar</dt>
+                        <dd id="detailPilar">-</dd>
+                        <dt>Etapa</dt>
+                        <dd id="detailEtapa">-</dd>
+                    </dl>
+                </div>
+
+                <!-- Sección: Métricas -->
+                <div class="detail-section">
+                    <h4>📐 Métricas</h4>
+                    <dl class="detail-grid">
+                        <dt>Área</dt>
+                        <dd id="detailArea">- m²</dd>
+                        <dt>Unidades</dt>
+                        <dd id="detailUnidades">-</dd>
+                        <dt>Edificios</dt>
+                        <dd id="detailEdificios">-</dd>
+                    </dl>
+                </div>
+
+                <!-- Sección: Desarrollador -->
+                <div class="detail-section">
+                    <h4>🏗️ Desarrollador</h4>
+                    <dl class="detail-grid">
+                        <dt>Empresa</dt>
+                        <dd id="detailDesarrollador">-</dd>
+                        <dt>F. Adjudicación</dt>
+                        <dd id="detailFechaAdj">-</dd>
+                        <dt>F. Entrega</dt>
+                        <dd id="detailFechaEnt">-</dd>
+                    </dl>
+                </div>
+
+                <!-- Observaciones -->
+                <div class="detail-section">
+                    <h4>📝 Observaciones</h4>
+                    <p id="detailObservaciones" class="observations">-</p>
+                </div>
+
+                <!-- Print Button -->
+                <button class="btn-action btn-print" id="btnPrint">
+                    🖨️ Imprimir Ficha Técnica
+                </button>
+            </div>
+        </aside>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="../shared-core.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/elite-features.js"></script>
+    <script src="js/enterprise-modules.js"></script>
+</body>
+
+</html>

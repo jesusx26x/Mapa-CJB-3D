@@ -519,29 +519,89 @@ App.UI.createBIPanel = function () {
                     <span>📊</span>
                     Dashboard Ejecutivo
                 </div>
-                <button class="bi-modal-close" id="biModalClose">✕</button>
+                <div class="bi-modal-actions">
+                    <button class="bi-filter-reset" id="biResetFilters" title="Limpiar filtros del dashboard">🔄 Reset</button>
+                    <button class="bi-modal-close" id="biModalClose">✕</button>
+                </div>
             </div>
             <div class="bi-modal-content">
+                <!-- KPI Row -->
+                <div class="bi-kpi-row" id="biKpiRow">
+                    <div class="bi-kpi-card">
+                        <div class="bi-kpi-icon">🏠</div>
+                        <div class="bi-kpi-info">
+                            <div class="bi-kpi-value" id="biKpiTotalLotes">0</div>
+                            <div class="bi-kpi-label">Total Lotes</div>
+                        </div>
+                    </div>
+                    <div class="bi-kpi-card">
+                        <div class="bi-kpi-icon">📐</div>
+                        <div class="bi-kpi-info">
+                            <div class="bi-kpi-value" id="biKpiTotalArea">0</div>
+                            <div class="bi-kpi-label">Área Total (ha)</div>
+                        </div>
+                    </div>
+                    <div class="bi-kpi-card">
+                        <div class="bi-kpi-icon">🏢</div>
+                        <div class="bi-kpi-info">
+                            <div class="bi-kpi-value" id="biKpiTotalUnits">0</div>
+                            <div class="bi-kpi-label">Unidades</div>
+                        </div>
+                    </div>
+                    <div class="bi-kpi-card">
+                        <div class="bi-kpi-icon">🚧</div>
+                        <div class="bi-kpi-info">
+                            <div class="bi-kpi-value" id="biKpiEnEjecucion">0</div>
+                            <div class="bi-kpi-label">En Ejecución</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Delivery Chart -->
                 <div class="bi-chart-container">
                     <h4 class="bi-chart-title">📈 Entregas de Viviendas por Año</h4>
                     <p class="bar-chart-subtitle">Unidades habitacionales terminadas anualmente</p>
                     <div class="bar-chart" id="deliveryChart"></div>
                 </div>
-                <div class="bi-chart-container">
-                    <h4 class="bi-chart-title">🍩 Distribución de Uso</h4>
-                    <div class="donut-container">
-                        <div class="donut-chart" id="usageDonut">
-                            <div class="donut-center">
-                                <div class="donut-total" id="donutTotal">0</div>
-                                <div class="donut-label">lotes</div>
+                
+                <!-- Donut Charts Row -->
+                <div class="bi-charts-row">
+                    <div class="bi-chart-container bi-chart-half">
+                        <h4 class="bi-chart-title">🍩 Distribución por Lotes</h4>
+                        <div class="donut-container">
+                            <div class="donut-chart" id="usageDonut">
+                                <div class="donut-center">
+                                    <div class="donut-total" id="donutTotal">0</div>
+                                    <div class="donut-label">lotes</div>
+                                </div>
                             </div>
+                            <div class="donut-legend" id="donutLegend"></div>
                         </div>
-                        <div class="donut-legend" id="donutLegend"></div>
+                    </div>
+                    <div class="bi-chart-container bi-chart-half">
+                        <h4 class="bi-chart-title">📐 Distribución por Área (m²)</h4>
+                        <div class="donut-container">
+                            <div class="donut-chart" id="areaDonut">
+                                <div class="donut-center">
+                                    <div class="donut-total" id="areaDonutTotal">0</div>
+                                    <div class="donut-label">m²</div>
+                                </div>
+                            </div>
+                            <div class="donut-legend" id="areaDonutLegend"></div>
+                        </div>
                     </div>
                 </div>
-                <div class="bi-chart-container">
-                    <h4 class="bi-chart-title">⚠️ Alertas Activas</h4>
-                    <div class="alerts-container" id="alertsContainer"></div>
+                
+                <!-- Estado and Desarrolladores Row -->
+                <div class="bi-charts-row">
+                    <div class="bi-chart-container bi-chart-half">
+                        <h4 class="bi-chart-title">🔄 Estado de Proyectos</h4>
+                        <div class="horizontal-bar-chart" id="estadoChart"></div>
+                    </div>
+                    <div class="bi-chart-container bi-chart-half">
+                        <h4 class="bi-chart-title">🏗️ Top 5 Desarrolladores</h4>
+                        <div class="horizontal-bar-chart" id="desarrolladorChart"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -573,9 +633,13 @@ App.UI.openBIModal = function () {
     const overlay = document.getElementById('biModalOverlay');
     if (overlay) {
         overlay.classList.add('active');
+        this.renderBIKpis();
         this.renderDeliveryChart();
         this.renderUsageDonut();
-        this.renderAlerts();
+        this.renderAreaDonut();
+        this.renderEstadoChart();
+        this.renderDesarrolladorChart();
+        this.bindBIInteractivity();
     }
 };
 
@@ -584,6 +648,166 @@ App.UI.closeBIModal = function () {
     if (overlay) {
         overlay.classList.remove('active');
     }
+};
+
+// ------------------------------------
+// BI DASHBOARD RENDERING FUNCTIONS
+// ------------------------------------
+
+// Estado colors
+const ESTADO_COLORS = {
+    'Terminado': '#10b981',
+    'En construcción': '#f59e0b',
+    'Disponible': '#3b82f6',
+    'Paralizado': '#ef4444',
+    'Adjudicado': '#a855f7',
+    'No Iniciado': '#64748b'
+};
+
+App.UI.renderBIKpis = function () {
+    const lotes = App.State.filtered || App.State.getAll();
+
+    // Total Lotes
+    const totalLotes = lotes.length;
+    document.getElementById('biKpiTotalLotes').textContent = totalLotes.toLocaleString('es-DO');
+
+    // Total Area (en hectáreas)
+    let totalArea = 0;
+    lotes.forEach(l => totalArea += (l._parsedArea || 0));
+    const areaHa = (totalArea / 10000).toFixed(1);
+    document.getElementById('biKpiTotalArea').textContent = areaHa;
+
+    // Total Unidades
+    let totalUnits = 0;
+    lotes.forEach(l => {
+        const u = typeof l.unidades === 'string' ? parseInt(l.unidades.replace(/,/g, '')) : l.unidades;
+        totalUnits += (u || 0);
+    });
+    document.getElementById('biKpiTotalUnits').textContent = totalUnits.toLocaleString('es-DO');
+
+    // En Ejecución
+    const enEjecucion = lotes.filter(l =>
+        l.estado?.toLowerCase().includes('construcción') ||
+        l.estado?.toLowerCase().includes('ejecución')
+    ).length;
+    document.getElementById('biKpiEnEjecucion').textContent = enEjecucion.toLocaleString('es-DO');
+};
+
+App.UI.renderEstadoChart = function () {
+    const container = document.getElementById('estadoChart');
+    if (!container) return;
+
+    const lotes = App.State.filtered || App.State.getAll();
+
+    // Count by estado
+    const estados = {};
+    lotes.forEach(l => {
+        const estado = l.estado || 'Sin estado';
+        estados[estado] = (estados[estado] || 0) + 1;
+    });
+
+    // Sort by count and render horizontal bars
+    const sorted = Object.entries(estados).sort((a, b) => b[1] - a[1]);
+    const maxCount = Math.max(...sorted.map(s => s[1]));
+
+    container.innerHTML = sorted.slice(0, 6).map(([estado, count]) => {
+        const width = (count / maxCount) * 100;
+        const color = ESTADO_COLORS[estado] || '#64748b';
+        const percent = Math.round((count / lotes.length) * 100);
+
+        return `
+            <div class="h-bar-item" data-filter-estado="${estado}">
+                <div class="h-bar-label">${estado}</div>
+                <div class="h-bar-track">
+                    <div class="h-bar-fill" style="width: ${width}%; background: ${color}"></div>
+                </div>
+                <div class="h-bar-value">${count} <span class="h-bar-percent">(${percent}%)</span></div>
+            </div>
+        `;
+    }).join('');
+};
+
+App.UI.renderDesarrolladorChart = function () {
+    const container = document.getElementById('desarrolladorChart');
+    if (!container) return;
+
+    const lotes = App.State.filtered || App.State.getAll();
+
+    // Count by desarrollador
+    const desarrolladores = {};
+    lotes.forEach(l => {
+        const dev = l.desarrollador || 'Sin desarrollador';
+        desarrolladores[dev] = (desarrolladores[dev] || 0) + 1;
+    });
+
+    // Sort by count and get top 5
+    const sorted = Object.entries(desarrolladores).sort((a, b) => b[1] - a[1]);
+    const maxCount = Math.max(...sorted.map(s => s[1]));
+
+    container.innerHTML = sorted.slice(0, 5).map(([dev, count]) => {
+        const width = (count / maxCount) * 100;
+        const percent = Math.round((count / lotes.length) * 100);
+
+        return `
+            <div class="h-bar-item" data-filter-dev="${dev}">
+                <div class="h-bar-label" title="${dev}">${dev.length > 20 ? dev.substring(0, 20) + '...' : dev}</div>
+                <div class="h-bar-track">
+                    <div class="h-bar-fill" style="width: ${width}%; background: var(--primary)"></div>
+                </div>
+                <div class="h-bar-value">${count} <span class="h-bar-percent">(${percent}%)</span></div>
+            </div>
+        `;
+    }).join('');
+};
+
+App.UI.bindBIInteractivity = function () {
+    // Bind reset button
+    document.getElementById('biResetFilters')?.addEventListener('click', () => {
+        App.Filter.reset();
+        this.openBIModal(); // Refresh charts
+    });
+
+    // Bind legend items for cross-filtering (donut charts)
+    document.querySelectorAll('.legend-item[data-filter-type]').forEach(item => {
+        item.addEventListener('click', () => {
+            const tipo = item.dataset.filterType;
+            // Deactivate all type filters first
+            document.querySelectorAll('.filter-btn[data-tipo]').forEach(b => b.classList.remove('active'));
+            // Activate the clicked type
+            const btn = document.querySelector(`.filter-btn[data-tipo="${tipo}"]`);
+            if (btn) {
+                btn.classList.add('active');
+                App.Filter.apply();
+                this.openBIModal(); // Refresh charts with new filter
+            }
+        });
+    });
+
+    // Bind estado bars for cross-filtering
+    document.querySelectorAll('.h-bar-item[data-filter-estado]').forEach(item => {
+        item.addEventListener('click', () => {
+            const estado = item.dataset.filterEstado;
+            const select = document.getElementById('filterEstado');
+            if (select) {
+                select.value = estado;
+                App.Filter.apply();
+                this.openBIModal(); // Refresh charts
+            }
+        });
+    });
+
+    // Bind desarrollador bars for cross-filtering
+    document.querySelectorAll('.h-bar-item[data-filter-dev]').forEach(item => {
+        item.addEventListener('click', () => {
+            const dev = item.dataset.filterDev;
+            const select = document.getElementById('filterDesarrollador');
+            if (select) {
+                select.value = dev;
+                App.Filter.apply();
+                this.openBIModal(); // Refresh charts
+            }
+        });
+    });
 };
 
 // ------------------------------------
@@ -629,23 +853,51 @@ App.UI.renderDeliveryChart = function () {
     const container = document.getElementById('deliveryChart');
     if (!container) return;
 
-    const maxVal = Math.max(...Object.values(YEARLY_DELIVERIES).map(d => d.nuevas));
-    const minVal = Math.min(...Object.values(YEARLY_DELIVERIES).map(d => d.nuevas));
+    const lotes = App.State.filtered || App.State.getAll();
 
-    container.innerHTML = Object.entries(YEARLY_DELIVERIES).map(([year, data]) => {
-        const height = Math.max(10, (data.nuevas / maxVal) * 100);
-        const isMax = data.nuevas === maxVal;
-        const isMin = data.nuevas === minVal;
+    // Calculate units by year from actual lot data
+    const yearlyData = {};
+
+    // Filter only habitacional lots with valid year
+    lotes.filter(l => l.tipo === 'Habitacional' && l._parsedYear).forEach(l => {
+        const year = l._parsedYear;
+        const units = typeof l.unidades === 'string'
+            ? parseInt(l.unidades.replace(/,/g, '')) || 0
+            : (l.unidades || 0);
+
+        if (!yearlyData[year]) {
+            yearlyData[year] = { units: 0, count: 0 };
+        }
+        yearlyData[year].units += units;
+        yearlyData[year].count++;
+    });
+
+    // Sort by year and get entries
+    const sortedYears = Object.keys(yearlyData).sort((a, b) => parseInt(a) - parseInt(b));
+
+    if (sortedYears.length === 0) {
+        container.innerHTML = '<div class="no-data">Sin datos de entregas</div>';
+        return;
+    }
+
+    const maxVal = Math.max(...sortedYears.map(y => yearlyData[y].units));
+    const minVal = Math.min(...sortedYears.map(y => yearlyData[y].units));
+
+    container.innerHTML = sortedYears.map(year => {
+        const data = yearlyData[year];
+        const height = maxVal > 0 ? Math.max(15, (data.units / maxVal) * 100) : 15;
+        const isMax = data.units === maxVal;
+        const isMin = data.units === minVal;
         const barColor = isMax ? 'linear-gradient(to top, #10b981, #34d399)' :
             isMin ? 'linear-gradient(to top, #ef4444, #f87171)' :
                 'linear-gradient(to top, var(--primary), #60a5fa)';
 
         return `
-            <div class="bar-item">
+            <div class="bar-item" data-filter-year="${year}" title="${data.count} proyectos">
                 <div class="bar" style="height: ${height}%; background: ${barColor}">
-                    <span class="bar-value">${data.nuevas.toLocaleString()}</span>
+                    <span class="bar-value">${data.units.toLocaleString('es-DO')}</span>
                 </div>
-                <span class="bar-label">${data.label}</span>
+                <span class="bar-label">${year}</span>
             </div>
         `;
     }).join('');
@@ -690,6 +942,66 @@ App.UI.renderUsageDonut = function () {
     donut.style.background = `conic-gradient(${segments.join(', ')})`;
     legend.innerHTML = legendItems.join('');
     if (totalEl) totalEl.textContent = total;
+};
+
+App.UI.renderAreaDonut = function () {
+    const donut = document.getElementById('areaDonut');
+    const legend = document.getElementById('areaDonutLegend');
+    const totalEl = document.getElementById('areaDonutTotal');
+    if (!donut || !legend) return;
+
+    // Sum area by type
+    const types = {};
+    let totalArea = 0;
+    App.State.getAll().forEach(l => {
+        const tipo = l.tipo || 'Otro';
+        const area = l._parsedArea || 0;
+        types[tipo] = (types[tipo] || 0) + area;
+        totalArea += area;
+    });
+
+    // Generate conic gradient
+    let currentAngle = 0;
+    const segments = [];
+    const legendItems = [];
+
+    Object.entries(types).sort((a, b) => b[1] - a[1]).forEach(([type, area]) => {
+        const angle = totalArea > 0 ? (area / totalArea) * 360 : 0;
+        const color = TYPE_COLORS[type] || '#64748b';
+        segments.push(`${color} ${currentAngle}deg ${currentAngle + angle}deg`);
+
+        // Format area for legend (convert to hectares if large)
+        const areaFormatted = area >= 10000
+            ? (area / 10000).toFixed(1) + ' ha'
+            : Math.round(area).toLocaleString('es-DO') + ' m²';
+
+        // Calculate percentage
+        const percent = totalArea > 0 ? Math.round((area / totalArea) * 100) : 0;
+
+        legendItems.push(`
+            <div class="legend-item" data-filter-type="${type}" style="cursor: pointer;">
+                <span class="legend-dot" style="background: ${color}"></span>
+                <span class="legend-label">${type}</span>
+                <span class="legend-value">${areaFormatted} <span class="legend-percent">(${percent}%)</span></span>
+            </div>
+        `);
+
+        currentAngle += angle;
+    });
+
+    donut.style.background = `conic-gradient(${segments.join(', ')})`;
+    legend.innerHTML = legendItems.join('');
+
+    // Format total area
+    if (totalEl) {
+        if (totalArea >= 1000000) {
+            totalEl.textContent = (totalArea / 1000000).toFixed(1) + 'M';
+        } else if (totalArea >= 1000) {
+            totalEl.textContent = (totalArea / 1000).toFixed(0) + 'K';
+        } else {
+            totalEl.textContent = Math.round(totalArea).toLocaleString('es-DO');
+        }
+    }
 };
 
 App.UI.renderAlerts = function () {
@@ -762,6 +1074,121 @@ App.UI.getAlerts = function () {
         if (a.type !== 'critical' && b.type === 'critical') return 1;
         return 0;
     });
+};
+
+// ------------------------------------
+// ALERTS MODAL (Separated from BI Dashboard)
+// ------------------------------------
+App.UI.createAlertsModal = function () {
+    if (document.getElementById('alertsModalOverlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'alertsModalOverlay';
+    overlay.className = 'bi-modal-overlay';
+
+    overlay.innerHTML = `
+        <div class="bi-modal alerts-modal">
+            <div class="bi-modal-header">
+                <div class="bi-modal-title">
+                    <span>⚠️</span>
+                    Alertas del Proyecto
+                </div>
+                <button class="bi-modal-close" id="alertsModalClose">✕</button>
+            </div>
+            <div class="bi-modal-content">
+                <div class="bi-chart-container">
+                    <div class="alerts-summary" id="alertsSummary"></div>
+                    <div class="alerts-container" id="alertsModalContainer"></div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Close on X button
+    document.getElementById('alertsModalClose').addEventListener('click', () => {
+        this.closeAlertsModal();
+    });
+
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            this.closeAlertsModal();
+        }
+    });
+
+    // Close on Escape key  
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('active')) {
+            this.closeAlertsModal();
+        }
+    });
+};
+
+App.UI.openAlertsModal = function () {
+    const overlay = document.getElementById('alertsModalOverlay');
+    if (!overlay) return;
+
+    overlay.classList.add('active');
+
+    const alerts = this.getAlerts();
+    const container = document.getElementById('alertsModalContainer');
+    const summary = document.getElementById('alertsSummary');
+
+    // Render summary
+    const criticalCount = alerts.filter(a => a.type === 'critical').length;
+    const warningCount = alerts.filter(a => a.type === 'warning').length;
+
+    if (summary) {
+        summary.innerHTML = `
+            <div class="alert-summary-item critical">
+                <span class="alert-summary-count">${criticalCount}</span>
+                <span class="alert-summary-label">Críticas</span>
+            </div>
+            <div class="alert-summary-item warning">
+                <span class="alert-summary-count">${warningCount}</span>
+                <span class="alert-summary-label">Advertencias</span>
+            </div>
+            <div class="alert-summary-item total">
+                <span class="alert-summary-count">${alerts.length}</span>
+                <span class="alert-summary-label">Total</span>
+            </div>
+        `;
+    }
+
+    // Render alerts
+    if (container) {
+        if (alerts.length === 0) {
+            container.innerHTML = '<div class="alert-item"><span class="alert-icon">✅</span><div class="alert-content"><div class="alert-title">Sin alertas</div><div class="alert-desc">Todos los proyectos en curso normal</div></div></div>';
+        } else {
+            container.innerHTML = alerts.map(alert => `
+                <div class="alert-item ${alert.type}" data-lot="${alert.loteId}">
+                    <span class="alert-icon">${alert.icon}</span>
+                    <div class="alert-content">
+                        <div class="alert-title">${alert.loteId}</div>
+                        <div class="alert-desc">${alert.message}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Add click handlers to zoom to lot
+            container.querySelectorAll('.alert-item[data-lot]').forEach(item => {
+                item.addEventListener('click', () => {
+                    const id = item.dataset.lot;
+                    this.closeAlertsModal();
+                    App.Map.zoomToLot(id);
+                });
+            });
+        }
+    }
+};
+
+App.UI.closeAlertsModal = function () {
+    const overlay = document.getElementById('alertsModalOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+    }
 };
 
 // ------------------------------------
@@ -869,6 +1296,7 @@ App.Elite = {
         App.UI.createEliteToolbar();
         App.UI.createHeatmapLegend();
         App.UI.renderBIDashboard();
+        App.UI.createAlertsModal();
 
         // Setup smart tooltip
         App.Map.setupSmartTooltip();
@@ -879,7 +1307,30 @@ App.Elite = {
         // Enable manual zoom input
         this.enhanceZoomInput();
 
+        // Bind alerts button
+        this.bindAlertsButton();
+
         console.log('✅ Elite Features activados');
+    },
+
+    bindAlertsButton() {
+        const btn = document.getElementById('btnAlerts');
+        console.log('🔔 Binding Alerts button:', btn ? 'found' : 'NOT FOUND');
+        if (btn) {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('🔔 Alerts button clicked');
+                App.UI.openAlertsModal();
+            });
+        } else {
+            // Fallback: Try with event delegation on document
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#btnAlerts')) {
+                    console.log('🔔 Alerts button clicked (delegated)');
+                    App.UI.openAlertsModal();
+                }
+            });
+        }
     },
 
     enhanceZoomInput() {

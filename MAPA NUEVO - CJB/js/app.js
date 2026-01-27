@@ -74,6 +74,16 @@ const App = {
                 console.log(`✅ Datos cargados: ${App.State.lotesMap.size} lotes.`);
                 App.State.setFiltered(Array.from(App.State.lotesMap.values()));
 
+                // Validate data using shared-core (if available)
+                if (typeof VBC !== 'undefined' && VBC.Validate) {
+                    const allLotes = Array.from(App.State.lotesMap.values());
+                    const validation = VBC.Validate.dataset(allLotes);
+                    VBC.Validate.logResults(validation, 'CJB');
+
+                    // Auto-backup to localStorage
+                    VBC.Backup.save('cjb_lotes', allLotes);
+                }
+
             } catch (error) {
                 console.error("❌ Error cargando datos:", error);
                 alert("Error cargando base de datos. Ver consola.");
@@ -161,11 +171,30 @@ const App = {
             const com = App.State.comercialMap.get(lote.id);
             const extra = hab || com || {};
 
+            // Normalize tipo from CSV uppercase to expected format
+            let rawTipo = lote.tipo || extra.tipo || 'Desconocido';
+            let normalizedTipo = rawTipo;
+
+            // Map uppercase CSV values to expected capitalized values
+            const tipoMap = {
+                'HABITACIONAL': 'Habitacional',
+                'COMERCIAL': 'Comercial',
+                'INSTITUCIONAL': 'Institucional',
+                'AREA VERDE': 'Área Verde',
+                'INFRAESTRUCTURA': 'Infraestructura',
+                'EQUIPAMIENTO': 'Equipamiento'
+            };
+
+            const upperTipo = rawTipo.toUpperCase().trim();
+            if (tipoMap[upperTipo]) {
+                normalizedTipo = tipoMap[upperTipo];
+            }
+
             return {
                 ...lote,
                 ...extra,
                 area_m2: lote.area_m2 || extra.area_m2 || '0',
-                tipo: lote.tipo || extra.tipo || 'Desconocido',
+                tipo: normalizedTipo,
                 _parsedArea: this.parseArea(lote.area_m2 || extra.area_m2),
                 _parsedYear: this.parseYear(lote['Fecha entrega'] || extra['Fecha entrega'])
             };
@@ -215,7 +244,8 @@ const App = {
 
             svg.querySelectorAll('path, polygon, rect, circle').forEach(el => {
                 const id = el.id;
-                if (id && id.match(/^\d{2}-\d{2}-\d{2}$/)) {
+                // Match numeric IDs (XX-XX-XX) AND infrastructure IDs (C-XX)
+                if (id && (id.match(/^\d{2}-\d{2}-\d{2}$/) || id.match(/^[Cc]-\d{1,2}$/))) {
                     App.State.svgElementsMap.set(id, el);
                     el.classList.add('lote');
                     el.addEventListener('click', () => App.UI.selectLot(id));
@@ -497,7 +527,15 @@ const App = {
             if (f.etapa && lote.etapa !== f.etapa) return false;
             if (f.desarrollador && lote.desarrollador !== f.desarrollador) return false;
 
-            if (lote._parsedYear && lote._parsedYear > f.yearMax) return false;
+            // Filtro de año: si el slider está en un año menor al máximo, ocultar lotes sin fecha
+            const maxYearAvailable = parseInt(document.getElementById('yearRangeSlider')?.max) || 2026;
+            if (f.yearMax < maxYearAvailable) {
+                // Filtro activo: solo mostrar lotes con año definido y <= yearMax
+                if (!lote._parsedYear || lote._parsedYear > f.yearMax) return false;
+            } else {
+                // Filtro desactivado (en máximo): mostrar todos, excepto los que superan el máximo
+                if (lote._parsedYear && lote._parsedYear > f.yearMax) return false;
+            }
 
             if (f.areaMin !== null && lote._parsedArea < f.areaMin) return false;
             if (f.areaMax !== null && lote._parsedArea > f.areaMax) return false;
@@ -517,7 +555,8 @@ const App = {
                 if (
                     lote.id.toLowerCase().includes(term) ||
                     lote.nombre?.toLowerCase().includes(term) ||
-                    lote.desarrollador?.toLowerCase().includes(term)
+                    lote.desarrollador?.toLowerCase().includes(term) ||
+                    lote.subtipo?.toLowerCase().includes(term)
                 ) {
                     filtered.push(lote);
                 }
@@ -525,6 +564,8 @@ const App = {
 
             App.State.setFiltered(filtered);
             App.Map.render();
+            App.UI.updateStats();
+            App.UI.updateKPIs();
         },
 
         reset() {
@@ -634,57 +675,149 @@ const App = {
         },
 
         updateKPIs() {
-            const yearMax = App.State.filters.yearMax || 9999;
+            // === VIVIENDAS ===
+            const allHabitacionales = App.State.getAll().filter(l => l.tipo === 'Habitacional');
+            const filteredHabitacionales = App.State.filtered.filter(l => l.tipo === 'Habitacional');
 
-            let viviendasSum = 0;
-            App.State.filtered.forEach(lote => {
-                // FIXED LOGIC: Strict date check
-                const isTerminado = lote.estado?.toLowerCase().includes('terminado') ||
-                    lote.estado?.toLowerCase().includes('concluido');
-                const hasValidDate = lote._parsedYear && lote._parsedYear <= yearMax;
+            // Lotes
+            const vivLotesTotal = allHabitacionales.length;
+            const vivLotesFiltered = filteredHabitacionales.length;
 
-                if (lote.tipo === 'Habitacional' && (hasValidDate || (isTerminado && !lote._parsedYear))) {
-                    const uTerminadas = typeof lote['Unidades terminadas'] === 'string'
-                        ? parseInt(lote['Unidades terminadas'].replace(/,/g, ''))
-                        : lote['Unidades terminadas'];
-
-                    const uTotales = typeof lote.unidades === 'string'
-                        ? parseInt(lote.unidades.replace(/,/g, ''))
-                        : lote.unidades;
-
-                    viviendasSum += (uTerminadas || uTotales || 0);
-                }
+            // Unidades
+            let vivUnitsTotal = 0;
+            allHabitacionales.forEach(lote => {
+                const uTerminadas = typeof lote['Unidades terminadas'] === 'string'
+                    ? parseInt(lote['Unidades terminadas'].replace(/,/g, ''))
+                    : lote['Unidades terminadas'];
+                const uTotales = typeof lote.unidades === 'string'
+                    ? parseInt(lote.unidades.replace(/,/g, ''))
+                    : lote.unidades;
+                vivUnitsTotal += (uTerminadas || uTotales || 0);
             });
 
-            const equipCount = App.State.filtered.filter(l =>
-                l.tipo === 'Equipamiento' || l.tipo === 'Institucional'
-            ).length;
+            let vivUnitsFiltered = 0;
+            filteredHabitacionales.forEach(lote => {
+                const uTerminadas = typeof lote['Unidades terminadas'] === 'string'
+                    ? parseInt(lote['Unidades terminadas'].replace(/,/g, ''))
+                    : lote['Unidades terminadas'];
+                const uTotales = typeof lote.unidades === 'string'
+                    ? parseInt(lote.unidades.replace(/,/g, ''))
+                    : lote.unidades;
+                vivUnitsFiltered += (uTerminadas || uTotales || 0);
+            });
 
-            const comercialesTotal = App.State.getAll().filter(l => l.tipo === 'Comercial').length;
-            const comercialesFiltered = App.State.filtered.filter(l => l.tipo === 'Comercial').length;
+            // Update Viviendas DOM
+            const vivLotesTotalEl = document.getElementById('kpiViviendasLotesTotal');
+            const vivLotesFilteredEl = document.getElementById('kpiViviendasLotesFiltered');
+            const vivUnitsTotalEl = document.getElementById('kpiViviendasUnitsTotal');
+            const vivUnitsFilteredEl = document.getElementById('kpiViviendasUnitsFiltered');
 
-            const viv2020 = document.getElementById('kpiViviendas2020');
-            const vivFiltered = document.getElementById('kpiViviendasFiltered');
-            if (viv2020) viv2020.textContent = CONFIG.baseline.viviendas2020.toLocaleString('es-DO');
-            if (vivFiltered) vivFiltered.textContent = viviendasSum.toLocaleString('es-DO');
+            if (vivLotesTotalEl) vivLotesTotalEl.textContent = vivLotesTotal.toLocaleString('es-DO');
+            if (vivLotesFilteredEl) vivLotesFilteredEl.textContent = vivLotesFiltered.toLocaleString('es-DO');
+            if (vivUnitsTotalEl) vivUnitsTotalEl.textContent = vivUnitsTotal.toLocaleString('es-DO');
+            if (vivUnitsFilteredEl) vivUnitsFilteredEl.textContent = vivUnitsFiltered.toLocaleString('es-DO');
 
-            const equip2020 = document.getElementById('kpiEquip2020');
-            const equipFiltered = document.getElementById('kpiEquipFiltered');
-            if (equip2020) equip2020.textContent = CONFIG.baseline.equipamientos2020;
-            if (equipFiltered) equipFiltered.textContent = equipCount;
+            // === EQUIPAMIENTOS ===
+            const allEquip = App.State.getAll().filter(l => l.tipo === 'Equipamiento' || l.tipo === 'Institucional');
+            const filteredEquip = App.State.filtered.filter(l => l.tipo === 'Equipamiento' || l.tipo === 'Institucional');
 
-            const comTotal = document.getElementById('kpiComTotal');
-            const comFiltered = document.getElementById('kpiComFiltered');
-            if (comTotal) comTotal.textContent = comercialesTotal;
-            if (comFiltered) comFiltered.textContent = comercialesFiltered;
+            const equipLotesTotal = allEquip.length;
+            const equipLotesFiltered = filteredEquip.length;
 
-            const growthPercent = CONFIG.baseline.viviendas2020 > 0
-                ? Math.round(((viviendasSum - CONFIG.baseline.viviendas2020) / CONFIG.baseline.viviendas2020) * 100)
+            let equipUnitsTotal = 0;
+            allEquip.forEach(lote => {
+                const u = typeof lote.unidades === 'string' ? parseInt(lote.unidades.replace(/,/g, '')) : lote.unidades;
+                equipUnitsTotal += (u || 0);
+            });
+
+            let equipUnitsFiltered = 0;
+            filteredEquip.forEach(lote => {
+                const u = typeof lote.unidades === 'string' ? parseInt(lote.unidades.replace(/,/g, '')) : lote.unidades;
+                equipUnitsFiltered += (u || 0);
+            });
+
+            // Update Equipamientos DOM
+            const equipLotesTotalEl = document.getElementById('kpiEquipLotesTotal');
+            const equipLotesFilteredEl = document.getElementById('kpiEquipLotesFiltered');
+            const equipUnitsTotalEl = document.getElementById('kpiEquipUnitsTotal');
+            const equipUnitsFilteredEl = document.getElementById('kpiEquipUnitsFiltered');
+
+            if (equipLotesTotalEl) equipLotesTotalEl.textContent = equipLotesTotal.toLocaleString('es-DO');
+            if (equipLotesFilteredEl) equipLotesFilteredEl.textContent = equipLotesFiltered.toLocaleString('es-DO');
+            if (equipUnitsTotalEl) equipUnitsTotalEl.textContent = equipUnitsTotal.toLocaleString('es-DO');
+            if (equipUnitsFilteredEl) equipUnitsFilteredEl.textContent = equipUnitsFiltered.toLocaleString('es-DO');
+
+            // === COMERCIALES ===
+            const allCom = App.State.getAll().filter(l => l.tipo === 'Comercial');
+            const filteredCom = App.State.filtered.filter(l => l.tipo === 'Comercial');
+
+            const comLotesTotal = allCom.length;
+            const comLotesFiltered = filteredCom.length;
+
+            let comUnitsTotal = 0;
+            allCom.forEach(lote => {
+                const u = typeof lote.unidades === 'string' ? parseInt(lote.unidades.replace(/,/g, '')) : lote.unidades;
+                comUnitsTotal += (u || 0);
+            });
+
+            let comUnitsFiltered = 0;
+            filteredCom.forEach(lote => {
+                const u = typeof lote.unidades === 'string' ? parseInt(lote.unidades.replace(/,/g, '')) : lote.unidades;
+                comUnitsFiltered += (u || 0);
+            });
+
+            // Update Comerciales DOM
+            const comLotesTotalEl = document.getElementById('kpiComLotesTotal');
+            const comLotesFilteredEl = document.getElementById('kpiComLotesFiltered');
+            const comUnitsTotalEl = document.getElementById('kpiComUnitsTotal');
+            const comUnitsFilteredEl = document.getElementById('kpiComUnitsFiltered');
+
+            if (comLotesTotalEl) comLotesTotalEl.textContent = comLotesTotal.toLocaleString('es-DO');
+            if (comLotesFilteredEl) comLotesFilteredEl.textContent = comLotesFiltered.toLocaleString('es-DO');
+            if (comUnitsTotalEl) comUnitsTotalEl.textContent = comUnitsTotal.toLocaleString('es-DO');
+            if (comUnitsFilteredEl) comUnitsFilteredEl.textContent = comUnitsFiltered.toLocaleString('es-DO');
+
+            // === CRECIMIENTO ===
+            const growthPercent = vivUnitsTotal > 0
+                ? Math.round(((vivUnitsFiltered - CONFIG.baseline.viviendas2020) / CONFIG.baseline.viviendas2020) * 100)
                 : 0;
             const growthEl = document.querySelector('.growth-value');
             if (growthEl) {
                 growthEl.textContent = (growthPercent >= 0 ? '+' : '') + growthPercent + '%';
             }
+
+            // === INFRAESTRUCTURA ===
+            this.updateInfrastructure();
+        },
+
+        updateInfrastructure() {
+            // Obtener todos los lotes de infraestructura vial
+            const allVial = App.State.getAll().filter(l =>
+                l.tipo === 'Infraestructura' && l.subtipo?.toLowerCase().includes('víal')
+            );
+            const filteredVial = App.State.filtered.filter(l =>
+                l.tipo === 'Infraestructura' && l.subtipo?.toLowerCase().includes('víal')
+            );
+
+            // Calcular km totales y filtrados
+            const totalKm = allVial.reduce((sum, l) => sum + (l._parsedArea || 0), 0);
+            const filteredKm = filteredVial.reduce((sum, l) => sum + (l._parsedArea || 0), 0);
+
+            // Calcular porcentaje de terminados
+            const completedVial = filteredVial.filter(l =>
+                l.estado?.toLowerCase().includes('terminado')
+            );
+            const completedKm = completedVial.reduce((sum, l) => sum + (l._parsedArea || 0), 0);
+            const vialPercent = filteredKm > 0 ? Math.round((completedKm / filteredKm) * 100) : 0;
+
+            // Actualizar UI
+            const vialBar = document.getElementById('infraVial');
+            const vialText = document.getElementById('infraVialText');
+            const vialKm = document.getElementById('infraVialKm');
+
+            if (vialBar) vialBar.style.width = vialPercent + '%';
+            if (vialText) vialText.textContent = vialPercent + '%';
+            if (vialKm) vialKm.textContent = (filteredKm / 1000).toFixed(2) + ' km';
         },
 
         bindGlobalEvents() {
@@ -692,6 +825,16 @@ const App = {
             document.getElementById('highContrastToggle')?.addEventListener('click', () => this.toggleHighContrast());
             document.getElementById('btnExport')?.addEventListener('click', () => this.exportCSV());
             document.getElementById('btnPrint')?.addEventListener('click', () => this.printLote());
+
+            // Bind Alerts Button
+            document.getElementById('btnAlerts')?.addEventListener('click', () => {
+                console.log('🔔 Alerts button clicked from app.js');
+                if (typeof App !== 'undefined' && App.UI && App.UI.openAlertsModal) {
+                    App.UI.openAlertsModal();
+                } else {
+                    console.warn('openAlertsModal not available yet');
+                }
+            });
         },
 
         toggleTheme() {

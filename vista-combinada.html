@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vista Combinada - CPAG + CJB</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            height: 100vh;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 2px solid #00a8ff;
+            height: 50px;
+        }
+
+        .header h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, #00a8ff, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .nav-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .nav-btn.cpag {
+            background: linear-gradient(135deg, #00a8ff, #0284c7);
+            color: white;
+        }
+
+        .nav-btn.cjb {
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: white;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 168, 255, 0.4);
+        }
+
+        .maps-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: calc(100vh - 50px);
+        }
+
+        .map-panel {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .map-panel:first-child {
+            border-right: 2px solid #00a8ff;
+        }
+
+        .map-panel:last-child {
+            border-left: 2px solid #a855f7;
+        }
+
+        .map-label {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+        }
+
+        .map-label.cpag {
+            background: rgba(0, 168, 255, 0.9);
+        }
+
+        .map-label.cjb {
+            background: rgba(168, 85, 247, 0.9);
+        }
+
+        .map-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            cursor: grab;
+            background: #0f172a;
+        }
+
+        .map-wrapper:active {
+            cursor: grabbing;
+        }
+
+        .map-wrapper svg {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 450px;
+            width: 90%;
+            border: 2px solid #00a8ff;
+            box-shadow: 0 20px 60px rgba(0, 168, 255, 0.3);
+            animation: modalIn 0.3s ease-out;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #334155;
+        }
+
+        .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .modal-id {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00a8ff;
+        }
+
+        .modal-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .modal-badge.cpag {
+            background: #00a8ff;
+        }
+
+        .modal-badge.cjb {
+            background: #a855f7;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .modal-body {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .modal-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .modal-row:last-child {
+            border-bottom: none;
+        }
+
+        .modal-label {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .modal-value {
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: right;
+        }
+
+        .modal-area {
+            background: linear-gradient(135deg, #1e3a5f, #0f172a);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            margin: 0.5rem 0;
+        }
+
+        .modal-area-label {
+            color: #94a3b8;
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .modal-area-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #00a8ff;
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid #00a8ff;
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.85rem;
+            z-index: 500;
+            pointer-events: none;
+            display: none;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #64748b;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #1e293b;
+            border-top-color: #00a8ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .maps-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+
+            .map-panel:first-child {
+                border-right: none;
+                border-bottom: 2px solid #00a8ff;
+            }
+
+            .map-panel:last-child {
+                border-left: none;
+                border-top: 2px solid #a855f7;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>📊 Vista Combinada de Mapas</h1>
+        <nav class="nav-buttons">
+            <a href="MAPA CPAG/index.html" class="nav-btn cpag">🏛️ CPAG Completo</a>
+            <a href="MAPA NUEVO - CJB/index.html" class="nav-btn cjb">🏘️ CJB Completo</a>
+        </nav>
+    </header>
+
+    <main class="maps-container">
+        <div class="map-panel" id="panelCPAG">
+            <span class="map-label cpag">Ciudad Pres. Antonio Guzmán</span>
+            <div class="map-wrapper" id="mapCPAG">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+        <div class="map-panel" id="panelCJB">
+            <span class="map-label cjb">Ciudad Juan Bosch</span>
+            <div class="map-wrapper" id="mapCJB">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for Lot Details -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="modal-id" id="modalId">00-00-00</span>
+                    <span class="modal-badge" id="modalBadge">CPAG</span>
+                </div>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-area">
+                <div class="modal-area-label">ÁREA TOTAL</div>
+                <div class="modal-area-value" id="modalArea">0 m²</div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-row">
+                    <span class="modal-label">Tipo</span>
+                    <span class="modal-value" id="modalTipo">-</span>
+                </div>
+                <div class="modal-row">
+                    <span class="modal-label">Subtipo</span>
+                    <span class="modal-value" id="modalSubtipo">-</span>
+                </div>
+                <div class="modal-row">
+                    <span class="modal-label">Estado</span>
+                    <span class="modal-value" id="modalEstado">-</span>
+                </div>
+                <div class="modal-row">
+                    <span class="modal-label">Desarrollador</span>
+                    <span class="modal-value" id="modalDesarrollador">-</span>
+                </div>
+                <div class="modal-row">
+                    <span class="modal-label">Unidades</span>
+                    <span class="modal-value" id="modalUnidades">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // Configuration
+        const MAPS = {
+            cpag: {
+                svgPath: 'MAPA CPAG/assets/mapa.svg',
+                csvPath: 'MAPA CPAG/data/lotesv2.csv',
+                container: 'mapCPAG',
+                label: 'CPAG',
+                color: '#00a8ff'
+            },
+            cjb: {
+                svgPath: 'MAPA NUEVO - CJB/assets/mapa.svg',
+                csvPath: 'MAPA NUEVO - CJB/data/lotesv2.csv',
+                container: 'mapCJB',
+                label: 'CJB',
+                color: '#a855f7'
+            }
+        };
+
+        // State
+        const lotesData = {
+            cpag: new Map(),
+            cjb: new Map()
+        };
+
+        // Parse CSV
+        function parseCSV(text) {
+            const rows = [];
+            let currentRow = [];
+            let currentField = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                const nextChar = text[i + 1];
+
+                if (inQuotes) {
+                    if (char === '"') {
+                        if (nextChar === '"') {
+                            currentField += '"';
+                            i++;
+                        } else {
+                            inQuotes = false;
+                        }
+                    } else {
+                        currentField += char;
+                    }
+                } else {
+                    if (char === '"') {
+                        inQuotes = true;
+                    } else if (char === ',') {
+                        currentRow.push(currentField.trim());
+                        currentField = '';
+                    } else if (char === '\n' || char === '\r') {
+                        if (currentField || currentRow.length > 0) {
+                            currentRow.push(currentField.trim());
+                            rows.push(currentRow);
+                        }
+                        currentRow = [];
+                        currentField = '';
+                        if (char === '\r' && nextChar === '\n') i++;
+                    } else {
+                        currentField += char;
+                    }
+                }
+            }
+            if (currentField || currentRow.length > 0) {
+                currentRow.push(currentField.trim());
+                rows.push(currentRow);
+            }
+
+            const headers = rows[0];
+            return rows.slice(1).map(row => {
+                const obj = {};
+                headers.forEach((h, i) => obj[h.trim()] = row[i] || '');
+                return obj;
+            });
+        }
+
+        // Normalize tipo
+        function normalizeTipo(tipo) {
+            const map = {
+                'HABITACIONAL': 'Habitacional',
+                'COMERCIAL': 'Comercial',
+                'INSTITUCIONAL': 'Institucional',
+                'AREA VERDE': 'Área Verde',
+                'INFRAESTRUCTURA': 'Infraestructura'
+            };
+            return map[tipo?.toUpperCase()?.trim()] || tipo;
+        }
+
+        // Get color for tipo
+        function getColor(tipo) {
+            const colors = {
+                'Habitacional': '#00a8ff',
+                'Comercial': '#f59e0b',
+                'Institucional': '#a855f7',
+                'Área Verde': '#22c55e',
+                'Infraestructura': '#64748b'
+            };
+            return colors[tipo] || '#64748b';
+        }
+
+        // Parse area
+        function parseArea(str) {
+            if (!str) return 0;
+            return parseFloat(str.replace(/,/g, '').replace(/[^0-9.]/g, '')) || 0;
+        }
+
+        // Load map and data
+        async function loadMap(key) {
+            const config = MAPS[key];
+            const container = document.getElementById(config.container);
+
+            try {
+                // Load CSV data
+                const csvResponse = await fetch(config.csvPath);
+                const csvText = await csvResponse.text();
+                const lotes = parseCSV(csvText);
+
+                lotes.forEach(lote => {
+                    if (lote.id) {
+                        lote.tipo = normalizeTipo(lote.tipo);
+                        lote._parsedArea = parseArea(lote.area_m2);
+                        lotesData[key].set(lote.id, lote);
+                    }
+                });
+
+                // Load SVG
+                const svgResponse = await fetch(config.svgPath);
+                const svgText = await svgResponse.text();
+                container.innerHTML = svgText;
+
+                const svg = container.querySelector('svg');
+                if (svg) {
+                    svg.style.width = '100%';
+                    svg.style.height = '100%';
+                    setupInteractivity(key, svg);
+                    setupZoomPan(key, container, svg);
+                }
+
+            } catch (error) {
+                console.error(`Error loading ${key}:`, error);
+                container.innerHTML = `<div class="loading" style="color: #f87171;">Error cargando mapa</div>`;
+            }
+        }
+
+        // Setup interactivity
+        function setupInteractivity(key, svg) {
+            const idPattern = /^(\d{2}-\d{2}-\d{2}|[Cc]-\d{1,2})$/;
+
+            svg.querySelectorAll('path, polygon, rect, circle').forEach(el => {
+                const id = el.id;
+                if (id && idPattern.test(id)) {
+                    const lote = lotesData[key].get(id);
+                    if (lote) {
+                        el.style.fill = getColor(lote.tipo);
+                        el.style.cursor = 'pointer';
+                        el.style.transition = 'opacity 0.2s';
+
+                        el.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            showModal(key, id);
+                        });
+
+                        el.addEventListener('mouseenter', (e) => {
+                            el.style.opacity = '0.8';
+                            showTooltip(e, id, lote);
+                        });
+
+                        el.addEventListener('mouseleave', () => {
+                            el.style.opacity = '1';
+                            hideTooltip();
+                        });
+                    }
+                }
+            });
+        }
+
+        // Zoom and pan setup
+        function setupZoomPan(key, container, svg) {
+            let scale = 1;
+            let translateX = 0;
+            let translateY = 0;
+            let isDragging = false;
+            let startX, startY;
+
+            const updateTransform = () => {
+                svg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+                svg.style.transformOrigin = 'center center';
+            };
+
+            container.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                scale = Math.max(0.5, Math.min(5, scale + delta));
+                updateTransform();
+            });
+
+            container.addEventListener('mousedown', (e) => {
+                if (e.target.tagName !== 'path' && e.target.tagName !== 'polygon') {
+                    isDragging = true;
+                    startX = e.clientX - translateX;
+                    startY = e.clientY - translateY;
+                    container.style.cursor = 'grabbing';
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    translateX = e.clientX - startX;
+                    translateY = e.clientY - startY;
+                    updateTransform();
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                isDragging = false;
+                container.style.cursor = 'grab';
+            });
+        }
+
+        // Modal functions
+        function showModal(key, id) {
+            const lote = lotesData[key].get(id);
+            if (!lote) return;
+
+            const config = MAPS[key];
+
+            document.getElementById('modalId').textContent = id;
+            document.getElementById('modalBadge').textContent = config.label;
+            document.getElementById('modalBadge').className = `modal-badge ${key}`;
+            document.getElementById('modalArea').textContent = lote._parsedArea.toLocaleString('es-DO') + ' m²';
+            document.getElementById('modalTipo').textContent = lote.tipo || '-';
+            document.getElementById('modalSubtipo').textContent = lote.subtipo || '-';
+            document.getElementById('modalEstado').textContent = lote.estado || '-';
+            document.getElementById('modalDesarrollador').textContent = lote.desarrollador || '-';
+            document.getElementById('modalUnidades').textContent = lote['Unidades terminadas'] || lote.unidades || '-';
+
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function hideModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        // Tooltip
+        function showTooltip(e, id, lote) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.innerHTML = `<strong>${id}</strong><br>${lote.tipo || 'Desconocido'}`;
+            tooltip.style.display = 'block';
+            tooltip.style.left = e.pageX + 15 + 'px';
+            tooltip.style.top = e.pageY + 15 + 'px';
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').style.display = 'none';
+        }
+
+        // Event listeners
+        document.getElementById('modalClose').addEventListener('click', hideModal);
+        document.getElementById('modalOverlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) hideModal();
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMap('cpag');
+            loadMap('cjb');
+        });
+    </script>
+</body>
+
+</html>

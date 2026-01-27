@@ -324,6 +324,39 @@ body {
     font-weight: 700;
 }
 
+/* KPI Dual Row Layout (Lotes + Unidades) */
+.kpi-dual-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.kpi-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.kpi-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    min-width: 50px;
+}
+
+.kpi-value {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+    min-width: 40px;
+    text-align: right;
+}
+
+.kpi-value.highlight {
+    color: var(--primary);
+    text-shadow: 0 0 15px var(--primary-glow);
+}
+
 /* Infrastructure Progress */
 .header-infra {
     background: var(--bg-card);

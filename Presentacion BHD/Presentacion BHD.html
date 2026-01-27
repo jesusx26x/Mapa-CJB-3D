@@ -611,6 +611,423 @@
             background-clip: text !important;
         }
 
+        /* ==================== SUCURSALES GALLERY MODAL ==================== */
+        .sucursales-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            overflow-y: auto;
+            backdrop-filter: blur(15px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .sucursales-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sucursales-modal-content {
+            width: 95%;
+            max-width: 1100px;
+            background: linear-gradient(145deg, #0a1a30 0%, #0f2748 50%, #071428 100%);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), 0 0 50px rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sucursales-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sucursales-modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #ef4444, #f59e0b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sucursales-modal-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sucursales-modal-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        .sucursales-gallery {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .sucursal-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s ease;
+        }
+
+        .sucursal-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .sucursal-image-container {
+            position: relative;
+            height: 280px;
+            overflow: hidden;
+        }
+
+        .sucursal-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .sucursal-card:hover .sucursal-image {
+            transform: scale(1.05);
+        }
+
+        .sucursal-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sucursal-badge.banreservas {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: #fff;
+        }
+
+        .sucursal-badge.ademi {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: #fff;
+        }
+
+        .sucursal-info {
+            padding: 20px;
+        }
+
+        .sucursal-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .sucursal-location {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sucursal-note {
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid #ef4444;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .clickable-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clickable-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(239, 68, 68, 0.3);
+        }
+
+        .clickable-card::after {
+            content: '👆 Click para ver fotos';
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .clickable-card:hover::after {
+            opacity: 1;
+        }
+
+        /* Light Mode for Sucursales Modal */
+        body.light-mode .sucursales-modal {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        body.light-mode .sucursales-modal-content {
+            background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        body.light-mode .sucursales-modal-title {
+            background: linear-gradient(90deg, #dc2626, #ea580c);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        body.light-mode .sucursal-card {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .sucursal-name {
+            color: #1e293b;
+        }
+
+        body.light-mode .sucursal-location {
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .sucursales-gallery {
+                grid-template-columns: 1fr;
+            }
+
+            .sucursal-image-container {
+                height: 200px;
+            }
+        }
+
+        /* ==================== GENERIC PHOTO MODAL SYSTEM ==================== */
+        .photo-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            overflow-y: auto;
+            backdrop-filter: blur(15px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .photo-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-modal-content {
+            width: 95%;
+            max-width: 900px;
+            background: linear-gradient(145deg, #0a1a30 0%, #0f2748 50%, #071428 100%);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            position: relative;
+        }
+
+        .photo-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .photo-modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .photo-modal-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-modal-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: #ef4444;
+            transform: rotate(90deg);
+        }
+
+        .photo-modal-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .photo-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(0, 212, 255, 0.4);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .photo-card-info {
+            padding: 15px;
+        }
+
+        .photo-card-title {
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .photo-card-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+        }
+
+        .photo-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, rgba(100, 100, 100, 0.3), rgba(50, 50, 50, 0.3));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+        }
+
+        .photo-placeholder-icon {
+            font-size: 40px;
+            opacity: 0.5;
+        }
+
+        /* Mini clickable cards for services */
+        .mini-clickable {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .mini-clickable:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .mini-clickable::after {
+            content: '📷';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .mini-clickable:hover::after {
+            opacity: 1;
+        }
+
+        /* Clickable list items */
+        .clickable-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 4px 8px !important;
+            margin: -4px -8px;
+            border-radius: 6px;
+        }
+
+        .clickable-item:hover {
+            background: rgba(255, 183, 0, 0.2);
+            transform: translateX(5px);
+        }
+
+        /* Light mode for photo modals */
+        body.light-mode .photo-modal {
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        body.light-mode .photo-modal-content {
+            background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+        }
+
+        body.light-mode .photo-modal-title {
+            color: #1e293b;
+        }
+
+        body.light-mode .photo-card {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .photo-card-title {
+            color: #1e293b;
+        }
+
+        body.light-mode .photo-card-desc {
+            color: #64748b;
+        }
+
         /* Theme Toggle Button */
         .theme-toggle {
             width: 40px;
@@ -1383,12 +1800,12 @@
             gap: 10px;
         }
 
-        /* SVG Styles - Enhanced 3D HD Quality */
+        /* SVG Styles - Optimized for Performance & Quality */
         #svgContainer svg {
-            filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.5));
-            transition: filter 0.8s ease, transform 0.8s ease;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
+            will-change: transform;
+            transform: translateZ(0);
+            image-rendering: auto;
+            shape-rendering: geometricPrecision;
         }
 
         /* HD 3D Mode - Premium Visual Effects */
@@ -1402,9 +1819,7 @@
         }
 
         .map-section.mode-3d #svgContainer svg {
-            filter:
-                drop-shadow(0 30px 60px rgba(0, 0, 0, 0.8)) drop-shadow(0 15px 35px rgba(0, 212, 255, 0.25)) drop-shadow(0 5px 15px rgba(0, 150, 255, 0.2)) drop-shadow(0 0 40px rgba(0, 100, 180, 0.15));
-            /* Sharp rendering for premium look */
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.4));
             shape-rendering: geometricPrecision;
         }
 
@@ -1449,44 +1864,38 @@
         }
 
         #svgContainer .lote {
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            transform-origin: center center;
+            transition: opacity 0.2s ease, filter 0.2s ease;
+            will-change: opacity, filter;
         }
 
         #svgContainer .lote:hover {
-            filter: brightness(1.5) drop-shadow(0 0 12px var(--primary));
+            filter: brightness(1.3);
             stroke: #fff;
             stroke-width: 2px;
-            z-index: 100;
         }
 
-        /* 3D Mode - HD Type-specific depth and glow effects */
+        /* 3D Mode - Simplified effects for performance */
         .map-section.mode-3d .lote.habitacional {
-            filter: brightness(1.3) drop-shadow(0 8px 20px rgba(0, 191, 255, 0.6)) drop-shadow(0 4px 10px rgba(0, 191, 255, 0.4)) drop-shadow(0 0 15px rgba(0, 200, 255, 0.35));
-            transform: translateZ(3px);
+            filter: brightness(1.15);
         }
 
         .map-section.mode-3d .lote.comercial {
-            filter: brightness(1.35) drop-shadow(0 10px 25px rgba(255, 50, 50, 0.6)) drop-shadow(0 5px 12px rgba(255, 0, 0, 0.4)) drop-shadow(0 0 18px rgba(255, 80, 80, 0.35));
-            transform: translateZ(5px);
+            filter: brightness(1.2);
         }
 
         .map-section.mode-3d .lote.institucional {
-            filter: brightness(1.4) drop-shadow(0 12px 30px rgba(171, 71, 188, 0.6)) drop-shadow(0 6px 15px rgba(171, 71, 188, 0.4)) drop-shadow(0 0 20px rgba(180, 100, 220, 0.35));
-            transform: translateZ(8px);
+            filter: brightness(1.25);
         }
 
         .map-section.mode-3d .lote.infraestructura {
-            filter: brightness(1.2) drop-shadow(0 6px 15px rgba(255, 255, 255, 0.35)) drop-shadow(0 3px 8px rgba(200, 200, 200, 0.25)) drop-shadow(0 0 12px rgba(180, 180, 180, 0.2));
-            transform: translateZ(2px);
+            filter: brightness(1.1);
         }
 
-        /* Ultra HD hover in 3D mode */
+        /* Hover in 3D mode */
         .map-section.mode-3d .lote:hover {
-            filter: brightness(2) drop-shadow(0 15px 40px var(--primary)) drop-shadow(0 8px 25px rgba(0, 255, 255, 0.7)) drop-shadow(0 0 50px rgba(0, 255, 255, 0.8)) drop-shadow(0 0 80px rgba(0, 212, 255, 0.5));
+            filter: brightness(1.5);
             stroke: #00ffff;
-            stroke-width: 5px;
-            transform: translateZ(15px) scale(1.02);
+            stroke-width: 3px;
         }
 
         /* 3D Camera animations */
@@ -2805,7 +3214,7 @@
         // INIT
         async function init() {
             try {
-                const csvData = await loadFile('../lotesv2.csv');
+                const csvData = await loadFile('lotesv2.csv');
                 lotesData = parseCSV(csvData);
                 await loadSVGMap();
                 initControls();
@@ -3054,26 +3463,11 @@
                 const status = (data.estado || '').toLowerCase();
                 const isDone = status.includes('terminado') || status.includes('terminación');
 
-                // Show if completed by year
+                // Show if completed by year - no automatic highlight
                 if (isDone && y && y <= year) {
                     el.style.opacity = '1';
-
-                    let shouldHighlight = false;
-                    if (isRangeMode) {
-                        // Highlight if in management range 2021-2025
-                        shouldHighlight = (y >= 2021 && y <= 2025);
-                    } else {
-                        // Normal mode: Highlight if current year matches and > 2020
-                        shouldHighlight = (y === year && year > 2020);
-                    }
-
-                    el.style.filter = shouldHighlight ? 'drop-shadow(0 0 10px var(--highlight-pop)) brightness(1.2)' : 'none';
-                    if (shouldHighlight) {
-                        el.style.stroke = 'var(--highlight-pop)';
-                        el.style.strokeWidth = '2px';
-                    } else {
-                        el.style.stroke = 'none';
-                    }
+                    el.style.filter = 'none';
+                    el.style.stroke = 'none';
                 } else {
                     el.style.opacity = '0.08';
                     el.style.filter = 'grayscale(100%)';
@@ -3083,7 +3477,7 @@
 
         // MAP LOADING
         async function loadSVGMap() {
-            const resp = await loadFile('../MASTER PLAN CIUDAD JUAN BOSCH COMPLETO CON ID 2.svg');
+            const resp = await loadFile('lotes_mapa.svg');
             const container = document.getElementById('svgContainer');
             container.innerHTML = resp;
             svgElement = container.querySelector('svg');
@@ -3149,7 +3543,7 @@
             currentZoom = 1;
             panX = 0; panY = 0;
             currentRotation = 0;
-            applyTransform();
+            applyTransform(true);
         }
 
         function rotateMap() {
@@ -3159,7 +3553,7 @@
             if (currentRotation === -90) currentZoom = 0.8; // Auto zoom out slightly to fit width
             else currentZoom = 1;
             panX = 0; panY = 0; // Reset pan on rotation to avoid getting lost
-            applyTransform();
+            applyTransform(true);
         }
 
         // ==================== ENHANCED 3D CONTROL SYSTEM ====================
@@ -3313,12 +3707,12 @@
             toggle3DMode();
         }
 
-        function applyTransform() {
+        function applyTransform(animate = false) {
             if (svgElement) {
-                // Apply rotation then scale then translate
                 svgElement.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom}) rotate(${currentRotation}deg)`;
                 svgElement.style.transformOrigin = 'center center';
-                svgElement.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                // Only animate on specific actions (reset, rotate), not during pan/drag
+                svgElement.style.transition = animate ? 'transform 0.3s ease-out' : 'none';
             }
         }
 
@@ -3705,6 +4099,135 @@
             showSlide(index);
         }
 
+        // ==================== SUCURSALES GALLERY MODAL ====================
+        function openSucursalesGallery() {
+            document.getElementById('sucursalesModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSucursalesGallery() {
+            document.getElementById('sucursalesModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close on ESC key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeSucursalesGallery();
+                closePhotoModal();
+            }
+        });
+
+        // ==================== GENERIC PHOTO MODAL SYSTEM ====================
+        // Photo gallery data configuration
+        const photoGalleryData = {
+            salud: {
+                title: '🏥 Infraestructura de Salud',
+                photos: [
+                    { src: 'Fotos/Salud/Hospital CJB.png', title: 'Hospital Municipal CJB', desc: 'Centro de atención médica principal' },
+                    { src: 'Fotos/Salud/Centro Diagnostico.png', title: 'Centro Diagnóstico', desc: 'Imagenología y diagnóstico' },
+                    { src: 'Fotos/Salud/UNAP.png', title: 'UNAP - Atención Primaria', desc: '3 unidades operativas' }
+                ]
+            },
+            bomberos: {
+                title: '🚒 Estaciones de Bomberos',
+                photos: [
+                    { src: 'Fotos/Servicios/Bomberos CJB.png', title: 'Estación de Bomberos CJB', desc: 'Servicio de emergencias' }
+                ]
+            },
+            destacamentos: {
+                title: '👮 Destacamentos Policiales',
+                photos: [
+                    { src: 'Fotos/Servicios/Destacamento CJB.png', title: 'Destacamento Policial', desc: 'Seguridad ciudadana' }
+                ]
+            },
+            deportivas: {
+                title: '🏋️ Áreas Deportivas',
+                photos: [
+                    { src: 'Fotos/Deportes/Area Deportiva 1.png', title: 'Área Deportiva', desc: 'Canchas y espacios recreativos' },
+                    { src: 'Fotos/Deportes/Polideportivo.png', title: 'Polideportivo CJB', desc: 'Instalaciones deportivas principales' }
+                ]
+            },
+            hipermercado: {
+                title: '🛒 Hipermercado Olé',
+                photos: [
+                    { src: 'Fotos/Comercio/Hipermercado Ole.png', title: 'Hipermercado Olé', desc: 'Centro comercial principal de CJB' },
+                    { src: 'Fotos/Comercio/Ole Interior.png', title: 'Interior Hipermercado', desc: 'Amplia oferta comercial' }
+                ]
+            },
+            hospital: {
+                title: '🏥 Hospital & Centro Diagnóstico',
+                photos: [
+                    { src: 'Fotos/Salud/Hospital CJB.png', title: 'Hospital Municipal CJB', desc: 'Flujo diario de pacientes' },
+                    { src: 'Fotos/Salud/Centro Diagnostico.png', title: 'Centro Diagnóstico', desc: 'Servicios de imagenología' }
+                ]
+            },
+            parque: {
+                title: '🌳 Parque Ecológico',
+                photos: [
+                    { src: 'Fotos/Recreacion/Parque Ecologico.png', title: 'Parque Ecológico CJB', desc: 'Valor residencial y recreación' }
+                ]
+            },
+            polideportivo: {
+                title: '🏟️ Polideportivo CJB',
+                photos: [
+                    { src: 'Fotos/Deportes/Polideportivo.png', title: 'Polideportivo CJB', desc: 'Deportes y eventos' },
+                    { src: 'Fotos/Deportes/Polideportivo Interior.png', title: 'Interior Polideportivo', desc: 'Instalaciones deportivas' }
+                ]
+            },
+            dumas: {
+                title: '🏬 Dumas Center 1 & 2',
+                photos: [
+                    { src: 'Fotos/Comercio/Dumas Center 1.png', title: 'Dumas Center 1', desc: 'Plaza comercial' },
+                    { src: 'Fotos/Comercio/Dumas Center 2.png', title: 'Dumas Center 2', desc: 'Segunda plaza comercial' }
+                ]
+            },
+            anfiteatro: {
+                title: '🎭 Anfiteatro CJB',
+                photos: [
+                    { src: 'Fotos/Cultura/Anfiteatro.png', title: 'Anfiteatro CJB', desc: 'En desarrollo - Eventos culturales' }
+                ]
+            },
+            patiobosch: {
+                title: '🏗️ Patio Bosch',
+                photos: [
+                    { src: 'Fotos/Comercio/Patio Bosch Render.png', title: 'Patio Bosch', desc: 'Centro Comercial - Próximamente' }
+                ]
+            }
+        };
+
+        function openPhotoModal(category) {
+            const data = photoGalleryData[category];
+            if (!data) return;
+
+            // Update modal content
+            document.getElementById('photoModalTitle').innerHTML = data.title;
+
+            // Build gallery HTML
+            let galleryHTML = '';
+            data.photos.forEach(photo => {
+                galleryHTML += `
+                    <div class="photo-card">
+                        <img src="${photo.src}" alt="${photo.title}" 
+                             onerror="this.parentElement.innerHTML='<div class=\\'photo-placeholder\\'><span class=\\'photo-placeholder-icon\\'>📷</span><span>Foto pendiente</span><span style=\\'font-size:10px;\\'>${photo.title}</span></div>'">
+                        <div class="photo-card-info">
+                            <div class="photo-card-title">${photo.title}</div>
+                            <div class="photo-card-desc">${photo.desc}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('photoModalGallery').innerHTML = galleryHTML;
+            document.getElementById('photoModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePhotoModal() {
+            document.getElementById('photoModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
     </script>
 
     <!-- BHD PRESENTATION MODAL -->
@@ -3844,8 +4367,8 @@
 
                     <!-- Consolidated Health & Education Detail Row -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                        <!-- HEALTH: Consolidated Card -->
-                        <div
+                        <!-- HEALTH: Consolidated Card - CLICKABLE -->
+                        <div class="mini-clickable" onclick="openPhotoModal('salud')"
                             style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05)); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 15px;">
                             <div
                                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -3914,27 +4437,27 @@
                         </div>
                     </div>
 
-                    <!-- Services Row -->
+                    <!-- Services Row - CLICKABLE -->
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-                        <div
+                        <div class="mini-clickable" onclick="openPhotoModal('bomberos')"
                             style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; text-align: center;">
                             <div style="font-size: 24px; margin-bottom: 4px;">🚒</div>
                             <div style="font-size: 18px; font-weight: 700; color: #fff;">2</div>
                             <div style="font-size: 11px; color: rgba(255,255,255,0.6);">Est. Bomberos</div>
                         </div>
-                        <div
+                        <div class="mini-clickable" onclick="openPhotoModal('destacamentos')"
                             style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; text-align: center;">
                             <div style="font-size: 24px; margin-bottom: 4px;">👮</div>
                             <div style="font-size: 18px; font-weight: 700; color: #fff;">2</div>
                             <div style="font-size: 11px; color: rgba(255,255,255,0.6);">Destacamentos</div>
                         </div>
-                        <div
+                        <div class="mini-clickable" onclick="openPhotoModal('deportivas')"
                             style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; text-align: center;">
                             <div style="font-size: 24px; margin-bottom: 4px;">🏋️</div>
                             <div style="font-size: 18px; font-weight: 700; color: #fff;">5+</div>
                             <div style="font-size: 11px; color: rgba(255,255,255,0.6);">Áreas Deportivas</div>
                         </div>
-                        <div
+                        <div class="mini-clickable" onclick="openPhotoModal('hipermercado')"
                             style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 12px; text-align: center;">
                             <div style="font-size: 24px; margin-bottom: 4px;">🛒</div>
                             <div style="font-size: 18px; font-weight: 700; color: #fff;">1</div>
@@ -4072,9 +4595,9 @@
                         <!-- Top Grid: Big Stats (65% Height) -->
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; flex: 1;">
 
-                            <!-- Card 1: Sucursales (Scarcity) -->
-                            <div
-                                style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(0, 0, 0, 0)); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 25px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                            <!-- Card 1: Sucursales (Scarcity) - CLICKABLE -->
+                            <div class="clickable-card" onclick="openSucursalesGallery()"
+                                style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(0, 0, 0, 0)); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 16px; padding: 25px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative;">
                                 <div
                                     style="font-size: 80px; font-weight: 800; color: #ef4444; line-height: 1; margin-bottom: 15px; text-shadow: 0 0 30px rgba(239, 68, 68, 0.2);">
                                     2</div>
@@ -4430,14 +4953,24 @@
                                 <h3 style="color: #ffb700; font-size: 14px; margin-bottom: 8px;">⚓ Efecto Ancla
                                     (Drivers)</h3>
                                 <ul
-                                    style="padding-left: 18px; margin: 0; font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.5;">
-                                    <li>🏥 <strong>Hospital & Centro Diagnóstico</strong> (Flujo Diario).</li>
-                                    <li>🛒 <strong>Hipermercado Olé</strong> (Tráfico Comercial).</li>
-                                    <li>🌳 <strong>Parque Ecológico</strong> (Valor Residencial).</li>
-                                    <li>🏟️ <strong>Polideportivo CJB</strong> (Deportes & Eventos).</li>
-                                    <li>🏬 <strong>Dumas Center 1 & 2</strong> (Plazas Comerciales).</li>
-                                    <li>🎭 <strong>Anfiteatro</strong> (En desarrollo).</li>
-                                    <li>🏗️ <strong>Patio Bosch</strong> (Centro Comercial - Próximamente).</li>
+                                    style="padding-left: 18px; margin: 0; font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.8;">
+                                    <li class="clickable-item" onclick="openPhotoModal('hospital')">🏥 <strong>Hospital
+                                            & Centro Diagnóstico</strong> (Flujo Diario).</li>
+                                    <li class="clickable-item" onclick="openPhotoModal('hipermercado')">🛒
+                                        <strong>Hipermercado Olé</strong> (Tráfico Comercial).
+                                    </li>
+                                    <li class="clickable-item" onclick="openPhotoModal('parque')">🌳 <strong>Parque
+                                            Ecológico</strong> (Valor Residencial).</li>
+                                    <li class="clickable-item" onclick="openPhotoModal('polideportivo')">🏟️
+                                        <strong>Polideportivo CJB</strong> (Deportes & Eventos).
+                                    </li>
+                                    <li class="clickable-item" onclick="openPhotoModal('dumas')">🏬 <strong>Dumas Center
+                                            1 & 2</strong> (Plazas Comerciales).</li>
+                                    <li class="clickable-item" onclick="openPhotoModal('anfiteatro')">🎭
+                                        <strong>Anfiteatro</strong> (En desarrollo).
+                                    </li>
+                                    <li class="clickable-item" onclick="openPhotoModal('patiobosch')">🏗️ <strong>Patio
+                                            Bosch</strong> (Centro Comercial - Próximamente).</li>
                                 </ul>
                             </div>
                             <div
@@ -4494,6 +5027,87 @@
                 </div>
                 <button class="nav-btn next" id="nextBtn" onclick="nextSlide()">Siguiente →</button>
             </div>
+
+            <!-- SUCURSALES GALLERY MODAL -->
+            <div class="sucursales-modal" id="sucursalesModal"
+                onclick="if(event.target === this) closeSucursalesGallery()">
+                <div class="sucursales-modal-content">
+                    <div class="sucursales-modal-header">
+                        <div class="sucursales-modal-title">
+                            <span>🏦</span> Sucursales Bancarias en Ciudad Juan Bosch
+                        </div>
+                        <button class="sucursales-modal-close" onclick="closeSucursalesGallery()"
+                            title="Cerrar">×</button>
+                    </div>
+
+                    <div class="sucursales-gallery">
+                        <!-- Banreservas -->
+                        <div class="sucursal-card">
+                            <div class="sucursal-image-container">
+                                <img src="Fotos/Sucursales Fisicas CJB/Sucursal banreservas CJB.png"
+                                    alt="Sucursal Banreservas CJB" class="sucursal-image">
+                                <span class="sucursal-badge banreservas">Banreservas</span>
+                            </div>
+                            <div class="sucursal-info">
+                                <div class="sucursal-name">Banco de Reservas (Banreservas)</div>
+                                <div class="sucursal-location">
+                                    <span>📍</span> Hipermercado Olé, Ciudad Juan Bosch
+                                </div>
+                                <div class="sucursal-note">
+                                    <strong>Tipo:</strong> Sucursal dentro de comercio • <strong>Horario:</strong>
+                                    Sujeto a horario del hipermercado
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Banco Ademi -->
+                        <div class="sucursal-card">
+                            <div class="sucursal-image-container">
+                                <img src="Fotos/Sucursales Fisicas CJB/Sucursal Ademi CJB.png"
+                                    alt="Sucursal Banco Ademi CJB" class="sucursal-image">
+                                <span class="sucursal-badge ademi">Banco Ademi</span>
+                            </div>
+                            <div class="sucursal-info">
+                                <div class="sucursal-name">Banco Ademi</div>
+                                <div class="sucursal-location">
+                                    <span>📍</span> Hipermercado Olé, Ciudad Juan Bosch
+                                </div>
+                                <div class="sucursal-note">
+                                    <strong>Tipo:</strong> Sucursal dentro de comercio • <strong>Enfoque:</strong>
+                                    Microfinanzas y PYMES
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Context Footer -->
+                    <div
+                        style="margin-top: 25px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center;">
+                        <p style="color: rgba(255,255,255,0.9); font-size: 13px; margin: 0;">
+                            ⚠️ <strong>Ambas sucursales operan exclusivamente dentro del Hipermercado Olé</strong><br>
+                            <span style="color: rgba(255,255,255,0.6); font-size: 11px;">
+                                No existe actualmente ninguna sucursal bancaria independiente en Ciudad Juan Bosch,
+                                representando una <strong style="color: #ef4444;">oportunidad única de mercado</strong>
+                                para establecer la primera presencia bancaria autónoma.
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GENERIC PHOTO MODAL -->
+            <div class="photo-modal" id="photoModal" onclick="if(event.target === this) closePhotoModal()">
+                <div class="photo-modal-content">
+                    <div class="photo-modal-header">
+                        <div class="photo-modal-title" id="photoModalTitle">📷 Galería de Fotos</div>
+                        <button class="photo-modal-close" onclick="closePhotoModal()" title="Cerrar">×</button>
+                    </div>
+                    <div class="photo-modal-gallery" id="photoModalGallery">
+                        <!-- Photos will be dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+
 </body>
 
 </html>

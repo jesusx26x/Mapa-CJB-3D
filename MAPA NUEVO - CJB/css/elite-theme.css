@@ -1,0 +1,160 @@
+/**
+ * ============================================================================
+ * ELITE THEME LITE v1.0 - Mejoras Conservadoras
+ * Ciudad Juan Bosch Platform
+ * 
+ * REGLA DE ORO: Solo AÑADIR, nunca SOBRESCRIBIR layouts existentes
+ * Este CSS mejora la estética sin romper nada.
+ * ============================================================================
+ */
+
+/* ============================================================================
+ * GOOGLE FONTS - Tipografía Premium
+ * ============================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ============================================================================
+ * VARIABLES - Solo colores y efectos nuevos
+ * ============================================================================ */
+:root {
+    /* Tipografía */
+    --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+
+    /* Colores de glow */
+    --glow-primary: rgba(0, 180, 216, 0.2);
+    --glow-hover: rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================================================
+ * TIPOGRAFÍA - Solo aplicar fuentes, NO cambiar tamaños ni layouts
+ * ============================================================================ */
+
+body {
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Números con fuente monospace para alineación */
+.kpi-value,
+.stat-value,
+#statTotal,
+#statFiltered,
+#statUnidades,
+#statAreaTotal,
+.zoom-input,
+.year-current,
+.area-value,
+#detailAreaPrimary {
+    font-family: var(--font-mono);
+    font-feature-settings: 'tnum' 1;
+}
+
+/* ============================================================================
+ * SCROLLBARS - Minimalistas (no afecta layout)
+ * ============================================================================ */
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+}
+
+/* ============================================================================
+ * HOVER EFFECTS - Solo efectos visuales, no cambian tamaño/posición
+ * ============================================================================ */
+
+/* Botones con glow suave al hover */
+button:hover,
+.map-btn:hover,
+.filter-btn:hover,
+.btn:hover {
+    box-shadow: 0 0 15px var(--glow-primary);
+}
+
+/* Press effect sutil */
+button:active,
+.map-btn:active,
+.filter-btn:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+}
+
+/* Cards con hover sutil */
+.kpi-comparison-card:hover,
+.bi-chart-container:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================================================
+ * INPUTS - Solo mejorar focus, no cambiar estructura
+ * ============================================================================ */
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.3);
+}
+
+/* ============================================================================
+ * MAPA - Glow ambiental muy sutil
+ * ============================================================================ */
+
+.map-container svg {
+    filter: drop-shadow(0 0 40px rgba(0, 168, 255, 0.05));
+}
+
+/* Lotes con brillo al hover */
+.map-container svg path:hover,
+.map-container svg polygon:hover {
+    filter: brightness(1.15);
+    cursor: pointer;
+}
+
+/* ============================================================================
+ * ANIMACIONES SUAVES - Solo transiciones
+ * ============================================================================ */
+
+/* Transiciones globales suaves */
+button,
+.map-btn,
+.filter-btn,
+.kpi-comparison-card,
+input,
+select {
+    transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+/* ============================================================================
+ * MEJORAS TIPOGRÁFICAS SUTILES
+ * ============================================================================ */
+
+/* Labels más legibles */
+.filter-label,
+.kpi-title {
+    letter-spacing: 0.03em;
+}
+
+/* Valores destacados */
+.kpi-value.highlight {
+    text-shadow: 0 0 20px rgba(0, 180, 216, 0.4);
+}
