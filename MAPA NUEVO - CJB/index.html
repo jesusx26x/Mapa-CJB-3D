@@ -13,13 +13,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="CJB Mapa">
     <link rel="manifest" href="manifest.json">
+    <meta name="view-transition" content="same-origin">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/elite-features.css">
     <link rel="stylesheet" href="css/enterprise-modules.css">
     <link rel="stylesheet" href="css/elite-theme.css">
-    <link rel="stylesheet" href="../premium-light-mode.css">
+    <link rel="stylesheet" href="../Timelapse%20CJB/premium-light-mode.css">
 </head>
 
 <body>
@@ -218,6 +221,14 @@
                 </select>
             </div>
 
+            <!-- Año de Titulación -->
+            <div class="filter-group">
+                <label class="filter-label">Año de Titulación</label>
+                <select id="filterTitulacion" class="filter-select">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+
             <!-- Año de Entrega - Range Slider -->
             <div class="filter-group">
                 <label class="filter-label">Año de Entrega (hasta)</label>
@@ -301,6 +312,7 @@
                 <button class="map-btn" id="zoomOut" title="Alejar">−</button>
                 <button class="map-btn" id="zoomReset" title="Restablecer">⟲</button>
                 <button class="map-btn alert-btn" id="btnAlerts" title="Ver Alertas">⚠️</button>
+                <button class="map-btn map-btn-3d" id="btnToggle3D" title="Alternar Vista Isométrica 3D">👁️ 3D</button>
             </div>
             <div class="map-container" id="mapContainer">
                 <div class="map-loading" id="mapLoading">
@@ -397,7 +409,7 @@
     </main>
 
     <!-- JavaScript -->
-    <script src="../shared-core.js"></script>
+    <script src="../Timelapse%20CJB/shared-core.js"></script>
     <script src="js/app.js"></script>
     <script src="js/elite-features.js"></script>
     <script src="js/enterprise-modules.js"></script>

@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vista Combinada - CPAG + CJB</title>
+    <meta name="view-transition" content="same-origin">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -331,6 +334,8 @@
     <header class="header">
         <h1>📊 Vista Combinada de Mapas</h1>
         <nav class="nav-buttons">
+            <button class="nav-btn" onclick="exportExecutivePDF()"
+                style="background: linear-gradient(135deg, #10b981, #059669); color: white;">📄 Exportar PDF</button>
             <a href="MAPA CPAG/index.html" class="nav-btn cpag">🏛️ CPAG Completo</a>
             <a href="MAPA NUEVO - CJB/index.html" class="nav-btn cjb">🏘️ CJB Completo</a>
         </nav>
@@ -401,14 +406,14 @@
         const MAPS = {
             cpag: {
                 svgPath: 'MAPA CPAG/assets/mapa.svg',
-                csvPath: 'MAPA CPAG/data/lotesv2.csv',
+                csvPath: 'Datos de CPAG.csv',
                 container: 'mapCPAG',
                 label: 'CPAG',
                 color: '#00a8ff'
             },
             cjb: {
                 svgPath: 'MAPA NUEVO - CJB/assets/mapa.svg',
-                csvPath: 'MAPA NUEVO - CJB/data/lotesv2.csv',
+                csvPath: 'Datos de CJB.csv',
                 container: 'mapCJB',
                 label: 'CJB',
                 color: '#a855f7'
@@ -423,55 +428,32 @@
 
         // Parse CSV
         function parseCSV(text) {
-            const rows = [];
-            let currentRow = [];
-            let currentField = '';
-            let inQuotes = false;
-
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                const nextChar = text[i + 1];
-
-                if (inQuotes) {
-                    if (char === '"') {
-                        if (nextChar === '"') {
-                            currentField += '"';
-                            i++;
-                        } else {
-                            inQuotes = false;
-                        }
-                    } else {
-                        currentField += char;
-                    }
-                } else {
-                    if (char === '"') {
-                        inQuotes = true;
-                    } else if (char === ',') {
-                        currentRow.push(currentField.trim());
-                        currentField = '';
-                    } else if (char === '\n' || char === '\r') {
-                        if (currentField || currentRow.length > 0) {
-                            currentRow.push(currentField.trim());
-                            rows.push(currentRow);
-                        }
-                        currentRow = [];
-                        currentField = '';
-                        if (char === '\r' && nextChar === '\n') i++;
-                    } else {
-                        currentField += char;
-                    }
+            const results = Papa.parse(text, { header: true, skipEmptyLines: true });
+            if (results.errors.length > 0) {
+                console.warn("⚠️ Advertencia: Errores menores al parsear CSV:", results.errors);
+            }
+            return results.data.map(row => {
+                const cleanRow = {};
+                for (const key in row) {
+                    cleanRow[key.trim()] = row[key] ? String(row[key]).trim() : '';
                 }
-            }
-            if (currentField || currentRow.length > 0) {
-                currentRow.push(currentField.trim());
-                rows.push(currentRow);
-            }
+                return cleanRow;
+            });
+        }
 
-            const headers = rows[0];
-            return rows.slice(1).map(row => {
-                const obj = {};
-                headers.forEach((h, i) => obj[h.trim()] = row[i] || '');
-                return obj;
+        function exportExecutivePDF() {
+            const elementosOcultar = document.querySelectorAll('.nav-buttons');
+            elementosOcultar.forEach(el => el.style.display = 'none');
+            const contenedor = document.body;
+            const options = {
+                margin: 10,
+                filename: `Reporte_Vista_Combinada_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#0f172a' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            html2pdf().set(options).from(contenedor).save().then(() => {
+                elementosOcultar.forEach(el => el.style.display = '');
             });
         }
 
@@ -539,7 +521,16 @@
 
             } catch (error) {
                 console.error(`Error loading ${key}:`, error);
-                container.innerHTML = `<div class="loading" style="color: #f87171;">Error cargando mapa</div>`;
+                container.innerHTML = `
+                    <div class="error-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #fff; padding: 2rem;">
+                        <span style="font-size: 3rem; margin-bottom: 1rem;">⚠️</span>
+                        <h3 style="color: #f87171; margin-bottom: 0.5rem;">Error leyendo Datos</h3>
+                        <p style="opacity: 0.8; max-width: 400px; margin-bottom: 1rem;">Ocurrió un problema procesando la base de datos.</p>
+                        <div style="background: rgba(255,59,48,0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,59,48,0.3); font-family: monospace; font-size: 0.85em; word-break: break-all;">
+                            ${error.message}
+                        </div>
+                    </div>
+                `;
             }
         }
 

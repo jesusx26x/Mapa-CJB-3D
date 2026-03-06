@@ -1,6 +1,6 @@
 const CONFIG = {
     paths: {
-        lotes: 'data/lotesv2.csv',
+        lotes: '../Datos de CPAG.csv',
         habitacional: 'data/Planilla%20Base%20Habitacionales.csv',
         comercial: 'data/Planilla%20general%20Comercial.csv',
         svg: 'assets/mapa.svg'
@@ -68,11 +68,18 @@ const App = {
                 // Merge and index lotes
                 lotes.forEach(lote => {
                     const merged = this.mergeLote(lote);
-                    App.State.lotesMap.set(merged.id, merged);
+                    if (merged.id) {
+                        this.lotesMap.set(merged.id, merged);
+                    }
                 });
 
-                console.log(`✅ Datos cargados: ${App.State.lotesMap.size} lotes.`);
-                App.State.setFiltered(Array.from(App.State.lotesMap.values()));
+                this.setFiltered(this.getAll());
+                console.log(`✅ Loaded ${this.lotesMap.size} lotes from CPAG`);
+
+                // Initialize Timeline based on minimum available year
+                App.Filter.initYearSlider();
+
+                this.startLiveSync();
 
                 // Validate data using shared-core (if available)
                 if (typeof VBC !== 'undefined' && VBC.Validate) {
@@ -86,7 +93,19 @@ const App = {
 
             } catch (error) {
                 console.error("❌ Error cargando datos:", error);
-                alert("Error cargando base de datos. Ver consola.");
+                const mapContainer = document.getElementById('mapContainer');
+                if (mapContainer) {
+                    mapContainer.innerHTML = `
+                        <div class="error-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: var(--text-primary, #fff); padding: 2rem;">
+                            <span style="font-size: 3rem; margin-bottom: 1rem;">⚠️</span>
+                            <h3 style="color: var(--danger-color, #ff3b30); margin-bottom: 0.5rem;">Error leyendo los Datos de Origen</h3>
+                            <p style="opacity: 0.8; max-width: 400px; margin-bottom: 1rem;">Ocurrió un problema al interpretar el archivo CSV. Asegúrate de que no tenga caracteres corruptos o haya sido eliminado.</p>
+                            <div style="background: rgba(255,59,48,0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,59,48,0.3); font-family: monospace; font-size: 0.9em; word-break: break-all;">
+                                ${error.message}
+                            </div>
+                        </div>
+                    `;
+                }
             }
         },
 
@@ -96,66 +115,93 @@ const App = {
             return await response.text();
         },
 
+        startLiveSync() {
+            console.log('🔄 Batería de Live Sync Mágica Activada');
+            this.lastModified = null;
+            this.lastContentLength = null;
+            
+            const headerActions = document.querySelector('.header-actions');
+            if (headerActions && !document.getElementById('liveSyncIndicator')) {
+                const liveInd = document.createElement('div');
+                liveInd.id = 'liveSyncIndicator';
+                liveInd.innerHTML = '<span style="display:inline-block; width:8px; height:8px; background:#00ff00; border-radius:50%; margin-right:5px; box-shadow: 0 0 10px #00ff00;"></span> Live Sync';
+                liveInd.style.cssText = 'display:flex; align-items:center; color:#00ff00; font-size:11px; font-weight:bold; margin-right:10px; border: 1px solid rgba(0,255,0,0.3); padding: 4px 10px; border-radius: 20px; background: rgba(0,255,0,0.1); cursor: help;';
+                liveInd.title = 'Sincronización en tiempo real con CSV local (HEAD Polling)';
+                headerActions.prepend(liveInd);
+            }
+
+            setInterval(async () => {
+                try {
+                    const cacheBuster = "?t=" + new Date().getTime();
+                    const urlConCacheBuster = CONFIG.paths.lotes + cacheBuster;
+                    
+                    const response = await fetch(urlConCacheBuster, { method: 'HEAD' });
+                    if (!response.ok) return;
+                    
+                    const modified = response.headers.get('Last-Modified');
+                    const length = response.headers.get('Content-Length');
+                    
+                    if (!modified && !length) return; 
+                    
+                    if (!this.lastModified && !this.lastContentLength) {
+                        this.lastModified = modified;
+                        this.lastContentLength = length;
+                        return;
+                    }
+                    
+                    if (this.lastModified !== modified || this.lastContentLength !== length) {
+                        console.log('🚀 Detección de Cambios en CSV! Recargando silenciosamente...');
+                        this.lastModified = modified;
+                        this.lastContentLength = length;
+                        
+                        // Recarga silenciosa usando GET con la misma URL con cache buster
+                        const mainText = await this.fetchCSV(urlConCacheBuster);
+                        const lotes = this.parseCSV(mainText);
+                        
+                        App.State.lotesMap.clear();
+                        lotes.forEach(lote => {
+                            const merged = this.mergeLote(lote);
+                            if (merged.id) {
+                                App.State.lotesMap.set(merged.id, merged);
+                            }
+                        });
+                        
+                        App.Filter.apply();
+                        if (App.UI && App.UI.updateStats) App.UI.updateStats();
+                        if (App.UI && App.UI.updateKPIs) App.UI.updateKPIs();
+                        
+                        const ind = document.getElementById('liveSyncIndicator');
+                        if (ind) {
+                            ind.style.backgroundColor = 'rgba(0, 255, 0, 0.4)';
+                            setTimeout(() => ind.style.backgroundColor = 'rgba(0,255,0,0.1)', 500);
+                        }
+                    }
+                } catch(e) {
+                    // Silencioso. Si falla (por ej. Excel bloqueó temporalmente el archivo local), 
+                    // simplemente ignoramos el error en este ciclo y probamos de nuevo luego de 3s.
+                }
+            }, 3000);
+        },
+
         parseCSV(text) {
-            const rows = [];
-            let currentRow = [];
-            let currentField = '';
-            let inQuotes = false;
-
-            for (let i = 0; i < text.length; i++) {
-                const char = text[i];
-                const nextChar = text[i + 1];
-
-                if (inQuotes) {
-                    if (char === '"') {
-                        if (nextChar === '"') {
-                            currentField += '"';
-                            i++;
-                        } else {
-                            inQuotes = false;
-                        }
-                    } else {
-                        currentField += char;
-                    }
-                } else {
-                    if (char === '"') {
-                        inQuotes = true;
-                    } else if (char === ',') {
-                        currentRow.push(currentField.trim());
-                        currentField = '';
-                    } else if (char === '\n' || char === '\r') {
-                        if (currentField || currentRow.length > 0) {
-                            currentRow.push(currentField.trim());
-                            rows.push(currentRow);
-                        }
-                        currentRow = [];
-                        currentField = '';
-                        if (char === '\r' && nextChar === '\n') i++;
-                    } else {
-                        currentField += char;
-                    }
+            const results = Papa.parse(text, { header: true, skipEmptyLines: true });
+            if (results.errors.length > 0) {
+                console.warn("⚠️ Advertencia: Errores menores al parsear CSV:", results.errors);
+            }
+            return results.data.map(row => {
+                const cleanRow = {};
+                for (const key in row) {
+                    cleanRow[key.trim()] = row[key] ? String(row[key]).trim() : '';
                 }
-            }
-            if (currentField || currentRow.length > 0) {
-                currentRow.push(currentField.trim());
-                rows.push(currentRow);
-            }
-
-            const headers = rows[0].map(h => h.trim());
-            return rows.slice(1).map(row => {
-                const obj = {};
-                headers.forEach((h, index) => {
-                    obj[h] = row[index] || '';
-                });
-                if (obj.id) {
-                    const parts = obj.id.split('-');
+                if (cleanRow.id) {
+                    const parts = cleanRow.id.split('-');
                     if (parts.length >= 2) {
-                        obj._cuadrante = parts[0];
-                        obj._manzana = parts[1];
-                        obj._lote = parts[2] || '';
+                        cleanRow._cuadrante = parts[0];
+                        cleanRow._manzana = parts[1];
+                        cleanRow._lote = parts[2] || '';
                     }
                 }
-                return obj;
+                return cleanRow;
             });
         },
 
@@ -273,10 +319,14 @@ const App = {
         },
 
         render() {
+            const isBIModeActive = document.body.dataset.biMode === 'true';
+
             App.State.svgElementsMap.forEach(el => {
                 el.style.fill = '#1e293b';
-                el.style.opacity = '0.3';
+                el.style.opacity = isBIModeActive ? '0.05' : '0.3';
                 el.classList.remove('highlighted');
+                el.style.filter = 'none';
+                el.style.stroke = 'none';
             });
 
             App.State.filtered.forEach(lote => {
@@ -284,6 +334,25 @@ const App = {
                 if (el) {
                     el.style.fill = this.getColor(lote.tipo);
                     el.style.opacity = '1';
+
+                    if (isBIModeActive) {
+                        const statusTarget = App.State.filters.estado;
+                        if (statusTarget && lote.estado === statusTarget) {
+                            if (lote.estado.toLowerCase().includes('paraliz')) {
+                                el.style.filter = 'drop-shadow(0 0 10px rgba(255, 59, 48, 0.9))';
+                                el.style.stroke = '#ff3b30';
+                                el.style.strokeWidth = '2px';
+                            } else {
+                                el.style.filter = 'drop-shadow(0 0 10px rgba(0, 168, 255, 0.9))';
+                                el.style.stroke = '#00a8ff';
+                                el.style.strokeWidth = '2px';
+                            }
+                        } else if (App.State.filters.types.length > 0 && App.State.filters.types.includes(lote.tipo)) {
+                            el.style.filter = 'drop-shadow(0 0 10px rgba(0, 168, 255, 0.9))';
+                            el.style.stroke = '#00a8ff';
+                            el.style.strokeWidth = '2px';
+                        }
+                    }
                 }
             });
 
@@ -568,6 +637,44 @@ const App = {
             App.UI.updateKPIs();
         },
 
+        applyBI(filterType, filterValue) {
+            console.log(`📊 Aplicando BI Filter: ${filterType} = ${filterValue}`);
+            this.reset();
+
+            document.body.dataset.biMode = 'true';
+
+            if (filterType === 'estado') {
+                const el = document.getElementById('filterEstado');
+                if (el) el.value = filterValue;
+            } else if (filterType === 'tipo') {
+                document.querySelectorAll('.filter-btn.active').forEach(b => b.classList.remove('active'));
+                const btn = document.querySelector(`.filter-btn[data-tipo="${filterValue}"]`);
+                if (btn) btn.classList.add('active');
+            }
+
+            this.apply();
+            App.Map.zoom(1.5); // Zoom In Dramático
+
+            let btnClear = document.getElementById('btnClearBI');
+            if (!btnClear) {
+                const panel = document.querySelector('.panel-filters .panel-header');
+                if (panel) {
+                    btnClear = document.createElement('button');
+                    btnClear.id = 'btnClearBI';
+                    btnClear.className = 'btn-action btn-clear-bi';
+                    btnClear.innerHTML = '❌ Limpiar Filtro BI';
+                    btnClear.style.cssText = 'background: #ff3b30; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; margin-left: 10px; box-shadow: 0 4px 10px rgba(255,59,48,0.3); animation: pulse 2s infinite;';
+                    btnClear.onclick = () => {
+                        document.body.dataset.biMode = 'false';
+                        this.reset();
+                        btnClear.remove();
+                        App.Map.resetMap();
+                    };
+                    panel.appendChild(btnClear);
+                }
+            }
+        },
+
         reset() {
             // Reset Elite Features (Heatmap, Opportunity, Neighbors)
             if (typeof App !== 'undefined' && App.Elite && App.Elite.resetAll) {
@@ -652,6 +759,91 @@ const App = {
             document.getElementById('detailFechaEnt').textContent = lote['Fecha entrega'] || '-';
 
             document.getElementById('detailObservaciones').textContent = lote.observaciones || '-';
+            // CRM Lead Generation (Inyección)
+            const currentDetailsPanel = document.getElementById('lotDetails');
+            const oldBtn = document.getElementById('btnCrmLeadGen');
+            if (oldBtn) oldBtn.remove();
+
+            if (lote.estado && lote.estado.trim().toLowerCase() === 'disponible') {
+                const btnCrm = document.createElement('a');
+                btnCrm.id = 'btnCrmLeadGen';
+                btnCrm.className = 'btn-action btn-crm-lead';
+                btnCrm.href = `https://docs.google.com/forms/d/e/TU_FORMULARIO/viewform?entry.123456=${encodeURIComponent(lote.id)}`;
+                btnCrm.target = '_blank';
+                btnCrm.rel = 'noopener noreferrer';
+                btnCrm.style.cssText = `
+                    display: flex; align-items: center; justify-content: center; gap: 8px;
+                    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+                    color: white; text-decoration: none; padding: 12px 16px;
+                    border-radius: 6px; font-weight: 600; margin-top: 15px;
+                    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+                    transition: transform 0.2s, box-shadow 0.2s;
+                `;
+                btnCrm.innerHTML = `<span>📝</span> Solicitar Información (Lote ${lote.id})`;
+                btnCrm.onmouseover = () => {
+                    btnCrm.style.transform = "translateY(-2px)";
+                    btnCrm.style.boxShadow = "0 6px 20px rgba(46, 204, 113, 0.4)";
+                };
+                btnCrm.onmouseout = () => {
+                    btnCrm.style.transform = "translateY(0)";
+                    btnCrm.style.boxShadow = "0 4px 15px rgba(46, 204, 113, 0.3)";
+                };
+                if (detailsPanel) detailsPanel.appendChild(btnCrm);
+            }
+        },
+
+        toggle3DView() {
+            const mapContainer = document.getElementById('mapContainer');
+            const btn = document.getElementById('btnToggle3D');
+
+            if (!mapContainer) return;
+
+            mapContainer.classList.toggle('view-3d');
+
+            if (mapContainer.classList.contains('view-3d')) {
+                if (btn) {
+                    btn.classList.add('active');
+                    btn.innerHTML = '🪐 2D';
+                    btn.title = "Volver a Vista Plana";
+                }
+                if (App.Map.resetMap) App.Map.resetMap();
+            } else {
+                if (btn) {
+                    btn.classList.remove('active');
+                    btn.innerHTML = '👁️ 3D';
+                    btn.title = "Alternar Vista Isométrica 3D";
+                }
+            }
+        },
+
+        exportExecutivePDF() {
+            const elementosOcultar = document.querySelectorAll(
+                '.map-controls, .panel-filters, header .header-actions, .btn-action'
+            );
+            elementosOcultar.forEach(el => el.style.display = 'none');
+
+            const mapContainer = document.getElementById('mapContainer');
+            const is3D = mapContainer && mapContainer.classList.contains('view-3d');
+            if (is3D) mapContainer.classList.remove('view-3d');
+
+            const contenedor = document.querySelector('.main-layout') || document.body;
+
+            const options = {
+                margin: 10,
+                filename: `Reporte_Avance_CPAG_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 1 },
+                html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#0f172a' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            html2pdf().set(options).from(contenedor).save().then(() => {
+                elementosOcultar.forEach(el => el.style.display = '');
+                if (is3D) mapContainer.classList.add('view-3d');
+            }).catch(e => {
+                console.error("Error al exportar PDF:", e);
+                elementosOcultar.forEach(el => el.style.display = '');
+                if (is3D) mapContainer.classList.add('view-3d');
+            });
         },
 
         updateStats() {
@@ -824,7 +1016,40 @@ const App = {
             document.getElementById('themeToggle')?.addEventListener('click', () => this.toggleTheme());
             document.getElementById('highContrastToggle')?.addEventListener('click', () => this.toggleHighContrast());
             document.getElementById('btnExport')?.addEventListener('click', () => this.exportCSV());
-            document.getElementById('btnPrint')?.addEventListener('click', () => this.printLote());
+            document.getElementById('btnPrint')?.addEventListener('click', () => this.exportExecutivePDF());
+            document.getElementById('btnToggle3D')?.addEventListener('click', () => this.toggle3DView());
+
+            // Make KPIs Visually Clickable
+            document.querySelectorAll('.kpi-comparison-card').forEach(c => {
+                c.style.cursor = 'pointer';
+                c.title = 'Haz clic para aislar esta categoría en el mapa';
+            });
+            // Update details badges directly
+            document.getElementById('detailEstado')?.style.setProperty('cursor', 'pointer');
+
+            // Global Cross-filtering Binder
+            document.body.addEventListener('click', (e) => {
+                const kpiCard = e.target.closest('.kpi-comparison-card');
+                if (kpiCard) {
+                    const titleEl = kpiCard.querySelector('.kpi-title');
+                    if (titleEl) {
+                        const title = titleEl.textContent.toLowerCase();
+                        let tipo = '';
+                        if (title.includes('vivienda')) tipo = 'Habitacional';
+                        else if (title.includes('equipamiento')) tipo = 'Equipamiento';
+                        else if (title.includes('comercial')) tipo = 'Comercial';
+                        if (tipo) App.Filter.applyBI('tipo', tipo);
+                    }
+                }
+
+                const statusBadge = e.target.closest('.status-badge-large, .status-badge');
+                if (statusBadge) {
+                    const statusText = statusBadge.textContent.trim();
+                    if (statusText && statusText !== 'Desconocido' && statusText !== 'Estado') {
+                        App.Filter.applyBI('estado', statusText);
+                    }
+                }
+            });
 
             // Bind Alerts Button
             document.getElementById('btnAlerts')?.addEventListener('click', () => {

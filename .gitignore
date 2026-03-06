@@ -15,6 +15,7 @@ desktop.ini
 *.bak
 *.backup
 *.2025_*
+_RESPALDO/
 
 # Large video files (optional - remove if needed)
 *.mp4
