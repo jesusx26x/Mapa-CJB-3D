@@ -1,6 +1,9 @@
 """
-Exporta el modelo «Flujo de Caja VBC Oct2026-Dic2027 v1.xlsx» a data/flujo_2027.json
+Exporta el modelo «Flujo de Caja VBC Oct2026-Dic2027 v*.xlsx» a data/flujo_2027.json
 para la pestaña «💰 Flujo 2027» del Sistema VBC.
+
+Sin --src usa la versión más alta del modelo en la carpeta 2027 (v1, v1.1, v1.2…;
+a igual versión, el archivo guardado más recientemente).
 
 Pasos:
   1. Copia el Excel a una carpeta temporal (el original nunca se abre ni se guarda).
@@ -26,10 +29,11 @@ from pathlib import Path
 import openpyxl
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_SRC = Path(
+MODELO_DIR = Path(
     r"C:\Users\John Marte\Fideicomiso VBCRD\Fonvivienda - IDMP\VBC2\Planificación Estratégica"
-    r"\01 Autosuficiencia Financiera\Presupuesto\2027\Flujo de Caja VBC Oct2026-Dic2027 v1.xlsx"
+    r"\01 Autosuficiencia Financiera\Presupuesto\2027"
 )
+MODELO_PATRON = "Flujo de Caja VBC Oct2026-Dic2027 v*.xlsx"
 DEFAULT_OUT = ROOT / "data" / "flujo_2027.json"
 ESCENARIOS = ["Conservador", "Base", "Optimista"]
 TOL = 1.0  # RD$ de tolerancia al cuadrar
@@ -638,14 +642,27 @@ def armar_escenario(wb, meses):
     return nombre, esc, maestro
 
 
+def modelo_vigente():
+    """Versión más alta del modelo (v1 < v1.1 < v1.2 …); a igual versión, el guardado más reciente."""
+    def version(p):
+        m = re.search(r" v(\d+(?:\.\d+)*)", p.name)
+        return tuple(int(x) for x in m.group(1).split(".")) if m else (0,)
+
+    candidatos = [p for p in MODELO_DIR.glob(MODELO_PATRON) if not p.name.startswith("~$")]
+    if not candidatos:
+        fail(f"No encontré «{MODELO_PATRON}» en {MODELO_DIR}")
+    return max(candidatos, key=lambda p: (version(p), p.stat().st_mtime))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--src", default=str(DEFAULT_SRC))
+    ap.add_argument("--src", help="Excel del modelo (por defecto, la versión más alta en la carpeta 2027)")
     ap.add_argument("--out", default=str(DEFAULT_OUT))
     args = ap.parse_args()
-    src = Path(args.src)
+    src = Path(args.src) if args.src else modelo_vigente()
     if not src.exists():
         fail(f"No existe el Excel: {src}")
+    print(f"Modelo: {src.name}")
 
     with tempfile.TemporaryDirectory(prefix="vbc_flujo_") as tmp:
         copias = recalcular(src, tmp)
