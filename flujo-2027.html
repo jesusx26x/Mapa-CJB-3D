@@ -127,6 +127,23 @@
         .btn:hover { border-color: var(--pri-line); color: var(--pri); }
         .btn.pri { background: var(--pri); color: #fff; border-color: var(--pri); }
         .btn.pri:hover { filter: brightness(1.08); color: #fff; }
+        .btn:disabled { opacity: .45; cursor: default; }
+        .btn:disabled:hover { border-color: var(--line); color: var(--tx2); }
+
+        /* Barra de selección / filtros activos */
+        .selbar {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 20px 12px; padding: 8px 12px;
+            background: var(--pri-soft); border: 1px solid var(--pri-line); border-radius: 10px; font-size: 12px; color: var(--tx2);
+        }
+        .selbar[hidden] { display: none; }
+        .selbar b { color: var(--tx); }
+        .selbar .chip {
+            display: inline-flex; align-items: center; gap: 2px; background: var(--card); border: 1px solid var(--line);
+            border-radius: 20px; padding: 2px 3px 2px 9px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--tx);
+        }
+        .selbar .chip button { border: 0; background: none; color: var(--mut); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 4px; }
+        .selbar .chip button:hover { color: var(--bad); }
+        .selbar .btn { margin-left: auto; padding: 5px 10px; }
 
         /* ============ TOOLBAR ============ */
         .toolbar { display: flex; align-items: center; gap: 16px; padding: 12px 20px; flex-wrap: wrap; }
@@ -151,6 +168,9 @@
         .k p { font-size: 11px; color: var(--mut); margin-top: 3px; }
         .k.caja { background: var(--caja-bg); border-color: var(--caja-line); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .k.caja h4 { grid-column: 1 / 3; color: var(--caja-h); }
+        .k.caja.selcaja { background: var(--card); border-color: var(--pri-line); }
+        .k.caja.selcaja h4 { color: var(--pri); }
+        .k.filtrado { border-color: var(--pri-line); box-shadow: inset 3px 0 0 var(--pri); }
         .k .warn { color: #d97706; font-weight: 600; }
         .neg { color: var(--bad); }
         .pos { color: var(--ok); }
@@ -177,6 +197,8 @@
         .mapsvg .lote:hover { fill-opacity: .75 !important; }
         .mapsvg .lote.sel { stroke: #0f172a !important; stroke-width: 2.2px !important; }
         body:not(.light-mode) .mapsvg .lote.sel { stroke: #ffffff !important; }
+        .mapsvg .lote.selm { stroke: #0f172a !important; stroke-width: 1.4px !important; }
+        body:not(.light-mode) .mapsvg .lote.selm { stroke: #ffffff !important; }
         .map-label {
             position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 3;
             padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
@@ -247,7 +269,7 @@
         .empty { color: var(--mut); font-size: 12px; padding: 14px 0; }
 
         /* ============ TABLAS ============ */
-        .tables { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px 20px; }
+        .tables { display: grid; grid-template-columns: 1.45fr 1fr; gap: 12px; padding: 0 20px 20px; }
         .tbwrap { overflow-x: auto; }
         table.tb { width: 100%; border-collapse: collapse; margin-top: 8px; }
         .tb th {
@@ -266,7 +288,7 @@
         .tb tfoot td { font-weight: 700; border-bottom: 0; border-top: 1px solid var(--line); }
         .tb .n { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
         .tb th.n { text-align: right; }
-        .heat { display: grid; grid-template-columns: repeat(15, 1fr); gap: 2px; width: 170px; }
+        .heat { display: grid; grid-template-columns: repeat(15, 1fr); gap: 2px; width: 150px; }
         .heat i { height: 14px; border-radius: 2px; background: var(--track); }
         .tag { font-style: normal; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 20px; white-space: nowrap; display: inline-block; margin: 1px 0; }
         .tg-adj { background: #ccfbf1; color: #0f766e; }
@@ -282,6 +304,15 @@
         .error-card { margin: 40px auto; max-width: 560px; text-align: center; }
         .error-card h3 { justify-content: center; color: var(--bad); margin-bottom: 8px; }
         .error-card code { display: block; margin-top: 10px; font-size: 11px; color: var(--tx2); word-break: break-all; }
+
+        @media (max-width: 1400px) {
+            .heat { width: 96px; gap: 1px; }
+        }
+
+        @media (max-width: 1320px) {
+            .tables { grid-template-columns: 1fr; }
+            .heat { width: 170px; gap: 2px; }
+        }
 
         @media (max-width: 1200px) {
             .kpis { grid-template-columns: repeat(2, 1fr); }
@@ -342,8 +373,11 @@
                 <button data-v="Base">Base</button>
                 <button data-v="Optimista">Optimista</button>
             </div>
+            <button class="btn" id="btnReset" title="Quitar la selección de lotes y las capas ocultas, y ver todo (Consolidado)">✕ Quitar filtros</button>
             <div class="stamp" id="stamp"></div>
         </div>
+
+        <div class="selbar" id="selbar" hidden></div>
 
         <section class="kpis" id="kpis"></section>
 
@@ -403,7 +437,8 @@
             svgText: {},
             maps: {},
             chart: null,
-            sel: null,
+            sel: null,              // lote con la ficha abierta
+            selLotes: new Set(),    // lotes seleccionados: filtran tarjetas, gráficos y barras
             sortObras: { k: 'pagos', dir: -1 },
             sortLic: { k: 'cobro', dir: -1 }
         };
@@ -443,73 +478,125 @@
             history.replaceState(null, '', `#proyecto=${S.proyecto}&escenario=${S.escenario}`);
         }
 
-        // ---------------------------------------------------------------- cálculos de la vista
+        // ---------------------------------------------------------------- partidas y filtros
+        // Cada fila de detalle del JSON (obra, retenido, licitación, cartera) es una «partida» con su
+        // clave de lote, su capa de la leyenda y su serie mensual. Las tarjetas, el gráfico y las barras
+        // se calculan sumando las partidas activas: las de capas visibles y, si hay lotes seleccionados,
+        // solo las de esos lotes.
+        const GRUPO_CAT = {
+            'LIC 2026-01': 'adjudicada', 'LIC 2027-01': 'licitar', 'ZFI 2027-02': 'licitar', 'Lotes adicionales': 'opcional',
+            'CPAG HAB 2027': 'licitar', 'CPAG COM 2027': 'licitar'
+        };
+        const GRUPO_FUENTE = {
+            'LIC 2026-01': 'lic2026', 'LIC 2027-01': 'lic2027', 'ZFI 2027-02': 'zfi', 'Lotes adicionales': 'adicionales',
+            'CPAG HAB 2027': 'cpag2027', 'CPAG COM 2027': 'cpag2027'
+        };
+        const FUENTES_ING = [
+            ['cartera', 'Cartera', CAT.cartera.color],
+            ['recupLegal', 'Recuperación legal', CAT.legal.color],
+            ['lic2026', 'LIC 2026-01', CAT.adjudicada.color],
+            ['lic2027', 'LIC 2027-01', CAT.licitar.color],
+            ['zfi', 'ZFI', '#16a34a'],
+            ['adicionales', 'Lotes adicionales', CAT.opcional.color],
+            ['cpag2027', 'Licitaciones CPAG 2027', '#4ade80']
+        ];
+        const CAPAS_FILTRO = [...ORDEN_CAT, 'virtual'];
+
+        function partidasVista() {
+            const e = esc();
+            const idx = Object.fromEntries(S.data.meses.map((m, i) => [m, i]));
+            const out = [];
+            e.obras.filter(o => enVista(o.proyecto)).forEach(o => out.push({
+                clave: o.clave, proyecto: o.proyecto, capa: o.enMapa ? 'obra' : 'virtual',
+                fuente: o.tipo.toLowerCase() === 'reserva' ? 'mantGeneral' : 'obras', serie: o.pagos, obra: o
+            }));
+            e.retenidos.filter(r => enVista(r.proyecto)).forEach(r => out.push({
+                clave: r.clave, proyecto: r.proyecto, capa: r.enMapa ? 'obra' : 'virtual', fuente: 'retenidos', serie: r.pagos
+            }));
+            e.licitaciones.filter(l => enVista(l.proyecto)).forEach(l => out.push({
+                clave: l.clave, proyecto: l.proyecto, capa: l.enMapa ? (GRUPO_CAT[l.grupo] || 'opcional') : 'virtual',
+                fuente: GRUPO_FUENTE[l.grupo] || 'adicionales', serie: l.cobros
+            }));
+            e.cartera.filter(c => enVista(c.proyecto)).forEach(c => {
+                const capa = !c.enMapa ? 'virtual' : (c.situacion.startsWith('Sin plan') ? 'legal' : 'cartera');
+                out.push({ clave: c.clave, proyecto: c.proyecto, capa, fuente: 'cartera', serie: c.cobros, cart: c });
+                if (c.recupLegal > 0.5 && c.mesRecupLegal in idx) {
+                    const serie = zeros();
+                    serie[idx[c.mesRecupLegal]] = c.recupLegal;
+                    out.push({ clave: c.clave, proyecto: c.proyecto, capa, fuente: 'recupLegal', serie });
+                }
+            });
+            return out;
+        }
+
+        const hayFiltro = () => S.selLotes.size > 0 || CAPAS_FILTRO.some(c => S.off.has(c));
+        const partidaActiva = p => !S.off.has(p.capa) && (!S.selLotes.size || S.selLotes.has(p.clave));
+
         function totalesVista() {
             const e = esc();
             const P = S.proyecto;
             const meses = S.data.meses;
-            let ing, obrasMes, ingSerie, detalleIng, detalleEgr;
+            const filtro = hayFiltro();
+            const act = partidasVista().filter(partidaActiva);
+            const serie = (fuente, proy) => act.filter(p => p.fuente === fuente && (!proy || p.proyecto === proy))
+                .reduce((a, p) => addArr(a, p.serie), zeros());
+            const ingFuente = Object.fromEntries(FUENTES_ING.map(([k]) => [k, serie(k)]));
+            // «Otros ingresos» son del Fideicomiso, sin lote: solo cuentan en Consolidado sin filtros
+            const otros = consolidado() && !filtro ? e.mensual.ingresos.otros : zeros();
+            const ingSerie = FUENTES_ING.reduce((a, [k]) => addArr(a, ingFuente[k]), otros);
+            const obrasMes = addArr(serie('obras'), serie('mantGeneral'));
+            const retMes = serie('retenidos');
+
+            let detalleIng = FUENTES_ING.map(([k, lab, col]) => [lab, sum(ingFuente[k]), col]);
+            let detalleEgr;
             if (consolidado()) {
-                const mi = e.mensual.ingresos, me = e.mensual.egresos;
-                ingSerie = mi.total;
-                obrasMes = addArr(addArr(me.obrasCJB, me.obrasCPAG), me.mantGeneral);
-                ing = e.kpis.ingresos;
-                detalleIng = [
-                    ['Cartera', sum(mi.cartera), CAT.cartera.color],
-                    ['Recuperación legal', sum(mi.recupLegal), CAT.legal.color],
-                    ['LIC 2026-01', sum(mi.lic2026), CAT.adjudicada.color],
-                    ['LIC 2027-01', sum(mi.lic2027), CAT.licitar.color],
-                    ['ZFI', sum(mi.zfi), '#16a34a'],
-                    ['Lotes adicionales', sum(mi.adicionales), CAT.opcional.color],
-                    ['Licitaciones CPAG 2027', sum(mi.cpag2027), '#4ade80'],
-                    ['Otros ingresos', sum(mi.otros), '#94a3b8']
-                ];
+                if (!filtro) detalleIng.push(['Otros ingresos', sum(otros), '#94a3b8']);
                 detalleEgr = [
-                    ['Obras CJB', sum(me.obrasCJB), '#f97316'],
-                    ['Obras CPAG', sum(me.obrasCPAG), '#fb923c'],
-                    ['Reserva mant. general', sum(me.mantGeneral), '#fdba74'],
-                    ['Retenidos', sum(me.retenidos), '#fed7aa'],
-                    ['Gastos fijos', sum(me.gastosFijos), '#64748b']
+                    ['Obras CJB', sum(serie('obras', 'CJB')), '#f97316'],
+                    ['Obras CPAG', sum(serie('obras', 'CPAG')), '#fb923c'],
+                    ['Reserva mant. general', sum(serie('mantGeneral')), '#fdba74'],
+                    ['Retenidos', sum(retMes), '#fed7aa']
                 ];
+                if (!filtro) detalleEgr.push(['Gastos fijos', sum(e.mensual.egresos.gastosFijos), '#64748b']);
             } else {
-                const pp = e.porProyecto[P] || { ingresos: {}, egresos: {} };
-                const pi = pp.ingresos, pe = pp.egresos;
-                ingSerie = pi.total || zeros();
-                obrasMes = addArr(pe.obras || zeros(), pe.mantGeneral || zeros());
-                ing = sum(ingSerie);
-                detalleIng = [
-                    ['Cartera', sum(pi.cartera), CAT.cartera.color],
-                    ['Recuperación legal', sum(pi.recupLegal), CAT.legal.color],
-                    ['LIC 2026-01', sum(pi.lic2026), CAT.adjudicada.color],
-                    ['LIC 2027-01', sum(pi.lic2027), CAT.licitar.color],
-                    ['ZFI', sum(pi.zfi), '#16a34a'],
-                    ['Lotes adicionales', sum(pi.adicionales), CAT.opcional.color],
-                    ['Licitaciones CPAG 2027', sum(pi.cpag2027), '#4ade80']
-                ].filter(([k, v]) => P === 'CPAG' ? v > 0.5 : k !== 'Licitaciones CPAG 2027');
+                detalleIng = detalleIng.filter(([k, v]) => P === 'CPAG' ? v > 0.5 : k !== 'Licitaciones CPAG 2027');
                 detalleEgr = [
-                    ['Obras ' + P, sum(pe.obras), '#f97316'],
-                    ['Reserva mant. general', sum(pe.mantGeneral), '#fdba74'],
-                    ['Retenidos ' + P, sum(pe.retenidos), '#fed7aa']
+                    ['Obras ' + P, sum(serie('obras')), '#f97316'],
+                    ['Reserva mant. general', sum(serie('mantGeneral')), '#fdba74'],
+                    ['Retenidos ' + P, sum(retMes), '#fed7aa']
                 ];
             }
-            const obras = sum(obrasMes);
-            const obrasRows = e.obras.filter(o => enVista(o.proyecto));
-            const contratos = obrasRows.filter(o => o.tipo.toLowerCase() !== 'reserva' && o.totalHorizonte > 0).length;
-            const reserva = obrasRows.some(o => o.tipo.toLowerCase() === 'reserva' && o.totalHorizonte > 0);
-            const lotes = Object.entries(e.lotes).filter(([k]) => proyectosVista().includes(proyDeClave(k)));
+
+            const obrasAct = act.filter(p => p.fuente === 'obras' || p.fuente === 'mantGeneral');
+            const contratos = obrasAct.filter(p => p.fuente === 'obras' && p.obra.totalHorizonte > 0).length;
+            const reserva = obrasAct.some(p => p.fuente === 'mantGeneral' && p.obra.totalHorizonte > 0);
+            const contrato = sum(obrasAct.filter(p => p.fuente === 'obras').map(p => p.obra.contrato));
+            const adenda = sum(obrasAct.filter(p => p.fuente === 'obras').map(p => p.obra.adenda));
+
+            // Lotes con movimiento: los de la vista que tienen alguna partida activa
+            const clavesAct = new Set(act.map(p => p.clave));
+            const lotes = Object.entries(e.lotes).filter(([k]) => proyectosVista().includes(proyDeClave(k)) && (!filtro || clavesAct.has(k)));
             const nLotes = Object.entries(S.data.maestro)
                 .filter(([k, m]) => proyectosVista().includes(m.proyecto) && RE_LOTE.test(m.id)).length;
             const porCat = c => lotes.filter(([, l]) => l.categoria === c).length;
+
+            // Flujo acumulado de la selección (ingresos − pagos a obras), para la tarjeta de caja
+            let acc = 0;
+            const acum = ingSerie.map((v, i) => (acc += v - obrasMes[i]));
+            const iMin = acum.indexOf(Math.min(...acum));
+
             return {
-                meses, ing, ingSerie, obras, obrasMes, contratos, reserva, nLotes, detalleIng, detalleEgr,
+                meses, filtro, ingSerie, obrasMes, retMes, detalleIng, detalleEgr,
+                ing: sum(ingSerie), obras: sum(obrasMes), contratos, reserva, contrato, adenda, nLotes,
                 nMov: lotes.length,
                 nObra: porCat('obra'),
                 nLic: porCat('adjudicada') + porCat('licitar') + porCat('opcional'),
-                nCart: porCat('cartera') + porCat('legal')
+                nCart: porCat('cartera') + porCat('legal'),
+                acum, minAcum: acum[iMin], mesMinAcum: meses[iMin], negAcum: acum.filter(v => v < -0.5).length
             };
         }
 
-        // Capas de la leyenda: conteo por categoría principal y monto por fuente
+        // Capas de la leyenda (sin aplicar filtros): conteo por categoría principal y monto por fuente
         function capasVista() {
             const e = esc();
             const P = proyectosVista();
@@ -519,22 +606,21 @@
                 const ls = lotes.filter(([, l]) => l.categoria === c);
                 cap[c] = { n: ls.length, monto: 0, saldo: 0, apagados: ls.length > 0 && ls.every(([, l]) => l.atenuado) };
             });
-            const grupoCat = { 'LIC 2026-01': 'adjudicada', 'LIC 2027-01': 'licitar', 'ZFI 2027-02': 'licitar', 'Lotes adicionales': 'opcional',
-                               'CPAG HAB 2027': 'licitar', 'CPAG COM 2027': 'licitar' };
-            let obrasVirt = 0, ingVirt = 0, nVirt = 0;
-            e.obras.filter(o => enVista(o.proyecto)).forEach(o => {
-                if (o.enMapa) cap.obra.monto += o.totalHorizonte; else { obrasVirt += o.totalHorizonte; nVirt++; }
+            let obrasVirt = 0, ingVirt = 0;
+            const virtuales = new Set();
+            partidasVista().forEach(p => {
+                const t = sum(p.serie);
+                if (p.fuente === 'retenidos') return;
+                const esObra = p.fuente === 'obras' || p.fuente === 'mantGeneral';
+                if (p.capa === 'virtual') {
+                    if (esObra) obrasVirt += t; else ingVirt += t;
+                    if (t > 0.5) virtuales.add(p.clave + '|' + (p.obra?.obra || p.fuente));
+                } else {
+                    cap[p.capa].monto += t;
+                }
+                if (p.capa === 'legal' && p.fuente === 'cartera') cap.legal.saldo += p.cart.saldo;
             });
-            e.licitaciones.filter(l => enVista(l.proyecto)).forEach(l => {
-                if (l.enMapa) cap[grupoCat[l.grupo] || 'opcional'].monto += l.cobroHorizonte; else ingVirt += l.cobroHorizonte;
-            });
-            e.cartera.filter(c => enVista(c.proyecto)).forEach(c => {
-                const cobro = c.totalHorizonte + c.recupLegal;
-                if (!c.enMapa) { ingVirt += cobro; if (cobro) nVirt++; return; }
-                if (c.situacion.startsWith('Sin plan')) { cap.legal.monto += cobro; cap.legal.saldo += c.saldo; }
-                else cap.cartera.monto += cobro;
-            });
-            return { cap, obrasVirt, ingVirt, nVirt };
+            return { cap, obrasVirt, ingVirt, nVirt: virtuales.size };
         }
 
         // ---------------------------------------------------------------- render general
@@ -542,16 +628,40 @@
             document.querySelectorAll('#segProyecto button').forEach(b => b.classList.toggle('on', b.dataset.v === S.proyecto));
             document.querySelectorAll('#segEscenario button').forEach(b => b.classList.toggle('on', b.dataset.v === S.escenario));
             escribirHash();
-            const T = totalesVista();
             renderStamp();
-            renderKpis(T);
-            renderLeyenda();
             renderMapas();
-            renderChart(T);
-            renderBarras(T);
             renderObras();
             renderLicitaciones();
-            verificarTotales(T);
+            actualizarFiltros();
+        }
+
+        // Todo lo que depende de la selección de lotes y de las capas de la leyenda
+        function actualizarFiltros() {
+            const T = totalesVista();
+            renderSelbar(T);
+            renderKpis(T);
+            renderLeyenda();
+            proyectosVista().forEach(pintarMapa);
+            renderChart(T);
+            renderBarras(T);
+            marcarFilas();
+            $('#btnReset').disabled = !T.filtro && consolidado();
+            if (!T.filtro) verificarTotales(T);
+        }
+
+        function renderSelbar(T) {
+            const bar = $('#selbar');
+            if (!T.filtro) { bar.hidden = true; bar.innerHTML = ''; return; }
+            const partes = [];
+            if (S.selLotes.size) {
+                const chips = [...S.selLotes].map(k => `<span class="chip">${h(k)}<button data-quitar="${h(k)}" title="Quitar de la selección">×</button></span>`).join(' ');
+                partes.push(`<b>${S.selLotes.size} ${S.selLotes.size === 1 ? 'lote seleccionado' : 'lotes seleccionados'}:</b> ${chips}`);
+            }
+            const ocultas = CAPAS_FILTRO.filter(c => S.off.has(c)).map(c => c === 'virtual' ? 'Sin lote en el mapa' : CAT[c].label);
+            if (ocultas.length) partes.push(`<b>Capas ocultas:</b> ${h(ocultas.join(', '))}`);
+            bar.innerHTML = `🔎 ${partes.join(' · ')} <span>— las tarjetas, el gráfico y las barras muestran solo esto.</span>
+                <button class="btn" data-reset>✕ Quitar filtros</button>`;
+            bar.hidden = false;
         }
 
         function renderStamp() {
@@ -567,23 +677,38 @@
             const e = esc();
             const k = e.kpis;
             const P = S.proyecto;
-            const nom = consolidado() ? 'del Fideicomiso' : 'del proyecto';
+            const f = T.filtro;
+            const fc = f ? ' filtrado' : '';
+            const nom = f ? 'de la selección' : (consolidado() ? 'del Fideicomiso' : 'del proyecto');
             const aporte = T.ing - T.obras;
-            const fuentes = consolidado() ? 'Cartera + licitaciones, CJB y CPAG' : `Cartera + licitaciones de lotes ${P}`;
-            const obrasTx = `${T.contratos} contratos con pagos` + (T.reserva ? ' + reserva mant. general' : '');
+            const fuentesSel = T.detalleIng.filter(r => r[1] > 0.5).map(r => `${h(r[0])} ${fmtM(r[1])}`).join(' · ');
+            const fuentes = f ? (fuentesSel || 'Sin ingresos en la selección')
+                : (consolidado() ? 'Cartera + licitaciones, CJB y CPAG' : `Cartera + licitaciones de lotes ${P}`);
+            const obrasTx = `${T.contratos} ${T.contratos === 1 ? 'contrato' : 'contratos'} con pagos` + (T.reserva ? ' + reserva mant. general' : '') +
+                (T.contrato > 0.5 ? `<br>Contratos ${fmtM(T.contrato)} · adendas ${fmtM(T.adenda)}` : '');
+            const mesLargo = m => m ? fmtMes(m).replace(/-(\d\d)$/, '-20$1') : '—';
             const sinIni = Math.abs(k.saldoInicial) < 1;
-            $('#kpis').innerHTML = `
-                <div class="k"><h4>💵 Ingresos ${nom}</h4><div class="v ${T.ing > 0 ? 'pos' : ''}">${fmtM(T.ing)}</div><p>${fuentes}</p></div>
-                <div class="k"><h4>🏗️ Pagos a obras ${consolidado() ? 'CJB + CPAG' : P}</h4><div class="v">${fmtM(T.obras)}</div><p>${obrasTx}</p></div>
-                <div class="k"><h4>📈 Aporte neto ${consolidado() ? 'de los proyectos' : P}</h4><div class="v ${aporte >= 0 ? 'pos' : 'neg'}">${fmtM(aporte)}</div><p>Ingresos − obras (antes de gastos fijos)</p></div>
-                <div class="k"><h4>🗺️ Lotes con movimiento</h4><div class="v">${T.nMov} <small>de ${T.nLotes}</small></div>
-                    <p>${T.nObra} obras · ${T.nLic} a licitar/adjudicados · ${T.nCart} cartera</p></div>
+            const pl = n => `${n} ${n === 1 ? 'mes' : 'meses'}`;
+            const caja = !f ? `
                 <div class="k caja"><h4>🏦 Caja del Fideicomiso (consolidado, incluye gastos fijos)</h4>
                     <div><p>Saldo más bajo</p><div class="v ${k.saldoMin < 0 ? 'neg' : 'pos'}">${fmtM(k.saldoMin)}</div>
-                        <p>${k.mesSaldoMin ? fmtMes(k.mesSaldoMin).replace(/-(\d\d)$/, '-20$1') : '—'} · ${k.mesesNegativos} ${k.mesesNegativos === 1 ? 'mes' : 'meses'} en negativo</p></div>
+                        <p>${mesLargo(k.mesSaldoMin)} · ${pl(k.mesesNegativos)} en negativo</p></div>
                     <div><p>Disponible para áreas (PACC)</p><div class="v">${fmtM(k.disponiblePACC)}</div>
                         <p>${sinIni ? '<span class="warn">Falta saldo inicial al 1-oct</span>' : 'Saldo inicial ' + fmtM(k.saldoInicial)}</p></div>
+                </div>` : `
+                <div class="k caja selcaja"><h4>📊 Flujo acumulado de la selección (ingresos − obras, sin gastos fijos)</h4>
+                    <div><p>Punto más bajo</p><div class="v ${T.minAcum < 0 ? 'neg' : 'pos'}">${fmtM(T.minAcum)}</div>
+                        <p>${mesLargo(T.mesMinAcum)} · ${pl(T.negAcum)} en negativo</p></div>
+                    <div><p>Caja del Fideicomiso (referencia)</p><div class="v ${k.saldoMin < 0 ? 'neg' : 'pos'}">${fmtM(k.saldoMin)}</div>
+                        <p>saldo más bajo ${mesLargo(k.mesSaldoMin)} · PACC ${fmtM(k.disponiblePACC)}</p></div>
                 </div>`;
+            $('#kpis').innerHTML = `
+                <div class="k${fc}"><h4>💵 Ingresos ${nom}</h4><div class="v ${T.ing > 0 ? 'pos' : ''}">${fmtM(T.ing)}</div><p>${fuentes}</p></div>
+                <div class="k${fc}"><h4>🏗️ Pagos a obras ${f ? 'de la selección' : (consolidado() ? 'CJB + CPAG' : P)}</h4><div class="v">${fmtM(T.obras)}</div><p>${obrasTx}</p></div>
+                <div class="k${fc}"><h4>📈 Aporte neto ${f ? 'de la selección' : (consolidado() ? 'de los proyectos' : P)}</h4><div class="v ${aporte >= 0 ? 'pos' : 'neg'}">${fmtM(aporte)}</div><p>Ingresos − obras (antes de gastos fijos)</p></div>
+                <div class="k${fc}"><h4>🗺️ Lotes con movimiento${f ? ' · selección' : ''}</h4><div class="v">${T.nMov} <small>de ${T.nLotes}</small></div>
+                    <p>${T.nObra} obras · ${T.nLic} a licitar/adjudicados · ${T.nCart} cartera</p></div>
+                ${caja}`;
         }
 
         // ---------------------------------------------------------------- leyenda
@@ -606,12 +731,14 @@
                 const partes = [];
                 if (obrasVirt) partes.push(`obras <span class="mono">${fmtM(obrasVirt)}</span>`);
                 if (ingVirt) partes.push(`ingresos <span class="mono">${fmtM(ingVirt)}</span>`);
-                items.push(`<div class="li info"><i style="background:transparent;border:1px dashed var(--mut)"></i><div><b>Sin lote en el mapa</b>
-                    <p>${nVirt} partidas generales o con ubicación por confirmar · ${partes.join(' · ')}</p></div></div>`);
+                items.push(`<button class="li ${S.off.has('virtual') ? 'off' : ''}" data-cat="virtual" aria-pressed="${!S.off.has('virtual')}">
+                    <i style="background:transparent;border:1px dashed var(--mut)"></i><div><b>Sin lote en el mapa</b>
+                    <p>${nVirt} partidas generales o con ubicación por confirmar · ${partes.join(' · ')}</p></div></button>`);
             }
             items.push(`<button class="li ${S.off.has('ninguno') ? 'off' : ''}" data-cat="ninguno">
                 <i style="background:var(--lot-neutral);border:1px solid var(--line)"></i><div><b>Sin movimiento</b><p>resto de lotes</p></div></button>`);
-            items.push(`<p class="hint">Clic en la leyenda para mostrar u ocultar cada capa.</p>`);
+            items.push(`<p class="hint">Clic en la leyenda para mostrar u ocultar cada capa (también filtra las tarjetas).<br>
+                Lotes: clic para verlo solo · <b>Ctrl+clic</b> para sumar o quitar varios.</p>`);
             $('#leg').innerHTML = items.join('');
         }
 
@@ -629,7 +756,7 @@
             const P = proyectosVista();
             const host = $('#maps');
             const titulo = consolidado() ? 'CJB + CPAG' : PROYECTOS[S.proyecto].nombre;
-            $('#mapTitle').innerHTML = `Mapa de flujos · ${h(titulo)} <span>clic en un lote para ver sus pagos y cobros</span>`;
+            $('#mapTitle').innerHTML = `Mapa de flujos · ${h(titulo)} <span>clic en un lote para verlo solo · Ctrl+clic para sumar varios</span>`;
             const clave = P.join('+');
             if (host.dataset.vista !== clave) {
                 host.dataset.vista = clave;
@@ -668,10 +795,9 @@
                 S.maps[p] = m;
                 setVB(m);
                 cont.insertAdjacentHTML('beforeend', `
-                    <div class="zoom"><button data-z="in" title="Acercar">+</button><button data-z="out" title="Alejar">−</button><button data-z="reset" title="Encuadrar">⟲</button></div>
-                    <div class="map-label">${p} · ${h(PROYECTOS[p].nombre)}</div>`);
-                const nota = notaMapa(p);
-                if (nota) cont.insertAdjacentHTML('beforeend', `<div class="map-note">${nota}</div>`);
+                    <div class="zoom"><button data-z="in" title="Acercar">+</button><button data-z="out" title="Alejar">−</button><button data-z="reset" title="Encuadrar todo el plano">⟲</button><button data-z="mov" title="Acercar a los lotes con movimiento">◎</button></div>
+                    <div class="map-label">${p} · ${h(PROYECTOS[p].nombre)}</div>
+                    <div class="map-note" hidden></div>`);
                 activarZoomPan(m);
                 activarEventos(m);
             } catch (err) {
@@ -682,11 +808,41 @@
 
         function notaMapa(p) {
             const e = esc();
-            const hayLotes = Object.keys(e.lotes).some(k => proyDeClave(k) === p);
+            const m = S.maps[p];
+            const claves = Object.keys(e.lotes).filter(k => proyDeClave(k) === p);
             const virt = e.obras.filter(o => o.proyecto === p && !o.enMapa && o.totalHorizonte > 0);
-            if (hayLotes || !virt.length) return '';
-            return `Hoy no hay lotes ${p} en venta ni en cartera. Sus obras (${virt.map(o => h(o.obra)).join(', ')}) ` +
-                `no tienen todavía ID de vía: <b>ubicación por confirmar</b>. Se muestran en las tablas y los totales.`;
+            const notas = [];
+            if (!claves.length && virt.length) {
+                notas.push(`Hoy no hay lotes ${p} en venta ni en cartera. Sus obras (${virt.map(o => h(o.obra)).join(', ')}) ` +
+                    `no tienen todavía ID de vía: <b>ubicación por confirmar</b>. Se muestran en las tablas y los totales.`);
+            }
+            // Lotes con movimiento que el plano SVG no tiene dibujados (sí cuentan en tarjetas y tablas)
+            const sinDibujo = m ? claves.filter(k => !m.lots.has(k.slice(p.length + 1))) : [];
+            if (sinDibujo.length) {
+                const desc = sinDibujo.map(k => {
+                    const l = e.lotes[k], mae = S.data.maestro[k] || {};
+                    return `<b>${h(k)}</b>${mae.tipo ? ' (' + h(mae.tipo) + ')' : ''} · ${l.categoria === 'obra' ? 'pagos ' + fmtM(l.egresos) : 'cobro ' + fmtM(l.ingresos)}`;
+                }).join(', ');
+                notas.push(`${sinDibujo.length === 1 ? 'Este lote con movimiento no está dibujado' : 'Estos lotes con movimiento no están dibujados'} en el plano: ${desc}. Sí cuentan en las tarjetas y tablas.`);
+            }
+            return notas.join('<br>');
+        }
+
+        // Caja de los lotes con movimiento del proyecto (para el botón ◎)
+        function encuadreMovimiento(m) {
+            const e = esc();
+            const sub = new Map();
+            Object.keys(e.lotes).forEach(k => {
+                if (proyDeClave(k) !== m.p) return;
+                const el = m.lots.get(k.slice(m.p.length + 1));
+                if (el) sub.set(k, el);
+            });
+            if (!sub.size) return { ...m.bbox };
+            const b = encuadre(m.svg, sub);
+            // margen extra y relación de aspecto razonable para que no quede demasiado cerca
+            const lado = Math.max(b.w, b.h, m.bbox.w / 6);
+            const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+            return { x: cx - lado * 0.6, y: cy - lado * 0.6, w: lado * 1.2, h: lado * 1.2 };
         }
 
         // Encuadre: caja que envuelve todos los lotes, en coordenadas del SVG raíz
@@ -741,6 +897,7 @@
                 const cx = m.vb.x + m.vb.w / 2, cy = m.vb.y + m.vb.h / 2;
                 if (z === 'in') zoomEn(m, 0.7, cx, cy);
                 else if (z === 'out') zoomEn(m, 1 / 0.7, cx, cy);
+                else if (z === 'mov') { m.vb = encuadreMovimiento(m); setVB(m); }
                 else { m.vb = { ...m.bbox }; setVB(m); }
             });
             c.addEventListener('wheel', ev => {
@@ -785,7 +942,7 @@
             m.svg.addEventListener('click', ev => {
                 if (m.suprimirClic) { m.suprimirClic = false; return; }
                 const el = ev.target.closest('.lote');
-                if (el) seleccionar(m.p + '-' + el.id, false);
+                if (el) clicLote(m.p + '-' + el.id, ev.ctrlKey || ev.metaKey || ev.shiftKey, false);
                 else cerrarFicha();
             });
         }
@@ -796,13 +953,16 @@
             const e = esc();
             const neutral = cssVar('--lot-neutral');
             const stroke = cssVar('--lot-stroke');
+            const haySel = S.selLotes.size > 0;
             m.lots.forEach((el, id) => {
                 const clave = p + '-' + id;
                 const l = e.lotes[clave];
+                const enSel = S.selLotes.has(clave);
                 let fill = neutral, op = 1;
                 if (l && !S.off.has(l.categoria)) {
                     fill = CAT[l.categoria].color;
                     op = l.atenuado ? 0.35 : 0.92;
+                    if (haySel && !enSel) op = Math.min(op, 0.25);   // fuera de la selección: atenuado
                 } else if (!l && S.off.has('ninguno')) {
                     op = 0.15;
                 }
@@ -810,8 +970,15 @@
                 el.style.fillOpacity = op;
                 el.style.stroke = stroke;
                 el.style.strokeWidth = '0.6';
+                el.classList.toggle('selm', enSel);
                 el.classList.toggle('sel', S.sel === clave);
             });
+            const nota = m.cont.querySelector('.map-note');
+            if (nota) {
+                const txt = notaMapa(p);
+                nota.innerHTML = txt;
+                nota.hidden = !txt;
+            }
             const f = m.cont.querySelector('.ficha');
             if (f && S.sel && proyDeClave(S.sel) === p) f.outerHTML = fichaHTML(S.sel);
             else if (f) f.remove();
@@ -844,6 +1011,11 @@
                 titulo = mae.nombre || obras.map(o => o.obra).join(' · ');
                 if (obras.length > 1 || !mae.nombre) filas.push(['Obras', obras.map(o => o.obra).join(' · '), true]);
                 filas.push(['Contratista', [...new Set(obras.map(o => o.contratista))].join(' · '), true]);
+                const contr = obras.filter(o => o.tipo.toLowerCase() !== 'reserva');
+                if (contr.length) {
+                    filas.push(['Monto del contrato', fmtM(sum(contr.map(o => o.contrato)))]);
+                    filas.push(['Adendas', fmtM(sum(contr.map(o => o.adenda)))]);
+                }
                 filas.push(['Restante por pagar', fmtM(sum(obras.map(o => o.restante)))]);
                 filas.push([`Pagos ${fmtMes(meses[0])} → ${fmtMes(meses[14])}`, fmtM(sum(obras.map(o => o.totalHorizonte)))]);
                 const r = sum(ret.map(x => x.totalHorizonte));
@@ -900,18 +1072,43 @@
             </div>`;
         }
 
-        function seleccionar(clave, desdeTabla) {
-            const p = proyDeClave(clave);
-            if (!S.maps[p]) return;
+        // Clic en un lote (mapa o tabla): solo → ese lote queda seleccionado (otro clic lo suelta);
+        // con Ctrl/Shift → se suma o se quita de la selección. La selección filtra tarjetas, gráfico y barras.
+        function clicLote(clave, multiple, desdeTabla) {
+            if (multiple) {
+                if (S.selLotes.has(clave)) {
+                    S.selLotes.delete(clave);
+                    if (S.sel === clave) S.sel = null;
+                } else {
+                    S.selLotes.add(clave);
+                    S.sel = clave;
+                }
+            } else if (S.selLotes.size === 1 && S.selLotes.has(clave)) {
+                S.selLotes.clear();
+                S.sel = null;
+            } else {
+                S.selLotes = new Set([clave]);
+                S.sel = clave;
+            }
+            // Si el lote estaba en una capa oculta, se vuelve a mostrar esa capa
             const l = esc().lotes[clave];
-            if (l && S.off.has(l.categoria)) { S.off.delete(l.categoria); renderLeyenda(); }
-            S.sel = clave;
+            const capa = l ? l.categoria : (/^(CJB|CPAG)-/.test(clave) && RE_LOTE.test(clave.replace(/^(CJB|CPAG)-/, '')) ? null : 'virtual');
+            if (S.sel === clave && capa && S.off.has(capa)) S.off.delete(capa);
+            mostrarFicha();
+            actualizarFiltros();
+            const m = S.maps[proyDeClave(clave)];
+            if (desdeTabla && S.sel === clave && m?.lots.has(clave.slice(proyDeClave(clave).length + 1))) {
+                $('#cardMapa').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Abre la ficha del lote S.sel (si está dibujado en el mapa) y cierra las demás
+        function mostrarFicha() {
+            document.querySelectorAll('.ficha').forEach(f => f.remove());
+            if (!S.sel) return;
+            const p = proyDeClave(S.sel);
             const m = S.maps[p];
-            m.cont.querySelector('.ficha')?.remove();
-            m.cont.insertAdjacentHTML('beforeend', fichaHTML(clave));
-            proyectosVista().forEach(pintarMapa);
-            marcarFilas();
-            if (desdeTabla) $('#cardMapa').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (m && m.lots.has(S.sel.slice(p.length + 1))) m.cont.insertAdjacentHTML('beforeend', fichaHTML(S.sel));
         }
 
         function cerrarFicha() {
@@ -921,13 +1118,38 @@
             marcarFilas();
         }
 
+        function quitarDeSeleccion(clave) {
+            S.selLotes.delete(clave);
+            if (S.sel === clave) S.sel = null;
+            mostrarFicha();
+            actualizarFiltros();
+        }
+
+        // Botón «Quitar filtros»: sin selección, todas las capas visibles y vista Consolidado
+        function quitarFiltros() {
+            S.selLotes.clear();
+            S.off.clear();
+            S.sel = null;
+            document.querySelectorAll('.ficha').forEach(f => f.remove());
+            Object.values(S.maps).forEach(m => { m.vb = { ...m.bbox }; setVB(m); });
+            if (S.proyecto !== 'Consolidado') { S.proyecto = 'Consolidado'; render(); }
+            else actualizarFiltros();
+        }
+
         // ---------------------------------------------------------------- gráficos
         function renderChart(T) {
             const e = esc();
             const labels = T.meses.map(fmtMes);
             const M = v => v / 1e6;
             let ing, egr, linea, lineaLbl, extra = [];
-            if (consolidado()) {
+            if (T.filtro) {
+                $('#c1Title').innerHTML = 'Ingresos vs. pagos a obras por mes <span>solo la selección</span>' +
+                    `<a onclick="quitarFiltros()">quitar filtros →</a>`;
+                ing = T.ingSerie;
+                egr = T.obrasMes;
+                linea = T.acum;
+                lineaLbl = 'Aporte neto acumulado';
+            } else if (consolidado()) {
                 $('#c1Title').innerHTML = 'Ingresos vs. egresos por mes <span>caja consolidada del Fideicomiso</span>';
                 ing = e.mensual.ingresos.total;
                 egr = e.mensual.egresos.total;
@@ -960,7 +1182,7 @@
                         },
                         ...extra,
                         { type: 'bar', label: 'Ingresos', data: ing.map(M), backgroundColor: '#22c55e', borderRadius: 3, order: 1 },
-                        { type: 'bar', label: consolidado() ? 'Egresos' : 'Pagos a obras', data: egr.map(M), backgroundColor: '#f97316', borderRadius: 3, order: 1 }
+                        { type: 'bar', label: consolidado() && !T.filtro ? 'Egresos' : 'Pagos a obras', data: egr.map(M), backgroundColor: '#f97316', borderRadius: 3, order: 1 }
                     ]
                 },
                 options: {
@@ -987,7 +1209,7 @@
             const mx = Math.max(...visibles.map(r => r[1]), 1);
             const m0 = fmtMes(S.data.meses[0]), m1 = fmtMes(S.data.meses[14]);
             let html = `<h3>${titulo} <span>${m0} → ${m1}</span></h3>`;
-            if (!visibles.length) html += `<p class="empty">Sin montos en este proyecto para el escenario.</p>`;
+            if (!visibles.length) html += `<p class="empty">${hayFiltro() ? 'Sin montos en la selección.' : 'Sin montos en este proyecto para el escenario.'}</p>`;
             html += visibles.map(([n, v, c]) => `<div class="r"><span>${h(n)}</span><div class="t"><i style="width:${(v / mx * 100).toFixed(1)}%;background:${c}"></i></div><b class="mono">${fmtM(v)}</b></div>`).join('');
             if (ceros.length && visibles.length) html += `<p class="foot">En 0 en este escenario: ${h(ceros.join(', '))}.</p>`;
             if (pie) html += `<p class="foot">${pie}</p>`;
@@ -997,10 +1219,9 @@
         function renderBarras(T) {
             $('#barsIn').innerHTML = barrasHTML('¿De dónde viene el dinero?', T.detalleIng);
             let pie = '';
-            if (!consolidado()) {
-                const gf = sum(esc().mensual.egresos.gastosFijos);
-                pie = `Gastos fijos (${fmtM(gf)}) son comunes del Fideicomiso y no se reparten por proyecto.`;
-            }
+            const gf = sum(esc().mensual.egresos.gastosFijos);
+            if (T.filtro) pie = `Solo la selección. Los gastos fijos (${fmtM(gf)}) son del Fideicomiso y no se reparten por lote.`;
+            else if (!consolidado()) pie = `Gastos fijos (${fmtM(gf)}) son comunes del Fideicomiso y no se reparten por proyecto.`;
             $('#barsOut').innerHTML = barrasHTML('¿A dónde va?', T.detalleEgr, pie);
         }
 
@@ -1025,26 +1246,36 @@
             const rows = todas.filter(o => o.totalHorizonte > 0.5);
             const resto = todas.filter(o => o.totalHorizonte <= 0.5);
             const getters = {
-                obra: o => o.obra, contratista: o => o.contratista, restante: o => o.restante,
+                obra: o => o.obra, contratista: o => o.contratista, contrato: o => o.contrato, adenda: o => o.adenda,
+                restante: o => o.restante,
                 proximo: o => { const i = o.pagos.findIndex(v => v > 0.5); return i < 0 ? 99 : i; }, pagos: o => o.totalHorizonte
             };
             ordenar(rows, S.sortObras, getters);
             const mx = Math.max(...rows.flatMap(o => o.pagos), 1);
             const titulo = consolidado() ? 'CJB + CPAG' : S.proyecto;
-            const cols = [['obra', 'Obra'], ['contratista', 'Contratista'], ['restante', 'Restante', 'n'], ['proximo', 'Próximo pago', 'n'], ['pagos', 'Período', 'n'], ['heat', `Pagos ${fmtMes(meses[0])} → ${fmtMes(meses[14])}`]];
+            const cols = [['obra', 'Obra'], ['contratista', 'Contratista'], ['contrato', 'Contrato', 'n'], ['adenda', 'Adenda', 'n'],
+                ['restante', 'Restante', 'n'], ['proximo', 'Próximo pago', 'n'], ['pagos', 'Período', 'n'], ['heat', `Pagos ${fmtMes(meses[0])} → ${fmtMes(meses[14])}`]];
+            const esReserva = o => o.tipo.toLowerCase() === 'reserva';
             $('#cardObras').innerHTML = `<h3>🏗️ Obras en ejecución · ${titulo} <span>ordenadas por pagos en el período</span></h3>
                 <div class="tbwrap"><table class="tb" id="tbObras"><thead><tr>${thHTML(cols, S.sortObras)}</tr></thead><tbody>
                 ${rows.map(o => `<tr data-clave="${h(o.clave)}" data-mapa="${o.enMapa}">
                     <td><b>${h(o.obra)}</b><span class="sub ${o.enMapa ? '' : 'porconf'}">${o.enMapa ? h(o.clave) : h(o.clave) + ' · ' + etiquetaVirtual(o.clave)}</span></td>
                     <td>${h(o.contratista)}</td>
+                    <td class="n">${esReserva(o) ? '<span title="Reserva, no es un contrato">—</span>' : fmtM(o.contrato)}</td>
+                    <td class="n">${esReserva(o) ? '—' : fmtM(o.adenda)}</td>
                     <td class="n">${fmtM(o.restante)}</td>
                     <td class="n">${proximo(o.pagos, meses)}</td>
                     <td class="n"><b>${fmtM(o.totalHorizonte)}</b></td>
                     <td><div class="heat">${o.pagos.map((v, i) => v > 0.5
                         ? `<i style="background:rgba(249,115,22,${(0.12 + 0.88 * v / mx).toFixed(2)})" title="${fmtMes(meses[i])} · ${fmtM(v)}"></i>` : '<i></i>').join('')}</div></td>
                 </tr>`).join('')}
-                </tbody><tfoot><tr><td colspan="4">Total pagos a obras</td><td class="n">${fmtM(sum(rows.map(o => o.totalHorizonte)))}</td><td></td></tr></tfoot></table></div>
-                ${resto.length ? `<p class="note">+ ${resto.length} obras sin pagos en el período (restante ${fmtM(sum(resto.map(o => o.restante)))}).</p>` : ''}`;
+                </tbody><tfoot><tr><td colspan="2">Total</td>
+                    <td class="n">${fmtM(sum(rows.filter(o => !esReserva(o)).map(o => o.contrato)))}</td>
+                    <td class="n">${fmtM(sum(rows.filter(o => !esReserva(o)).map(o => o.adenda)))}</td>
+                    <td class="n">${fmtM(sum(rows.map(o => o.restante)))}</td><td></td>
+                    <td class="n">${fmtM(sum(rows.map(o => o.totalHorizonte)))}</td><td></td></tr></tfoot></table></div>
+                ${resto.length ? `<p class="note">+ ${resto.length} obras sin pagos en el período (contratos ${fmtM(sum(resto.map(o => o.contrato)))} · adendas ${fmtM(sum(resto.map(o => o.adenda)))} · restante ${fmtM(sum(resto.map(o => o.restante)))}).</p>` : ''}
+                <p class="note">Clic en una fila para ver solo esa obra · Ctrl+clic para sumar varias.</p>`;
             $('#tbObras thead').addEventListener('click', ev => cambiarOrden(ev, S.sortObras, renderObras));
             $('#tbObras tbody').addEventListener('click', clicFila);
             marcarFilas();
@@ -1103,33 +1334,45 @@
         function clicFila(ev) {
             const tr = ev.target.closest('tr[data-clave]');
             if (!tr) return;
+            clicLote(tr.dataset.clave, ev.ctrlKey || ev.metaKey || ev.shiftKey, true);
             if (tr.dataset.mapa !== 'true') {
+                // Partida sin lote dibujado: se selecciona igual (filtra las tarjetas), pero no hay ficha en el mapa
                 const t = $('#tip');
-                t.innerHTML = `<b>${h(tr.dataset.clave)}</b><br>Sin lote en el mapa (${etiquetaVirtual(tr.dataset.clave)}).`;
+                t.innerHTML = `<b>${h(tr.dataset.clave)}</b><br>Sin lote en el mapa (${etiquetaVirtual(tr.dataset.clave)}). Las tarjetas muestran esta partida.`;
                 t.style.display = 'block';
                 t.style.left = (ev.clientX + 12) + 'px';
                 t.style.top = (ev.clientY + 12) + 'px';
-                setTimeout(() => { t.style.display = 'none'; }, 1800);
-                return;
+                setTimeout(() => { t.style.display = 'none'; }, 2200);
             }
-            seleccionar(tr.dataset.clave, true);
         }
 
         function marcarFilas() {
-            document.querySelectorAll('.tb tbody tr').forEach(tr => tr.classList.toggle('sel', tr.dataset.clave === S.sel));
+            document.querySelectorAll('.tb tbody tr').forEach(tr => tr.classList.toggle('sel', S.selLotes.has(tr.dataset.clave)));
         }
 
         // ---------------------------------------------------------------- control de cuadre
         // La suma de las capas (lotes en el mapa + «ubicación por confirmar») debe dar los KPIs.
+        // Además, sin filtros, las tarjetas (calculadas desde las partidas) deben dar lo publicado por el Excel.
         function verificarTotales(T) {
+            const e = esc();
             const { cap, obrasVirt, ingVirt } = capasVista();
             const obrasCapas = cap.obra.monto + obrasVirt;
             const ingCapas = ['adjudicada', 'licitar', 'opcional', 'cartera', 'legal'].reduce((a, c) => a + cap[c].monto, 0) + ingVirt;
-            const otros = consolidado() ? sum(esc().mensual.ingresos.otros) : 0;
-            const ok1 = Math.abs(obrasCapas - T.obras) < 1, ok2 = Math.abs(ingCapas + otros - T.ing) < 1;
-            const msg = `[Flujo 2027] ${S.proyecto} · ${S.escenario}: obras capas ${fmtM(obrasCapas)} vs KPI ${fmtM(T.obras)} · ingresos capas ${fmtM(ingCapas + otros)} vs KPI ${fmtM(T.ing)}`;
-            if (ok1 && ok2) console.info('✔ ' + msg); else console.warn('✖ ' + msg);
-            return ok1 && ok2;
+            const otros = consolidado() ? sum(e.mensual.ingresos.otros) : 0;
+            let ingExcel, obrasExcel;
+            if (consolidado()) {
+                ingExcel = e.kpis.ingresos;
+                obrasExcel = sum(e.mensual.egresos.obrasCJB) + sum(e.mensual.egresos.obrasCPAG) + sum(e.mensual.egresos.mantGeneral);
+            } else {
+                const pp = e.porProyecto[S.proyecto] || { ingresos: {}, egresos: {} };
+                ingExcel = sum(pp.ingresos.total);
+                obrasExcel = sum(pp.egresos.obras) + sum(pp.egresos.mantGeneral);
+            }
+            const ok = [obrasCapas - T.obras, ingCapas + otros - T.ing, ingExcel - T.ing, obrasExcel - T.obras].every(d => Math.abs(d) < 1);
+            const msg = `[Flujo 2027] ${S.proyecto} · ${S.escenario}: ingresos tarjeta ${fmtM(T.ing)} · capas ${fmtM(ingCapas + otros)} · Excel ${fmtM(ingExcel)}` +
+                ` | obras tarjeta ${fmtM(T.obras)} · capas ${fmtM(obrasCapas)} · Excel ${fmtM(obrasExcel)}`;
+            if (ok) console.info('✔ ' + msg); else console.warn('✖ ' + msg);
+            return ok;
         }
 
         // ---------------------------------------------------------------- acciones
@@ -1137,6 +1380,7 @@
             if (p === S.proyecto) return;
             S.proyecto = p;
             S.sel = null;
+            S.selLotes.clear();
             render();
         }
 
@@ -1173,8 +1417,13 @@
                 const c = ev.target.closest('button.li')?.dataset.cat;
                 if (!c) return;
                 if (S.off.has(c)) S.off.delete(c); else S.off.add(c);
-                renderLeyenda();
-                proyectosVista().forEach(pintarMapa);
+                actualizarFiltros();
+            });
+            $('#btnReset').addEventListener('click', quitarFiltros);
+            $('#selbar').addEventListener('click', ev => {
+                const q = ev.target.closest('[data-quitar]')?.dataset.quitar;
+                if (q) quitarDeSeleccion(q);
+                else if (ev.target.closest('[data-reset]')) quitarFiltros();
             });
             $('#themeToggle').addEventListener('click', () => document.body.classList.toggle('light-mode'));
             $('#btnFullscreen').addEventListener('click', () => {
@@ -1185,7 +1434,7 @@
             window.addEventListener('hashchange', () => {
                 const antes = S.proyecto;
                 leerHash();
-                if (S.proyecto !== antes) S.sel = null;
+                if (S.proyecto !== antes) { S.sel = null; S.selLotes.clear(); }
                 render();
             });
             // Al cambiar el tema: repintar mapas y gráfico con los colores del tema
@@ -1215,7 +1464,7 @@
             render();
         }
 
-        window.FlujoVBC = { S, verificarTotales: () => verificarTotales(totalesVista()) };
+        window.FlujoVBC = { S, totalesVista, clicLote, quitarFiltros, verificarTotales: () => verificarTotales(totalesVista()) };
         document.addEventListener('DOMContentLoaded', iniciar);
     </script>
 </body>

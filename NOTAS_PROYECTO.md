@@ -48,7 +48,8 @@ Muestra sobre el mapa y con gráficos el flujo de caja proyectado **oct-2026 →
 obras en ejecución (pagos), lotes adjudicados y a licitar (cobros) y cartera por cobrar.
 Se ve por proyecto (**CJB / CPAG / Consolidado**) y por escenario (**Conservador / Base / Optimista**).
 
-- **Fuente única:** `VBC2\Planificación Estratégica\01 Autosuficiencia Financiera\Presupuesto\2027\Flujo de Caja VBC Oct2026-Dic2027 v1.xlsx`.
+- **Fuente única:** `VBC2\Planificación Estratégica\01 Autosuficiencia Financiera\Presupuesto\2027\Flujo de Caja VBC Oct2026-Dic2027 v*.xlsx`.
+  El script toma solo la versión más alta (v1 → v1.1 → v1.2…) e imprime cuál usó.
   La página no lee el Excel; lee `data/flujo_2027.json`.
 - **Para actualizar los datos:** doble clic en `Actualizar Flujo 2027.bat` y refrescar la página (F5).
   El script (`tools/export_flujo_2027.py`) copia el Excel a una carpeta temporal (el original no se toca,
@@ -57,6 +58,9 @@ Se ve por proyecto (**CJB / CPAG / Consolidado**) y por escenario (**Conservador
 - **Llave del mapa:** `ClaveMapa` = Proyecto-ID (ej. `CJB-04-13-01`). CJB y CPAG repiten IDs.
   Las claves `CJB-GENERAL`, `*-POR-CONFIRMAR` y `PORCONF-*` no tienen lote en el mapa: salen en tablas y totales.
 - `data/flujo_2027.json` está en `.gitignore`: tiene saldos de clientes y el repositorio es público.
+- **Filtrar:** clic en un lote (mapa o tabla) muestra solo ese lote; **Ctrl+clic** suma o quita varios.
+  La leyenda apaga/prende capas. Tarjetas, gráfico y barras se recalculan con lo seleccionado.
+  **✕ Quitar filtros** vuelve a todo (Consolidado). El botón ◎ del mapa acerca a los lotes con movimiento.
 
 ## 🌗 Modo claro / oscuro
 
