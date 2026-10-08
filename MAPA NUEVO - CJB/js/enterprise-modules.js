@@ -1362,8 +1362,9 @@ App.Enterprise = {
      */
     init() {
         console.log('🏢 Initializing Enterprise Modules (Clean Canvas)...');
-        // PWA and core utilities only
-        App.PWA?.init();
+        // PWA desactivada: service-worker.js no está en la raíz del servidor (el registro siempre
+        // daba 404) y su estrategia «cache first» serviría JS/CSS viejos tras cada cambio.
+        // Para reactivarla hay que ubicar y ajustar service-worker.js y volver a llamar App.PWA.init().
     },
 
     /**
@@ -1372,7 +1373,8 @@ App.Enterprise = {
     addToolbarButtons() {
         // Disabled to keep canvas clean
         return;
-    },
+
+        // Menú original (no se ejecuta): se conserva para reactivarlo quitando el return.
         const toolbar = document.querySelector('.elite-toolbar');
         if (!toolbar) return;
 
