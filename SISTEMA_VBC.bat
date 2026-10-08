@@ -32,12 +32,14 @@ echo ============================================================
 echo.
 echo   Presentacion:      http://127.0.0.1:9000/Presentacion_Mapas_VBC.html
 echo   Vista Combinada:   http://127.0.0.1:9000/vista-combinada.html
+echo   Flujo 2027:        http://127.0.0.1:9000/flujo-2027.html
 echo   CPAG:              http://127.0.0.1:9000/MAPA%%20CPAG/index.html
 echo   CJB:               http://127.0.0.1:9000/MAPA%%20NUEVO%%20-%%20CJB/index.html
 echo.
 echo   Archivos de Datos:
 echo     - Datos de CPAG.csv  (editar para actualizar mapa CPAG)
 echo     - Datos de CJB.csv   (editar para actualizar mapa CJB)
+echo     - data\flujo_2027.json (generar con "Actualizar Flujo 2027.bat")
 echo.
 echo   Para cerrar: Cierra esta ventana o presiona Ctrl+C
 echo ============================================================
