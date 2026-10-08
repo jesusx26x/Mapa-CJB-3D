@@ -461,6 +461,7 @@
                     ['LIC 2027-01', sum(mi.lic2027), CAT.licitar.color],
                     ['ZFI', sum(mi.zfi), '#16a34a'],
                     ['Lotes adicionales', sum(mi.adicionales), CAT.opcional.color],
+                    ['Licitaciones CPAG 2027', sum(mi.cpag2027), '#4ade80'],
                     ['Otros ingresos', sum(mi.otros), '#94a3b8']
                 ];
                 detalleEgr = [
@@ -482,8 +483,9 @@
                     ['LIC 2026-01', sum(pi.lic2026), CAT.adjudicada.color],
                     ['LIC 2027-01', sum(pi.lic2027), CAT.licitar.color],
                     ['ZFI', sum(pi.zfi), '#16a34a'],
-                    ['Lotes adicionales', sum(pi.adicionales), CAT.opcional.color]
-                ];
+                    ['Lotes adicionales', sum(pi.adicionales), CAT.opcional.color],
+                    ['Licitaciones CPAG 2027', sum(pi.cpag2027), '#4ade80']
+                ].filter(([k, v]) => P === 'CPAG' ? v > 0.5 : k !== 'Licitaciones CPAG 2027');
                 detalleEgr = [
                     ['Obras ' + P, sum(pe.obras), '#f97316'],
                     ['Reserva mant. general', sum(pe.mantGeneral), '#fdba74'],
@@ -517,7 +519,8 @@
                 const ls = lotes.filter(([, l]) => l.categoria === c);
                 cap[c] = { n: ls.length, monto: 0, saldo: 0, apagados: ls.length > 0 && ls.every(([, l]) => l.atenuado) };
             });
-            const grupoCat = { 'LIC 2026-01': 'adjudicada', 'LIC 2027-01': 'licitar', 'ZFI 2027-02': 'licitar', 'Lotes adicionales': 'opcional' };
+            const grupoCat = { 'LIC 2026-01': 'adjudicada', 'LIC 2027-01': 'licitar', 'ZFI 2027-02': 'licitar', 'Lotes adicionales': 'opcional',
+                               'CPAG HAB 2027': 'licitar', 'CPAG COM 2027': 'licitar' };
             let obrasVirt = 0, ingVirt = 0, nVirt = 0;
             e.obras.filter(o => enVista(o.proyecto)).forEach(o => {
                 if (o.enMapa) cap.obra.monto += o.totalHorizonte; else { obrasVirt += o.totalHorizonte; nVirt++; }
@@ -1050,7 +1053,8 @@
         function chipLic(l) {
             const base = {
                 'LIC 2026-01': ['Adjudicada', 'tg-adj'], 'LIC 2027-01': ['Por licitar 2027-01', 'tg-lic'],
-                'ZFI 2027-02': ['ZFI 2027', 'tg-lic'], 'Lotes adicionales': ['Adicional', 'tg-op']
+                'ZFI 2027-02': ['ZFI 2027', 'tg-lic'], 'Lotes adicionales': ['Adicional', 'tg-op'],
+                'CPAG HAB 2027': ['Por licitar · habitacional', 'tg-lic'], 'CPAG COM 2027': ['Por licitar · comercial', 'tg-lic']
             }[l.grupo] || [l.grupo, 'tg-off'];
             let extra = '';
             if (!l.incluida) extra = ' <em class="tag tg-off">Excluido</em>';

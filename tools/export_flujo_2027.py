@@ -225,6 +225,7 @@ FLUJO_FILAS = {
     "lic2027": "Licitación 2027-01",
     "zfi": "Zona Franca Industrial",
     "adicionales": "Lotes adicionales",
+    "cpag2027": "Licitaciones CPAG 2027",
     "otros": "Otros ingresos",
     "totalIngresos": "TOTAL INGRESOS",
     "obrasCJB": "Cubicaciones obras CJB",
@@ -243,7 +244,12 @@ FLUJO_FILAS = {
     "estado": "Estado",
 }
 
-GRUPO_CAMPO = {"LIC 2026-01": "lic2026", "LIC 2027-01": "lic2027", "ZFI 2027-02": "zfi", "Lotes adicionales": "adicionales"}
+GRUPO_CAMPO = {"LIC 2026-01": "lic2026", "LIC 2027-01": "lic2027", "ZFI 2027-02": "zfi", "Lotes adicionales": "adicionales",
+               "CPAG HAB 2027": "cpag2027", "CPAG COM 2027": "cpag2027"}
+ING_KEYS = ["cartera", "recupLegal", "lic2026", "lic2027", "zfi", "adicionales", "cpag2027"]
+# grupo de licitación -> categoría de color en el mapa
+GRUPO_CAT = {"LIC 2026-01": "adjudicada", "LIC 2027-01": "licitar", "ZFI 2027-02": "licitar",
+             "CPAG HAB 2027": "licitar", "CPAG COM 2027": "licitar"}
 
 
 def leer_panel(wb):
@@ -499,12 +505,11 @@ def armar_escenario(wb, meses):
             acc["recupLegal"][idx[c["mesRecupLegal"]]] += c["_recupRaw"]
     for rt in retenidos:
         add_into(acc["retenidos"], rt["_pagosRaw"])
-    for k in ["obrasCJB", "obrasCPAG", "mantGeneral", "cartera", "recupLegal", "lic2026", "lic2027", "zfi",
-              "adicionales", "retenidos"]:
+    for k in ["obrasCJB", "obrasCPAG", "mantGeneral", "retenidos"] + ING_KEYS:
         check(k, acc[k], f[k])
 
     gastos_fijos = [sum(v) for v in zip(f["gfRRHH"], f["gfCargaFija"], f["gfAdmin"], f["gfMant"], f["gfBienes"])]
-    tot_ing = [sum(v) for v in zip(*(f[k] for k in ["cartera", "recupLegal", "lic2026", "lic2027", "zfi", "adicionales", "otros"]))]
+    tot_ing = [sum(v) for v in zip(*(f[k] for k in ING_KEYS + ["otros"]))]
     tot_egr = [sum(v) for v in zip(f["obrasCJB"], f["obrasCPAG"], f["mantGeneral"], f["retenidos"], gastos_fijos)]
     check("TOTAL INGRESOS", tot_ing, f["totalIngresos"])
     check("TOTAL EGRESOS", tot_egr, f["totalEgresos"])
@@ -534,7 +539,7 @@ def armar_escenario(wb, meses):
         if rt["enMapa"]:
             add_into(lotes[rt["clave"]]["egresosMes"], rt["_pagosRaw"])
     for l in lics:
-        cat = {"LIC 2026-01": "adjudicada", "LIC 2027-01": "licitar", "ZFI 2027-02": "licitar"}.get(l["grupo"], "opcional")
+        cat = GRUPO_CAT.get(l["grupo"], "opcional")
         tag(l["clave"], cat)
         if l["enMapa"]:
             add_into(lotes[l["clave"]]["ingresosMes"], l["_cobrosRaw"])
@@ -596,7 +601,7 @@ def armar_escenario(wb, meses):
         for rt in retenidos:
             if rt["proyecto"] == p:
                 add_into(egr["retenidos"], rt["_pagosRaw"])
-        ing_keys = ["cartera", "recupLegal", "lic2026", "lic2027", "zfi", "adicionales"]
+        ing_keys = ING_KEYS
         egr_keys = ["obras", "mantGeneral", "retenidos"]
         ing_d = {k: [r2(v) for v in ing[k]] for k in ing_keys}
         egr_d = {k: [r2(v) for v in egr[k]] for k in egr_keys}
@@ -609,7 +614,7 @@ def armar_escenario(wb, meses):
     esc = {
         "kpis": kpis,
         "mensual": {
-            "ingresos": {k: R(f[k]) for k in ["cartera", "recupLegal", "lic2026", "lic2027", "zfi", "adicionales", "otros"]}
+            "ingresos": {k: R(f[k]) for k in ING_KEYS + ["otros"]}
             | {"total": R(f["totalIngresos"])},
             "egresos": {"obrasCJB": R(f["obrasCJB"]), "obrasCPAG": R(f["obrasCPAG"]), "mantGeneral": R(f["mantGeneral"]),
                         "retenidos": R(f["retenidos"]), "gastosFijos": R(gastos_fijos),
