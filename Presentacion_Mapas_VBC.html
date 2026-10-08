@@ -1311,10 +1311,202 @@
             animation: scaleIn 0.5s ease 0.75s forwards;
             opacity: 0;
         }
+
+        /* ======================== */
+        /* MODO CLARO               */
+        /* ======================== */
+        .theme-btn {
+            position: fixed;
+            top: 128px;
+            right: 20px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .theme-btn:hover {
+            border-color: #00f2fe;
+        }
+
+        body.light-mode {
+            background: linear-gradient(135deg, #f8fafc 0%, #e8eef6 50%, #f8fafc 100%);
+            background-size: 400% 400%;
+            color: #0f172a;
+        }
+
+        body.light-mode .glass-panel {
+            background: rgba(255, 255, 255, 0.85) !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+            color: #0f172a !important;
+        }
+
+        body.light-mode .glass-panel h4,
+        body.light-mode .glass-panel p,
+        body.light-mode .glass-panel li {
+            color: #334155 !important;
+        }
+
+        body.light-mode h1,
+        body.light-mode h2,
+        body.light-mode h3,
+        body.light-mode h4,
+        body.light-mode .sub {
+            color: var(--blue-dark) !important;
+        }
+
+        body.light-mode .subtitle,
+        body.light-mode .cover-slide .subtitle {
+            color: #334155 !important;
+        }
+
+        body.light-mode .header-bar {
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        body.light-mode .header-title {
+            color: var(--blue-dark);
+        }
+
+        body.light-mode .cover-logo-section,
+        body.light-mode .cover-stat {
+            background: #ffffff;
+            border-color: #e2e8f0;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        body.light-mode .cover-slide h1 {
+            text-shadow: none;
+        }
+
+        body.light-mode .cover-slide h1 .accent {
+            color: var(--red-primary);
+        }
+
+        body.light-mode .cover-stat-value {
+            color: var(--blue-medium);
+        }
+
+        body.light-mode .cover-stat-label {
+            color: #475569;
+        }
+
+        body.light-mode .problem-card,
+        body.light-mode .solution-card,
+        body.light-mode .comparison-box,
+        body.light-mode .status-card,
+        body.light-mode .benefit-item,
+        body.light-mode .presented-to {
+            background: #ffffff;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        body.light-mode .problem-card,
+        body.light-mode .solution-card,
+        body.light-mode .status-card,
+        body.light-mode .benefit-item,
+        body.light-mode .presented-to {
+            border-color: #e2e8f0;
+        }
+
+        body.light-mode .problem-content h4,
+        body.light-mode .solution-card h4,
+        body.light-mode .benefit-text h4,
+        body.light-mode .timeline-step h4 {
+            color: #0f172a !important;
+        }
+
+        body.light-mode .status-card.terminado h4 {
+            color: #16a34a !important;
+        }
+
+        body.light-mode .status-card.construccion h4 {
+            color: #d97706 !important;
+        }
+
+        body.light-mode .status-card.disponible h4 {
+            color: var(--blue-medium) !important;
+        }
+
+        body.light-mode .status-card.paralizado h4 {
+            color: var(--red-primary) !important;
+        }
+
+        /* La regla global de modo oscuro (p, li, .demo-note… #f8fafc !important) obliga a usar !important */
+        body.light-mode p,
+        body.light-mode .problem-content p,
+        body.light-mode .solution-card p,
+        body.light-mode .benefit-text p,
+        body.light-mode .timeline-step p,
+        body.light-mode .status-card p,
+        body.light-mode .presented-to p,
+        body.light-mode .demo-note {
+            color: #475569 !important;
+        }
+
+        body.light-mode .comparison-list li {
+            color: #1e293b !important;
+            border-bottom-color: #e2e8f0;
+        }
+
+        body.light-mode .benefit-icon {
+            background: #eef2f7;
+        }
+
+        body.light-mode .demo-btn {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: var(--blue-dark);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        body.light-mode .demo-btn:hover {
+            background: #f0f7ff;
+            border-color: var(--blue-light);
+            color: var(--blue-dark);
+        }
+
+        body.light-mode .presented-to strong {
+            color: #059669;
+        }
+
+        body.light-mode .slide-footer.cover-footer {
+            background: var(--blue-dark);
+        }
+
+        body.light-mode .server-status,
+        body.light-mode .theme-btn {
+            background: rgba(255, 255, 255, 0.92);
+            border-color: #e2e8f0;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+        }
+
+        body.light-mode .server-status {
+            color: #059669;
+        }
+
+        body.light-mode .theme-btn {
+            color: #334155;
+        }
     </style>
 </head>
 
 <body>
+    <script src="vbc-core/vbc-theme-sync.js"></script>
+    <!-- Tema claro / oscuro -->
+    <button class="theme-btn" id="themeToggle" title="Cambiar tema"
+        onclick="document.body.classList.toggle('light-mode')"><span class="ico">☀️</span> <span class="txt">Modo claro</span></button>
+
     <!-- Server Status -->
     <div class="server-status">
         <div class="status-dot" id="statusDot"></div>

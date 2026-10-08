@@ -81,6 +81,111 @@
             box-shadow: 0 4px 15px rgba(0, 168, 255, 0.4);
         }
 
+        .nav-btn.theme {
+            background: #1e293b;
+            color: #e2e8f0;
+            border: 1px solid #334155;
+        }
+
+        /* ============ MODO CLARO (paleta de css/styles.css) ============ */
+        body.light-mode {
+            background: #f8fafc;
+            color: #0f172a;
+        }
+
+        body.light-mode .header {
+            background: linear-gradient(90deg, #ffffff 0%, #f1f5f9 100%);
+            border-bottom-color: #0066cc;
+        }
+
+        body.light-mode .header h1 {
+            background: linear-gradient(90deg, #0066cc, #7c3aed);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        body.light-mode .nav-btn.theme {
+            background: #ffffff;
+            color: #334155;
+            border-color: #e2e8f0;
+        }
+
+        body.light-mode .nav-btn:hover {
+            box-shadow: 0 4px 15px rgba(0, 102, 204, 0.25);
+        }
+
+        body.light-mode .map-wrapper {
+            background: #ffffff;
+        }
+
+        body.light-mode .map-panel:first-child {
+            border-right-color: #0066cc;
+        }
+
+        body.light-mode .map-panel:last-child {
+            border-left-color: #7c3aed;
+        }
+
+        body.light-mode .map-label {
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+        }
+
+        body.light-mode .modal-overlay {
+            background: rgba(15, 23, 42, 0.35);
+        }
+
+        body.light-mode .modal {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border-color: #0066cc;
+            box-shadow: 0 20px 60px rgba(0, 102, 204, 0.18);
+        }
+
+        body.light-mode .modal-header,
+        body.light-mode .modal-row {
+            border-bottom-color: #e2e8f0;
+        }
+
+        body.light-mode .modal-id,
+        body.light-mode .modal-area-value {
+            color: #0066cc;
+        }
+
+        body.light-mode .modal-badge {
+            color: #ffffff;
+        }
+
+        body.light-mode .modal-close,
+        body.light-mode .modal-label,
+        body.light-mode .modal-area-label {
+            color: #64748b;
+        }
+
+        body.light-mode .modal-close:hover,
+        body.light-mode .modal-value {
+            color: #0f172a;
+        }
+
+        body.light-mode .modal-area {
+            background: linear-gradient(135deg, #e0efff, #f8fafc);
+        }
+
+        body.light-mode .tooltip {
+            background: rgba(255, 255, 255, 0.97);
+            border-color: #0066cc;
+            color: #0f172a;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+        }
+
+        body.light-mode .spinner {
+            border-color: #e2e8f0;
+            border-top-color: #0066cc;
+        }
+
+        body.light-mode .error-state {
+            color: #0f172a !important;
+        }
+
         .maps-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -336,9 +441,11 @@
 </head>
 
 <body>
+    <script src="vbc-core/vbc-theme-sync.js"></script>
     <header class="header">
         <h1>📊 Vista Combinada de Mapas</h1>
         <nav class="nav-buttons">
+            <button class="nav-btn theme" id="themeToggle" title="Cambiar tema"><span class="ico">☀️</span> <span class="txt">Modo claro</span></button>
             <button class="nav-btn" onclick="exportExecutivePDF()"
                 style="background: linear-gradient(135deg, #10b981, #059669); color: white;">📄 Exportar PDF</button>
             <a href="MAPA CPAG/index.html" class="nav-btn cpag">🏛️ CPAG Completo</a>
@@ -487,13 +594,14 @@
 
         function exportExecutivePDF() {
             const elementosOcultar = document.querySelectorAll('.nav-buttons');
+            const fondoPdf = document.body.classList.contains('light-mode') ? '#f8fafc' : '#0f172a';
             elementosOcultar.forEach(el => el.style.display = 'none');
             const contenedor = document.body;
             const options = {
                 margin: 10,
                 filename: `Reporte_Vista_Combinada_${new Date().toISOString().split('T')[0]}.pdf`,
                 image: { type: 'jpeg', quality: 1 },
-                html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#0f172a' },
+                html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: fondoPdf },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
             };
             html2pdf().set(options).from(contenedor).save().then(() => {
@@ -691,6 +799,9 @@
         }
 
         // Event listeners
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+        });
         document.getElementById('modalClose').addEventListener('click', hideModal);
         document.getElementById('modalOverlay').addEventListener('click', (e) => {
             if (e.target === e.currentTarget) hideModal();
