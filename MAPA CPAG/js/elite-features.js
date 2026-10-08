@@ -65,8 +65,14 @@ const TYPE_COLORS = {
 // DATA FUSION EXTENSIONS
 // ------------------------------------
 App.Data.loadStats = async function () {
+    // CPAG no tiene datos_estadisticas.csv propio: se usan las constantes sin pedir el archivo (daba 404)
+    const STATS_PATH = null;
+    if (!STATS_PATH) {
+        this.statsData = HISTORICAL_METAS;
+        return this.statsData;
+    }
     try {
-        const text = await this.fetchCSV('data/datos_estadisticas.csv');
+        const text = await this.fetchCSV(STATS_PATH);
         const rows = this.parseCSV(text);
 
         this.statsData = {};

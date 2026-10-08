@@ -1,8 +1,9 @@
 const CONFIG = {
     paths: {
         lotes: '../Datos de CPAG.csv',
-        habitacional: 'data/Planilla Base Habitacionales.csv',
-        comercial: 'data/Planilla general Comercial.csv',
+        // CPAG no tiene planillas de habitacionales/comerciales (son de CJB): no se piden
+        habitacional: null,
+        comercial: null,
         svg: 'assets/mapa.svg'
     },
     baseline: {
@@ -52,8 +53,8 @@ const App = {
                 // Load secondary CSVs first (using allSettled to prevent total failure)
                 console.log('Loading secondary CSVs...');
                 const results = await Promise.allSettled([
-                    this.fetchCSV(CONFIG.paths.habitacional),
-                    this.fetchCSV(CONFIG.paths.comercial)
+                    CONFIG.paths.habitacional ? this.fetchCSV(CONFIG.paths.habitacional) : Promise.resolve(null),
+                    CONFIG.paths.comercial ? this.fetchCSV(CONFIG.paths.comercial) : Promise.resolve(null)
                 ]);
 
                 const habText = results[0].status === 'fulfilled' ? results[0].value : null;
