@@ -1,5 +1,5 @@
 ﻿No. Carpeta,Nombre del Proyecto,Lote,Desarrollador,Georeferencia,Superficie Total (m²),Cant. Edificios,Cant. Manzanas,VIVIENDAS ADJUDICADAS,Total de Apartamentos planos arq.,VIVIENDAS REALES ,Distribución de Apartamentos,Dormitorios,Áreas Verdes (m²),Áreas Recreativas (m²),Áreas de Huertos (m²),Total Estacionamientos,Estacionamientos Generales,Estacionamientos Discapacitados,Cisterna (si/no),Cant. De filtrantes,Linderos del Proyecto,Ubicación / Lotes Colindantes,Accesos Principales,Infraestructura y Equipamiento,Seguridad,Observaciones,FECHA DE ENTREGA DE PROYECTO, TIEMPO PARALIZADOS,Cant. Imbornales,Cant. De filtrantes2,Fecha de Aprobación de master plan,Estatus,Column1
-1,Camino Verde,09-27-01,"Consorcio AGK-SI , SRL",420604.146;2044206.915,"88,119.59",79,1,"1,264","1,264",,"|Tipo A, 51m²|
+1,Camino Verde,09-27-01,"Consorcio AGK-SI, SRL",420604.146;2044206.915,"88,119.59",79,1,"1,264","1,264",,"|Tipo A, 51m²|
 |Tipo B, 65m²|
 |Tipo C, 80m²|                                 ","2H, 3H","16,083.12",1028.45 (5.3%),3167.9,1281,1144,137,,,"Norte: 3.00 m
 Sur: 3.00 m
@@ -26,7 +26,7 @@ Oeste: 5.00 m","Norte: Boulevard la Mujer
 Sur:   Lote 08-23-07
 Este: Av. Camino Real
 Oeste: Av. La Gaviota","Av. Camino Real, Av. La Gaviota","Parques, área infantil, 1/2 cancha basketball, huerto, multiuso",2 Garitas de seguridad,Planos solicitados,,,,,,PARALIZADO,08-23-01
-4,La Maravilla,07-31-01,Consorcio Pequeño Burgues,421341.948;2044353.617,"12,852.43",11,1,196,196,,"|Tipo C, 80m²|
+4,La Maravilla,07-31-01,Consorcio Pequeño Burgués,421341.948;2044353.617,"12,852.43",11,1,196,196,,"|Tipo C, 80m²|
 |Tipo D, 90m²|
 |Tipo E, 100m²|",3H,1945.43 (15%),194.11 (2%),392 (3%),198,192,6,,,"Norte:  4m
 Sur: 2.81m
@@ -44,7 +44,7 @@ Oeste: 3.00m","Norte: Boulevard la Mujer
 Sur: Boulevard el Oro y la Paz
 Este: Av. El Sembrador
 Oeste: Calle Fragata, Lote 06-26-04, Lote 06-26-03, Lote 06-26-02","Boulevard el Oro y La Paz,  Calle Fragata","Gazebo, juego infantil, ciclovía, cancha basketball",2 Garitas de seguridad,"Proyecto en ejecucion, hasta el momento se levantaron 656 viviendas ",,,14,,,EJECUCION,06-26-01
-6,Res. Palmera IV,05-17-05,Constructora del Pais CODELPA,#N/A,"47,735.35",41,1,656,656,,"|Tipo A, 58m²|
+6,Res. Palmera IV,05-17-05,Constructora del País CODELPA,,"47,735.35",41,1,656,656,,"|Tipo A, 58m²|
 |Tipo B, 75m²|
 |Tipo C, 84m²|
 |Tipo E, 75m²|
@@ -55,7 +55,7 @@ Oeste: 8.55m","Norte: Calle Papa Juan
 Sur: Calle Angela Gaviño
 Este: Lote 05-17-03
 Oeste: Lote 05-17-02, 05-17-01","Calle Papa Juan, Calle Angela Gaviño",,4 Garitas de seguridad,,,,,,,EJECUCION,05-17-05
-7,Palmera III,04-16-01,Constructora del Pais CODELPA,;,"23,704.06",16,1,336,336,,"|Tipo A, 58m²|
+7,Palmera III,04-16-01,Constructora del País CODELPA,;,"23,704.06",16,1,336,336,,"|Tipo A, 58m²|
 |Tipo B, 75m²|
 |Tipo C, 84m²|
 |Tipo E, 75m²|
@@ -66,20 +66,20 @@ Oeste:","Norte:  Calle Río Verde
 Este: Av. El Sembrador
 Oeste: Av. Camino Real NO
 Sur: Calle Papa Juan","Calle Río Verde, Av. El Sembrador, Av. Camino Real NO, Calle Papa Juan",,4 Garitas de seguridad,,23-Feb,,,,23-Feb,CONCLUIDO,04-16-01
-8,Res. 5ta Residence,03-09-02,Consorcio Conabesa Bello & Diaz,421395.264;2045802.456,"16,298.90",30,1,240,240,,"|Tipo -Rango 3-, 70-80 m²|",3H,2011 (12.24%),830.12 (5.05%),491.86 (2.99%),241,278,5,No,NA,"Norte: 144.97 m
+8,Res. 5ta Residence,03-09-02,Consorcio Conabesa Bello & Díaz,421395.264;2045802.456,"16,298.90",30,1,240,240,,"|Tipo -Rango 3-, 70-80 m²|",3H,2011 (12.24%),830.12 (5.05%),491.86 (2.99%),241,278,5,No,,"Norte: 144.97 m
 Sur: 144.91 m
 Este: 113.09 m
 Oeste: 111.8 m","Norte:  Lote 03-09-08
 Este: Av. Camino Real
 Oeste: Terreno exterior CJB
 Sur: Lote 03-09-03",Calle Camino Real,Depósito de residuos sólidos y tanque de gas conforme a norma,2 Garitas de seguridad,,,,,,30/05/2019,EJECUCION,03-09-02
-9,Res. Rio Grande,03-09-01,Consorcio Rio Grande,421248.531;2046101.944,"29,450.42",22,1,444,440,100 en proceso ,"|Tipo A, 52.76 m²|
+9,Res. Rio Grande,03-09-01,Consorcio Río Grande,421248.531;2046101.944,"29,450.42",22,1,444,440,100 en proceso ,"|Tipo A, 52.76 m²|
 |Tipo B, 66.9 m²|
 |Tipo C, 79.81m²|","2H, 3H",5588.94 (19%),3106.49 (9%),1441.20 (4%),440,426,14,NO ,4,,"Norte:  Calle Manuel Sicuri
 Este: Lote 03-09-07
 Oeste: Lote 02-07-01
 Sur: Terreno exterior CJB",Calle Manuel Sicuri,"Gazebo, juego infantil, ciclovía, huertos, gimnasia al aire libre, parques",,,21-Aug,,4,,21-Aug,EJECUCION,03-09-01
-10,Habitad II,03-09-08,Consorcio Ingasa-Risek,421444.713;2045903.506,"9,082.36",8.5,2,128,136,128,"|Tipo R1, 50 m²|
+10,Habitad II,03-09-08,Consorcio Ingasa-Rizek,421444.713;2045903.506,"9,082.36",8.5,2,128,136,128,"|Tipo R1, 50 m²|
 |Tipo R2, 69 m²|
 |Tipo R3, 80 m²|","2H, 3H",492.95 (5%),569.32 (6%),292.26 (3%),150,150,0,NO,2,"Norte: 2.00m
 Sur:  6.50m
@@ -88,7 +88,7 @@ Oeste: 5.00m","Norte: Lote educacional 03-09-07
 Sur: Lote habitacional 03-09-02
 Este: Ave. Camino Real 
 Oeste: Limite CJB",Avenida Camino Real ,Depósito de residuos sólidos y tanque de gas conforme a norma,Sin garita de control de acceso ,,24-May,,0,,24-May,CONCLUIDO,03-09-08
-11,Habitad III,01-02-08,Consorcio Ingasa-Risek,421373.791;2046572.189,"10,000.56",9.5,1,144,152,144,"|Tipo R1, 50 m²|
+11,Habitad III,01-02-08,Consorcio Ingasa-Rizek,421373.791;2046572.189,"10,000.56",9.5,1,144,152,144,"|Tipo R1, 50 m²|
 |Tipo R2, 69 m²|
 |Tipo R3, 80 m²|","2H, 3H",492.95 (5%),460.62 (5%),308.6 (3%),158,0,0,NO,2,"Norte: 12.00m
 Sur:  6.50m
@@ -97,7 +97,7 @@ Oeste: 5.00m","Norte: Limite CJB
 Sur: Calle la Muchacha de la Guaira
 Este: Lote habitacional 01-02-04
 Oeste: Lote habitacional 01-02-09",Calle Muchacha de la Guaira ,Depósito de residuos sólidos y tanque de gas conforme a norma,Sin garita de control de acceso ,,,,0,,,EJECUCION,01-02-08
-12,Sembrador VI,07-31-02,"Constructora Bisono, S.A",421452.237;2044244.611,"59,516.61",68,1,544,544,,"|Tipo C mod,96.39 m²|
+12,Sembrador VI,07-31-02,"Constructora Bisonó, S.A.",421452.237;2044244.611,"59,516.61",68,1,544,544,,"|Tipo C mod,96.39 m²|
 ",3H,1491.40 (2.51%),0,1168.44 (1.96%),1105,1092,13,,,"Norte: 19.75m
 Sur:  7.79m
 Este: 3.00m
@@ -105,7 +105,7 @@ Oeste: 5.30m","Norte: Boulevard el Oro y La Paz
 Sur: Calle La Mañosa Este 
 Este: Av. El Sembrador 
 Oeste: Lotes Institucionales 07-31-03,07-31-04,07-31-05",Boulevard el Oro y La Paz,Depósito de residuos sólidos y tanque de gas conforme a norma,Garita de control de acceso para entrada y salida,,,,,,,EJECUCION,07-31-02
-13,Sembrador III,01-03-01,CONSTRUCTORA BISONO S.A,421577.178;2046420.652,"141,828.65",158,5,"1,624","1,936","1,640","|Tipo B mod,  m²|
+13,Sembrador III,01-03-01,"Constructora Bisonó, S.A.",421577.178;2046420.652,"141,828.65",158,5,"1,624","1,936","1,640","|Tipo B mod,  m²|
 |Tipo C mod, 96.39 m²|
 |Tipo F, m²|
 |Tipo I, 69.85 m²||
@@ -118,7 +118,7 @@ Noreste: Av. El Sembrador
 Sur:  Calle Rey David
 Este: Av. Camino Real, NO
 Oeste: Lotes 01-03-03, 01-03-02","Av. Camino Real NO, Calle Rey David, Calle Muchacha de la Guaira y Av. El Sembrador",Depósito de residuos sólidos y tanque de gas conforme a norma,,,23-Jan,,18,,23-Jan,CONCLUIDO,01-03-01
-14,Sembrador VIII A & B,"02-07-02,02-07-03",CONSTRUCTORA BISONO S.A,#N/A,"23,527.56",27,1,328,360,272,"|Tipo I mod,68.62 m²|
+14,Sembrador VIII A & B,"02-07-02,02-07-03","Constructora Bisonó, S.A.",,"23,527.56",27,1,328,360,272,"|Tipo I mod,68.62 m²|
 |Tipo I,69.85 m²|
 |Tipo J,58.46 m²|","2H, 3H","1,401.65 (6.03%)",200 (0.85%),772.21 (3.32%),337,328,9,NO,12,"Norte: 19.34 m
 Sur: 3.00 m
@@ -126,7 +126,7 @@ Este: 2.00m
 Oeste: 6.20 m","Norte: Calle Rey David Este: Lote Hab 02-07-01
 Oeste: Calle Cayo Confites 
 Sur: Limite CJB",Calle Cayo Confites ,Depósito de residuos sólidos y tanque de gas conforme a norma,Sin garita de control de acceso ,,25-Apr,,11,,25-Apr,EJECUCION,"02-07-02,02-07-03"
-16,Sembrador VII A & B,"02-04-03,02-04-02","Constructora Bisono, S.A",#N/A,"24,233.85",35,1,328,328,,"|Tipo C mod, 96.39 m²|
+16,Sembrador VII A & B,"02-04-03,02-04-02","Constructora Bisonó, S.A.",,"24,233.85",35,1,328,328,,"|Tipo C mod, 96.39 m²|
 |Tipo F, m²|
 |Tipo I, 69.85 m²||
 |Tipo I mod, 72.43 m²|
@@ -134,7 +134,7 @@ Sur: Limite CJB",Calle Cayo Confites ,Depósito de residuos sólidos y tanque de
 Sur: Calle Rey David
 Este: Lote Habitacional 02-04-01
 Oeste: Calle Cayo Confites ",Calle Cayo Confites ,Depósito de residuos sólidos y tanque de gas conforme a norma,Sin garita de control de acceso ,,,,,,24-May,CONCLUIDO,"02-04-03,02-04-02"
-18,Sembrador IX - X,"01-01-04,01-01-05","Constructora Bisono, S.A",#N/A,"34,409.55",39,2,560,504,504,"
+18,Sembrador IX - X,"01-01-04,01-01-05","Constructora Bisonó, S.A.",,"34,409.55",39,2,560,504,504,"
 |Tipo I, 69.85 m²||
 |Tipo I mod, 72.43 m²|
 ",3H,1454.52 (4.23%),300 (0.87%),1065.33 (3.10%),515,510,5,NO,11,"Norte: 5.07 m
@@ -145,7 +145,7 @@ Sur: 4.21 m
 Sur: Lote habitacional 01-01-06
 Este: Limite CJB
 Oeste: Av El Sembrador ",Avenida El Sembrador,Depósito de residuos sólidos y tanque de gas conforme a norma,Garita de control de acceso para entrada y salida,Proyecto en proceso de permisologia aprobado recientemente,,,,,,EJECUCION,"01-01-04,01-01-05"
-20,Terrazol I,04-12-04,Grupo Inmobiliario Terrazas GIT,;,"14,201.00",26,1,208,216,208,"|Tipo R1, 55 m²|
+20,Terrazol I,04-12-04,Grupo Inmobiliario Terrazas (GIT),;,"14,201.00",26,1,208,216,208,"|Tipo R1, 55 m²|
 |Tipo R2, 70 m²|
 |Tipo R3, 87,95,86 m²|","3H, 2H",271 (1.91%),271 (1.91%),437 (3.08%),190,184,6,NO,14,"Norte: 2.30 m
 Este: 2.00 m 
@@ -155,7 +155,7 @@ Sur: 2.30 m
 Sur: Lote habitacional 04-12-05
 Este: Calle Paseo Rio Verde
 Oeste: Av El Sembrador ",Avenida El Sembrador,Depósito de residuos sólidos y tanque de gas conforme a norma,Garita de control de acceso para entrada y salida,,,,14,,,EJECUCION,04-12-04
-21,Res La Marquesa II,01-01-09,Construcciones Planificadas,#N/A,"23,683.68",41,1,328,328,,"|Tipo R1, 60 m²|
+21,Res La Marquesa II,01-01-09,Construcciones Planificadas,,"23,683.68",41,1,328,328,,"|Tipo R1, 60 m²|
 |Tipo R3, 83 m²|","2H, 3H",7457.22 (31.54%),"2,007.35 (8.49%)",685.67 (2.90%),420,420,8,,,,"Norte: Avenida El Sembrador.
 Sur: Área verde. Al igual que se encuentra la carretera Juan Pablo II.
 Este: Lote habitacional 01-01-07 donde sobresale parcialmente el área de baños.
@@ -171,7 +171,7 @@ Sur: 3.50m
 Sur: Calle Paseo Río Verde, Av. El Sembrador
 Este: Lote 04-13-01
 Oeste: Lote 01-01-09",Av. El Sembrador,,,,,,,,,EJECUCION,01-01-07
-23,N/A,01-01-03,"Constructora Bisono, S.A",421596.846;2047101.187,"27,055.42",,,384,384,,,,,,,,,,,,,,,,,Adjudicado recientemente a Constructora Bisonó,,,,,,NO INICIADO,01-01-03
+23,,01-01-03,"Constructora Bisonó, S.A.",421596.846;2047101.187,"27,055.42",,,384,384,,,,,,,,,,,,,,,,,Adjudicado recientemente a Constructora Bisonó,,,,,,NO INICIADO,01-01-03
 24,Por Definir,01-02-04,RYZEK (Promotora Pradera Verde),421504.696;2046800.498,,,,1176,"1,176",,"|Tipo R1, 54.66 m²|
 |Tipo R2, 68.50 m²|
 |Tipo R3, 80 m²|","2H, 3H","34,780 (26.43%)",1765.52 (2.20%),2720.20 (3.64%),1176,1173,3,,,"Norte: 2.85 m
@@ -181,8 +181,8 @@ Oeste:  2.00m","Norte: Lote 01-02-03
 Sur: Calle Muchacha de la Guaira, Lote 01-02-05
 Este: Av. Sembrador
 Oeste: Límite CJB, Lote 01-02-06, 01-02-08","Calle la Muchacha de la Guaira, Av. El Sembrador","Parque, juegos infantiles",,Reasignado a Promotora Pradera Verde(RIZEK),,,,,,NO INICIADO,01-02-04
-25,Rio Grande,04-15-01,RIZEK,;,,102,1,600,600,,,,,,,,,,,,,,,,,Master Plan en proceso de aprobación,,,,,,NO INICIADO,04-15-01
-26,Casa Coral,04-12-05,Constructora OV,#N/A,"50,815.58",82,1,528,752,,"|Tipo R1, 55 m²|
+25,Rio Grande,04-15-01,Consorcio Rizek,;,,102,1,600,600,,,,,,,,,,,,,,,,,Master Plan en proceso de aprobación,,,,,,NO INICIADO,04-15-01
+26,Casa Coral,04-12-05,Constructora OV,,"50,815.58",82,1,528,752,,"|Tipo R1, 55 m²|
 |Tipo R2, 69 m²|
 |Tipo R3, 80 m²|","3H,2H",10056.53 (19.79%),828.34 (1.63%),1552.32 (3.06%),752,752,0,,,"Norte: 3.90 m
 Sur: 3.20 m
@@ -195,7 +195,7 @@ Oeste: Calle Rio Verde. ",Avenida El Sembrador,Depósito de residuos sólidos y 
 Sur: Calle La Vega.
 Este: Lote comercial 04-39-02
 Oeste: Avenida el Sembrador ",Calle Rio Verde,,,Proceso de aprobación de master plan,,,,,,NO INICIADO,04-39-01
-28,Terrazol II,04-13-03,RJN-Proconstruccion,421898.516;2045419.795,"44,877.40",41,1,656,656,,"|Tipo R1, 55 m²|
+28,Terrazol II,04-13-03,RJN-Proconstrucción,421898.516;2045419.795,"44,877.40",41,1,656,656,,"|Tipo R1, 55 m²|
 |Tipo R2, 70 m²|
 |Tipo R3, 87,95 m²|","3H, 2H",1464.724 (3.26%),1464.724 (3.26%),1312 (2.92%),620,601,19,,,"Norte: 2.00 m
 Este: 10.00 m 
@@ -205,7 +205,7 @@ Sur: 2.30 m
 Sur: Calle La Vega 
 Este: PTAR 04-13-04
 Oeste: Calle La Mancha  ",La Mancha Indeleble ,Depósito de residuos sólidos y tanque de gas conforme a norma,Garita de control de acceso para entrada y salida,,,,,,,EJECUCION,04-13-03
-29,Residencial Sol del Este,04-40-01,Servinsco,#N/A,"121,447.47",,21,1528,"1,520",,"|Tipo A+, 92.95 m² |
+29,Residencial Sol del Este,04-40-01,SERVINSCO,,"121,447.47",,21,1528,"1,520",,"|Tipo A+, 92.95 m² |
 |Tipo B, 67.56 m² |
 |Tipo C 55.06 m² |","2H, 3H","14,573.69 (12%)","3,643.42 (3%)","3,643.42 (3%)",1810,1731,35,,,"Norte: Calle La Vega (ubicación de garitas de seguridad)
 Sur: Área verde
@@ -215,7 +215,7 @@ Sur: Área verde
 Este: Área verde
 Oeste: Lote comercial 04-40-02",Calle La Vega,"Primer Espacio: Parques, Cancha de baloncesto techada con baños para damas y caballeros, Auditorio, Salón de reuniones, Anfiteatro, Gazebos, Áreas de picnic, Parque para mascotas, Área de juegos infantiles.
 Segundo Espacio: Salón multiuso con gimnasio, área de yoga y zona de juegos de mesa, Media cancha, Juegos al aire libre, Pista de patinaje, Área de ejercicio, Oficina administrativa, Gradas y baños, Bancos exteriores, estacionamientos distribuidos alrededor de los parques.",Cuenta con dos garitas de control de acceso para entrada y salida de personal y vehículos,Proceso de aprobación de master plan,,,,,,NO INICIADO,04-40-01
-30,Sembrador I,08-22-01,"Constructora Bisono, S.A",420587.837;2044622.298,"102,142.01",103,6,1176,"1,504","1,176","
+30,Sembrador I,08-22-01,"Constructora Bisonó, S.A.",420587.837;2044622.298,"102,142.01",103,6,1176,"1,504","1,176","
 |Tipo F, m²|
 |Tipo I, 69.85 m²||
 |Tipo J, 58.46 m²|","2H, 3H",8989.46 (8.8%),0,3967.83 (3.9%),1602,1573,29,NO ,8,"Norte: 22.2 m
@@ -234,7 +234,7 @@ Oeste: 3.00 m","Norte: Calle Segunda SE
 Sur:  
 Este: Calle Primera SE 
 Oeste: Av. Camino Real",Entrada y salida por la Calle Primera SE y Av. Camino Real,"Área social con huerto urbano, 3 huertos urbanos, gazebo y salón multiusos, depósito de gas y basura, área de juegos infatiles y cancha deportiva.",Sin garita de control de acceso ,,13-Jun,,,,18-Jun,CONCLUIDO,07-35-01
-32,Res. Crisfer,07-30-02,Crisfer Inmobiliaria S.A.,421152.549;2044229.911,"16,860.64",14,1,240,224,240,"|Tipo R1, 54.27 m²|
+32,Res. Crisfer,07-30-02,"Crisfer Inmobiliaria, S.A.",421152.549;2044229.911,"16,860.64",14,1,240,224,240,"|Tipo R1, 54.27 m²|
 |Tipo R2, 65.23 m²|
 |Tipo R3, 71.13 m²|","1H, 2H, 3H",3489.61 (22.86%),674.16,581,226,216,10,,10,"Norte: 5.00 m
 Sur: 18.20 m
@@ -243,7 +243,7 @@ Oeste: 2.06 m","Norte: Lote 07-30-01
 Sur:  Calle Navidad Este
 Este: Lote 07-30-05, Lote 07-30-04, Lote 07-30-03
 Oeste: Av. Camino Real",Camino Real SE,"Parque, area deportiva, salon multiuso, huerto, gazebo, ciclovía, juegos infantiles",,,17-Mar,,10,,17-Mar,CONCLUIDO,07-30-02
-33,Res. Rio Verde,07-30-01,Tecnoamerica,421171.499;2044341.738,"17,626.94",22,,280,280,280,"|Tipo R1, 46.21|
+33,Res. Rio Verde,07-30-01,Tecnoamérica,421171.499;2044341.738,"17,626.94",22,,280,280,280,"|Tipo R1, 46.21|
 |Tipo R2, 56.38|
 |Tipo R3, 70.21-76.1. m²|","2H, 3H",2825.46(16.03%),1119.43(6.4%),544.30(3.1%),230,224,6,NO,18,"Norte: 3.00 m
 Este: 5.00 m 
@@ -253,7 +253,7 @@ Sur: 3.00 m
 Sur: Lote habitacional .07-30-02
 Este: Calle Fragata
 Oeste: Ave. Camino Real ",Calle Fragata ,"Áreas de juegos infantiles, gazebos, huertos urbanos y servicios de basura",,,18-May,,18,,18-May,CONCLUIDO,07-30-01
-34,Habitat I ,07-30-01,Consorcio Ingasa-Risek,421171.499;2044341.738,"18,285.52",17,5,272,272,,"|Tipo A, 93.95 - 95.40 m²|
+34,Habitat I ,07-30-01,Consorcio Ingasa-Rizek,421171.499;2044341.738,"18,285.52",17,5,272,272,,"|Tipo A, 93.95 - 95.40 m²|
 |Tipo B, 79.93 - 80.06 m²|
 |Tipo C, 55.90 m²|","2H, 3H","3,540.13 (19.36%)",217.4 (1.19%),539.60 (2.95%),361,272,5,,,"Norte: 2.71 m
 Sur: 2.40 m
@@ -262,7 +262,7 @@ Oeste:  0.10 m","Norte: Calle Boulevard El Oro y La Paz
 Este: Calle Fragata 
 Oeste: Av. Camino Real 
 Sur: Lote habitacional 07-30-02",Av. Camino Real  y Calle Boulevard El Oro y La Paz ,"Áreas de juegos infantiles, gazebos, huertos urbanos y servicios de basura",Dos Garitas de seguridad en las entradas,,18-May,,,,21-Aug,CONCLUIDO,07-30-01
-35,Res. Florazahar,09-28-01,Consorcio Dominico Español,420856.467;2044324.524,"17,094.54",31,3,224,248,224,"|Tipo R1, 46.50 m²|
+35,Res. Florazahar,09-28-01,Consorcio Domínico Español,420856.467;2044324.524,"17,094.54",31,3,224,248,224,"|Tipo R1, 46.50 m²|
 |Tipo R2,  68.30m²|
 |Tipo R3,  80.78 m²|", 3H,3702.25 (22%),851.80 (6%),540.15 (3%),218,204,14,,6,"Norte: 5.00m
 Sur:  2.00m
@@ -271,7 +271,7 @@ Oeste: 5.00m","Norte:  Boulevard Oro y La Paz
 Este: Av. Camino Real
 Oeste: Av. La Gaviota
 Sur: Lote 09-28-03, Lote 09-28-02 ","Boulevard Oro y La Paz, Av. La Gaviota","Áreas Infantiles, gazebos, huertos urbanos",Dos Garitas de seguridad en las entradas,,17-Jul,,,6,2017,CONCLUIDO,09-28-01
-36,Ciudad Palmera II,06-25-02,Constructora del Pais Codelpa,#N/A,"30,566.21",17,1,432,432,,"|Tipo A, 55m²|
+36,Ciudad Palmera II,06-25-02,Constructora del Pais Codelpa,,"30,566.21",17,1,432,432,,"|Tipo A, 55m²|
 |Tipo B, 68m²|
 |Tipo C, 77m²|                                 |Tipo D, 55m²|
 |Tipo E, 68m²|
@@ -282,7 +282,7 @@ Oeste: 5.00m","Norte:  Lote 06-25-01, Lote 06-25-03
 Este: Calle Fragata, Lote 06-25-03
 Oeste: Av. Camino Real
 Sur: Boulevard el Oro y la Paz","Calle Fragata, Av. Camino Real","Zona deportiva, zona infantil, huertos",2 garitas de seguridad,,18-Aug,,,,18-Aug,CONCLUIDO,06-25-02
-37,Ciudad Palmera I,06-25-01,Constructora del Pais Codelpa,#N/A,"29,909.38",19,1,416,416,,"|Tipo A, 55m²|
+37,Ciudad Palmera I,06-25-01,Constructora del Pais Codelpa,,"29,909.38",19,1,416,416,,"|Tipo A, 55m²|
 |Tipo B, 68m²|
 |Tipo C, 77m²|                                 |Tipo D, 55m²|
 |Tipo F, 77m²|","2H, 3H",4344.32 (15%),1311.98 (5%),674.95 (2%),364,357,7,,,"Norte: 5.00m
@@ -298,7 +298,7 @@ Sur: Lote 06-35-02","Calle Fragata, Av. Camino Real","Pista Jogging, Ciclovía, 
 Este: Av. Camino Real
 Oeste: Av. La Gaviota
 Sur:  Boulevard el Oro y la Paz",Av. Camino Real y Av. La Gaviota,"Área infantil, huertos, ciclovía",2 garitas de seguridad,,19-May,,8,,19-May,CONCLUIDO,08-23-02
-39,Res. Antares I,05-20-01,Estrella,420958.632;2045245.533,"37,794.10",40,1,528,408,528,"|Tipo R1,  52 m²|
+39,Res. Antares I,05-20-01,Ingeniería Estrella,420958.632;2045245.533,"37,794.10",40,1,528,408,528,"|Tipo R1,  52 m²|
 |Tipo R2,  66 m²|
 |Tipo R2B,  69.4 m²|
 |Tipo R3,  79.7 m²|","2H, 3H","10,126 (26.8%)",3202 (8.5%),3722 (9.8%),408,395,13,NO,28,"Norte: 5.00m
@@ -308,7 +308,7 @@ Oeste: 5.00m","Norte: Calle Carmen Quidiello de Bosch
 Este: Lote Institucional 05-20-03
 Oeste:  Av. La Gaviota 
 Sur: Lote Institucional 05-20-07","Av. La Gaviota, Calle Carmen Quidiello","Gazebo, juegos infantiles, gimnasio al aire libre, 1/2 cancha de basketball",2 garitas de seguridad,,17-Nov,,28,,17-Nov,CONCLUIDO,05-20-01
-40,Res. Antares II,05-18-01,Estrella,420958.632;2045245.533,"75,770.60",86,1,992,984,992,"|Tipo R1,  52 m²|
+40,Res. Antares II,05-18-01,Ingeniería Estrella,420958.632;2045245.533,"75,770.60",86,1,992,984,992,"|Tipo R1,  52 m²|
 |Tipo R2,  66 m²|
 |Tipo R2B,  69.4 m²|
 |Tipo R3,  79.7 m²|","2H, 3H","10,411.2 (13.5%)",3943 (5.1%),2525.2 (3.3%),984,954,30,NO ,29,"Norte: 5.00m
@@ -318,7 +318,7 @@ Oeste: 5.00m","Norte: Calle Angela Gaviño
 Este: Lotes 05-18-04,05-18-07,05-18-08
 Oeste:  Calle La Gaviota 
 Sur: Calle Carmen Quidiello de Bosch","Calle Angela Gavino, Calle Carmen Quidiello, Av. La Gaviota","Parque, 1/2 cancha",4 garitas de seguridad,,19-Jul,,29,,19-Jul,CONCLUIDO,05-18-01
-41,Res. Antares III,05-17-03,Estrella,421196.074;2045360.518,"86,365.44",111,1,528,"1,184",528,"|Tipo R1,  52 m²|
+41,Res. Antares III,05-17-03,Ingeniería Estrella,421196.074;2045360.518,"86,365.44",111,1,528,"1,184",528,"|Tipo R1,  52 m²|
 |Tipo R2,  66 m²|
 |Tipo R2B,  69.4 m²|
 |Tipo R3,  79.7 m²|","2H, 3H",9332.5 (10.9%),3215.5 (3.7%),2901.50 (3.4%),1184,1147,37,SI ,14,"Norte: 5.00m
@@ -328,7 +328,7 @@ Oeste: 5.00m","Norte: Calle Papa Juan
 Este: Av. Camino Real 
 Oeste:  Lote Habitacional 05-17-05
 Sur: Calle Angela Gaviño ","Av. La Leyenda, Calle Ángela Gaviño","Parque, cancha basketball, gimnasio al aire libre, gazebo",2 garitas de seguridad,,22-Apr,,14,,22-Apr,CONCLUIDO,05-17-03
-42,Sembrador IV,05-19-01,"Constructora Bisono, S.A",421425.784;2045271.243,"35,073.03",50,1,464,464,,"|Tipo C mod, 64.87 m²|
+42,Sembrador IV,05-19-01,"Constructora Bisonó, S.A.",421425.784;2045271.243,"35,073.03",50,1,464,464,,"|Tipo C mod, 64.87 m²|
 |Tipo F, 54.40 m²|
 |Tipo I, 80.82 m²|
 |Tipo J, 72 m²|","2H, 3H",2678.87 (7.64%),0,927.35 (2.64%),653,632,19,,,"Norte:  17.35 m
@@ -338,7 +338,7 @@ Oeste: 5.00 m","Norte: Calle La Vega (Tramo 2)
 Sur: 
 Este: Av. Profesor Juan Bosch
 Oeste: Calle Camino Real NE (Tramo 6)",Calle La Vega (Tramo 2),"Huerto urbano, gazebo, depósito de basura.",Sin garita de control de acceso ,,19-Feb,,,,19-Feb,CONCLUIDO,05-19-01
-43,Sembrador V,05-19-07,"Constructora Bisono, S.A",421390.346;2045066.836,"71,504.95",88,2,752,752,,"|Tipo C mod, 64.87 m²|
+43,Sembrador V,05-19-07,"Constructora Bisonó, S.A.",421390.346;2045066.836,"71,504.95",88,2,752,752,,"|Tipo C mod, 64.87 m²|
 |Tipo F, 54.40 m²|
 |Tipo I, 80.82 m²|
 |Tipo J, 72 m²|","2H, 3H",3509.36 (4.91%),0,1525.78 (2.13%),1312,1293,0,,,"Norte:  17.35 m
@@ -348,7 +348,7 @@ Oeste: 5.00 m","Norte: Lote habitacional 05-19-01
 Sur: Lotes comerciales 05-19-04,05-19-06 y 05-19-05
 Este: Av. Profesor Juan Bosch
 Oeste: Calle Camino Real",,Depósito de residuos sólidos y tanque de gas conforme a norma,,,20-Jun,,,,20-Oct,CONCLUIDO,05-19-07
-44,Sembrador II,"03-08-01, 03-08-02",CONSTRUCTORA BISONO S.A,#N/A,"71,979.31",86,4,936,936,,"|Tipo C mod, 96.39 m²|
+44,Sembrador II,"03-08-01, 03-08-02","Constructora Bisonó, S.A.",,"71,979.31",86,4,936,936,,"|Tipo C mod, 96.39 m²|
 |Tipo F, m²|
 |Tipo I, 69.85 m²||
 |Tipo I mod, 72.43 m²|
@@ -359,7 +359,7 @@ Oeste: 3.00 m","Norte:
 Sur: 
 Este: Av. Profesor Juan Bosch
 Oeste: Calle Camino Real",Calle Camino Real,"Huerto urbano, gazebo, depósito de basura.",Sin garita de control de acceso ,,,,21-Apr,,21-Apr,CONCLUIDO,"03-08-01, 03-08-02"
-46,Res. Pequeño Burgues,03-09-04,Consorcio Pequeño Burgues,421270.008;2045543.58,"16,721.11",13,1,248,248,,"|Tipo A, 55 m²|
+46,Res. Pequeño Burgues,03-09-04,Consorcio Pequeño Burgués,421270.008;2045543.58,"16,721.11",13,1,248,248,,"|Tipo A, 55 m²|
 |Tipo B, 69 m²|
 |Tipo C, 80 m²|","2H, 3H",1395 (9%),893 (5%),607 (4%),342,330,12,,6,,"Norte: Lote 03-09-03
 Sur: Calle La Vega
@@ -389,5 +389,3 @@ Oeste: Limite CJB",Avenida Camino Real ,"Depósito de residuos sólidos y tanque
 Sur: Calle Rey David 
 Este: Calle Dos Amigos
 Oeste: Lotes 02-04-03, 02-04-02","Calle Dos Amigos, Calle Rey David","Gazebo, juegos infantiles, gimnasio al aire libre, parque, ciclovía, huerto",2 garitas de seguridad,,20-Jan,,5,,20-Jan,CONCLUIDO,02-04-01
-,,01-00-00,,,,,,VIVIENDAS ADJUDICADAS,,,,,,,,,,,,,,,,,,,,,,,,,01-00-00
-,,01-00-00,,,,"1,898.50",83,"24,784.00",26366,,,,,,,,,,,,,,,,,,,,,,,,01-00-00

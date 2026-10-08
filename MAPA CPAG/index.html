@@ -16,6 +16,7 @@
     <meta name="view-transition" content="same-origin">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="css/styles.css">
@@ -23,6 +24,7 @@
     <link rel="stylesheet" href="css/enterprise-modules.css">
     <link rel="stylesheet" href="css/elite-theme.css">
     <link rel="stylesheet" href="../Timelapse%20CJB/premium-light-mode.css">
+    <link rel="stylesheet" href="../vbc-core/vbc-theme.css">
 </head>
 
 <body>
@@ -92,42 +94,30 @@
                         <span class="kpi-value highlight" id="kpiComLotesFiltered">0</span>
                     </div>
                     <div class="kpi-row">
-                        <span class="kpi-label">Unidades:</span>
+                        <span class="kpi-label">Locales:</span>
                         <span class="kpi-value" id="kpiComUnitsTotal">0</span>
                         <span class="kpi-arrow">→</span>
                         <span class="kpi-value highlight" id="kpiComUnitsFiltered">0</span>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Infrastructure Progress -->
-        <div class="header-infra">
-            <div class="infra-title">⚡ INFRAESTRUCTURA</div>
-            <div class="infra-bars">
-                <div class="infra-row">
-                    <span class="infra-label">Vial</span>
-                    <div class="progress-bar-mini">
-                        <div class="progress-fill vial" id="infraVial" style="width: 0%"></div>
+            <!-- Infraestructura (37 Lotes) -->
+            <div class="kpi-comparison-card">
+                <div class="kpi-title">⚡ INFRAESTRUCTURA</div>
+                <div class="kpi-dual-row">
+                    <div class="kpi-row">
+                        <span class="kpi-label">Lotes:</span>
+                        <span class="kpi-value" id="kpiInfraLotesTotal">0</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiInfraLotesFiltered">0</span>
                     </div>
-                    <span class="infra-percent" id="infraVialText">0%</span>
-                    <span class="infra-km" id="infraVialKm">0 km</span>
-                </div>
-                <div class="infra-row">
-                    <span class="infra-label">Eléctrica</span>
-                    <div class="progress-bar-mini">
-                        <div class="progress-fill electrica" id="infraElectrica" style="width: 69%"></div>
+                    <div class="kpi-row">
+                        <span class="kpi-label">Red Vial:</span>
+                        <span class="kpi-value" id="kpiInfraUnitsTotal">100%</span>
+                        <span class="kpi-arrow">→</span>
+                        <span class="kpi-value highlight" id="kpiInfraUnitsFiltered">24.8 km</span>
                     </div>
-                    <span class="infra-percent" id="infraElectricaText">69%</span>
-                    <span class="infra-target">→ 100%</span>
-                </div>
-                <div class="infra-row">
-                    <span class="infra-label">Hidrosanitaria</span>
-                    <div class="progress-bar-mini">
-                        <div class="progress-fill hidro" id="infraHidro" style="width: 52%"></div>
-                    </div>
-                    <span class="infra-percent" id="infraHidroText">52%</span>
-                    <span class="infra-target">→ 87%</span>
                 </div>
             </div>
         </div>
@@ -151,6 +141,9 @@
 
         <!-- Theme Toggle & Actions -->
         <div class="header-actions">
+            <button class="btn-action" id="btnFullscreen" title="Alternar Modo Pantalla Completa (F11 / ESC)" style="display:flex; align-items:center; gap:5px; font-size:0.75rem; font-weight:600; padding:5px 12px; background:linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border:1px solid rgba(56,189,248,0.4); border-radius:6px; color:#38bdf8; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+                <span id="fsIcon">⛶</span> <span id="fsText">Pantalla Completa</span>
+            </button>
             <button class="btn-icon-only" id="highContrastToggle" title="Alto Contraste (Obra)">☀️</button>
             <button class="btn-icon-only" id="themeToggle" title="Cambiar tema">🌙</button>
         </div>
@@ -178,6 +171,38 @@
                 <div class="search-results" id="searchResults"></div>
             </div>
 
+            <!-- Modo de Visualización del Mapa (Segmented Control) -->
+            <div class="filter-group">
+                <label class="filter-label">Modo de Coloración</label>
+                <div class="segmented-control">
+                    <button class="segment-btn active" data-map-mode="tipo" title="Zonificación por Tipo de Suelo">🎨 Tipo Suelo</button>
+                    <button class="segment-btn" data-map-mode="estado" title="Realidad física y ejecución de obra">🏗️ Estado Obra</button>
+                    <button class="segment-btn" data-map-mode="plazos" title="Visualizar exclusivamente los lotes con atraso contractual en fecha de término">⏱️ Lotes en Atraso</button>
+                    <button class="segment-btn" data-map-mode="adendas" title="Lotes con Adendas o Readjudicaciones formalizadas">📜 Adendas</button>
+                    <button class="segment-btn" data-map-mode="legal" title="Causal de rescisión por abandono o penalidad contractual">⚖️ Estatus Legal</button>
+                    <button class="segment-btn" data-map-mode="unificada" title="Semáforo de Riesgo Consolidado (Fallas combinadas)">🎯 Capa Unificada</button>
+                </div>
+                <!-- Leyenda Dinámica Explicativa del Modo de Coloración -->
+                <div class="color-mode-legend-box" id="colorModeLegendContainer">
+                    <div class="legend-box-header">
+                        <span class="legend-box-title" id="legendBoxTitle">🎨 Zonificación por Tipo de Suelo</span>
+                    </div>
+                    <div class="legend-box-items" id="legendBoxItems">
+                        <!-- Inyectado dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción: Ver Listado y Exportar Informe PDF -->
+            <div class="filter-group-actions">
+                <button class="btn-view-table" id="btnViewFilteredList" title="Abrir listado interactivo de lotes filtrados estilo Excel">
+                    <span>👁️</span> Ver Listado (<span id="viewListLotesCount">98</span>)
+                </button>
+                <button class="btn-export-report" id="btnExportFilteredReport" title="Exportar informe en PDF con el mapa y tabla de lotes filtrados">
+                    <span>📑</span> Exportar Informe PDF (<span id="reportLotesCount">98</span>)
+                </button>
+            </div>
+
             <!-- Categorías Grid 2x2 -->
             <div class="filter-group">
                 <label class="filter-label">Categoría</label>
@@ -200,28 +225,67 @@
                 </div>
             </div>
 
-            <!-- Cuadrante -->
+            <!-- Filtro Multi-Selección de Estado de Obra -->
             <div class="filter-group">
-                <label class="filter-label">Cuadrante</label>
-                <select id="filterCuadrante" class="filter-select">
-                    <option value="">Todos</option>
-                </select>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <label class="filter-label" style="margin:0;">🏗️ Estado de Obra (<span id="estadoSelectedCount">0</span>)</label>
+                    <button type="button" id="btnClearEstados" style="font-size:0.65rem; color:#38bdf8; background:none; border:none; cursor:pointer; padding:0; display:none;">Limpiar</button>
+                </div>
+                <div class="multi-select-container" id="estadoMultiSelectContainer">
+                    <div class="multi-select-trigger" id="estadoMultiSelectTrigger">
+                        <span id="estadoMultiSelectPlaceholder">Todos los Estados</span>
+                        <span class="multi-select-arrow">▼</span>
+                    </div>
+                    <div class="multi-select-chips" id="estadoMultiSelectChips" style="display:none;"></div>
+                    <div class="multi-select-dropdown" id="estadoMultiSelectDropdown" style="display:none;">
+                        <div class="multi-select-options-list" id="estadoOptionsList">
+                            <!-- Opciones inyectadas dinámicamente -->
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Pilar -->
+            <!-- Filtro Multi-Selección de Estatus de Plazo / Retrasos -->
             <div class="filter-group">
-                <label class="filter-label">Pilar</label>
-                <select id="filterPilar" class="filter-select">
-                    <option value="">Todos</option>
-                </select>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <label class="filter-label" style="margin:0;">⏱️ Estatus de Plazo / Retrasos (<span id="criticidadSelectedCount">0</span>)</label>
+                    <button type="button" id="btnClearCriticidad" style="font-size:0.65rem; color:#38bdf8; background:none; border:none; cursor:pointer; padding:0; display:none;">Limpiar</button>
+                </div>
+                <div class="multi-select-container" id="criticidadMultiSelectContainer">
+                    <div class="multi-select-trigger" id="criticidadMultiSelectTrigger">
+                        <span id="criticidadMultiSelectPlaceholder">Todos los Estatus de Plazo</span>
+                        <span class="multi-select-arrow">▼</span>
+                    </div>
+                    <div class="multi-select-chips" id="criticidadMultiSelectChips" style="display:none;"></div>
+                    <div class="multi-select-dropdown" id="criticidadMultiSelectDropdown" style="display:none;">
+                        <div class="multi-select-options-list" id="criticidadOptionsList">
+                            <!-- Opciones inyectadas dinámicamente -->
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Estado -->
+            <!-- Filtro Multi-Selección de Desarrolladores -->
             <div class="filter-group">
-                <label class="filter-label">Estado de Obra</label>
-                <select id="filterEstado" class="filter-select">
-                    <option value="">Todos</option>
-                </select>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <label class="filter-label" style="margin:0;">🏢 Desarrolladores (<span id="devSelectedCount">0</span>)</label>
+                    <button type="button" id="btnClearDevs" style="font-size:0.65rem; color:#38bdf8; background:none; border:none; cursor:pointer; padding:0; display:none;">Limpiar</button>
+                </div>
+                <div class="multi-select-container" id="devMultiSelectContainer">
+                    <div class="multi-select-trigger" id="devMultiSelectTrigger">
+                        <span id="devMultiSelectPlaceholder">Todos los Desarrolladores</span>
+                        <span class="multi-select-arrow">▼</span>
+                    </div>
+                    <div class="multi-select-chips" id="devMultiSelectChips" style="display:none;"></div>
+                    <div class="multi-select-dropdown" id="devMultiSelectDropdown" style="display:none;">
+                        <div class="multi-select-search-box">
+                            <input type="text" id="devSearchInput" placeholder="Buscar desarrollador..." class="multi-select-search-input">
+                        </div>
+                        <div class="multi-select-options-list" id="devOptionsList">
+                            <!-- Opciones inyectadas dinámicamente -->
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Año de Entrega - Range Slider -->
@@ -271,29 +335,8 @@
                 </div>
             </details>
 
-            <!-- Estadísticas -->
-            <div class="stats-box">
-                <h3>📊 Resumen Filtrado</h3>
-                <div class="stat-row">
-                    <span>Total Lotes</span>
-                    <span id="statTotal">0</span>
-                </div>
-                <div class="stat-row">
-                    <span>Filtrados</span>
-                    <span id="statFiltered" class="highlight">0</span>
-                </div>
-                <div class="stat-row">
-                    <span>Unidades Hab.</span>
-                    <span id="statUnidades">0</span>
-                </div>
-                <div class="stat-row stat-highlight">
-                    <span>Área Total</span>
-                    <span id="statAreaTotal">0 m²</span>
-                </div>
-            </div>
-
             <!-- Export Button -->
-            <button class="btn-action btn-export" id="btnExport">
+            <button class="btn-action btn-export" id="btnExport" style="margin-top: 15px;">
                 📥 Exportar CSV
             </button>
         </aside>
@@ -306,8 +349,6 @@
                     title="Escribe un valor de zoom (ej: 150%)">
                 <button class="map-btn" id="zoomOut" title="Alejar">−</button>
                 <button class="map-btn" id="zoomReset" title="Restablecer">⟲</button>
-                <button class="map-btn alert-btn" id="btnAlerts" title="Ver Alertas">⚠️</button>
-                <button class="map-btn map-btn-3d" id="btnToggle3D" title="Alternar Vista Isométrica 3D">👁️ 3D</button>
             </div>
             <div class="map-container" id="mapContainer">
                 <div class="map-loading" id="mapLoading">
@@ -317,6 +358,7 @@
                 <!-- SVG se inyecta aquí -->
             </div>
             <div class="map-tooltip" id="mapTooltip"></div>
+            
         </section>
 
         <!-- PANEL DERECHO: DETALLES -->
@@ -344,9 +386,9 @@
                     <span class="area-value" id="detailAreaPrimary">0 m²</span>
                 </div>
 
-                <!-- Sección: General (compacta) -->
-                <div class="detail-section">
-                    <h4>📋 General</h4>
+                <!-- Sección 1: General y Métricas (Unificada, Siempre Abierta) -->
+                <div class="detail-section static-section">
+                    <h4>📋 General y Métricas</h4>
                     <dl class="detail-grid">
                         <dt>Tipo</dt>
                         <dd id="detailTipo">-</dd>
@@ -354,56 +396,229 @@
                         <dd id="detailSubtipo">-</dd>
                         <dt>Nombre</dt>
                         <dd id="detailNombre">-</dd>
-                        <dt>Cuadrante</dt>
-                        <dd id="detailCuadrante">-</dd>
-                        <dt>Pilar</dt>
-                        <dd id="detailPilar">-</dd>
                         <dt>Etapa</dt>
                         <dd id="detailEtapa">-</dd>
-                    </dl>
-                </div>
-
-                <!-- Sección: Métricas -->
-                <div class="detail-section">
-                    <h4>📐 Métricas</h4>
-                    <dl class="detail-grid">
-                        <dt>Área</dt>
-                        <dd id="detailArea">- m²</dd>
-                        <dt>Unidades</dt>
+                        <dt id="detailUnidadesLabel">Viviendas / Locales</dt>
                         <dd id="detailUnidades">-</dd>
                         <dt>Edificios</dt>
                         <dd id="detailEdificios">-</dd>
                     </dl>
                 </div>
 
-                <!-- Sección: Desarrollador -->
-                <div class="detail-section">
-                    <h4>🏗️ Desarrollador</h4>
-                    <dl class="detail-grid">
-                        <dt>Empresa</dt>
-                        <dd id="detailDesarrollador">-</dd>
-                        <dt>F. Adjudicación</dt>
-                        <dd id="detailFechaAdj">-</dd>
-                        <dt>F. Entrega</dt>
-                        <dd id="detailFechaEnt">-</dd>
-                    </dl>
+                <!-- Sección 2: Acordeón - Evaluación de Riesgo (Cerrado por defecto, abierto en Capa Unificada) -->
+                <div class="accordion-section" id="accRiesgo">
+                    <button type="button" class="accordion-header" onclick="App.UI.toggleAccordion('accRiesgo')">
+                        <span style="display:flex; align-items:center; gap:8px;">
+                            <span>🎯 Evaluación de Riesgo</span>
+                            <span id="detailScoreRiesgoHeader" class="risk-score-mini-pill">-</span>
+                        </span>
+                        <span class="accordion-chevron">▾</span>
+                    </button>
+                    <div class="accordion-body">
+                        <div class="risk-header-row" style="margin-bottom:6px;">
+                            <span class="risk-title-badge">🎯 Semáforo Integral</span>
+                            <span id="detailScoreRiesgo" class="risk-score-pill">0/4 fallas</span>
+                        </div>
+                        <div id="detailSemaforoBadge" class="risk-status-pill">-</div>
+
+                        <!-- Desglose Específico de Riesgos -->
+                        <div class="risk-factors-wrapper">
+                            <ul id="detailListaRiesgos" class="risk-factors-list">
+                                <!-- Inyectado dinámicamente -->
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Observaciones -->
-                <div class="detail-section">
-                    <h4>📝 Observaciones</h4>
-                    <p id="detailObservaciones" class="observations">-</p>
+                <!-- Sección 3: Acordeón - Desarrollador y Plazos (Cerrado por defecto) -->
+                <div class="accordion-section" id="accDesarrollador">
+                    <button type="button" class="accordion-header" onclick="App.UI.toggleAccordion('accDesarrollador')">
+                        <span>🏗️ Desarrollador y Plazos</span>
+                        <span class="accordion-chevron">▾</span>
+                    </button>
+                    <div class="accordion-body">
+                        <dl class="detail-grid">
+                            <dt>Empresa</dt>
+                            <dd id="detailDesarrollador">-</dd>
+                            <dt>F. Adjudicación Orig.</dt>
+                            <dd id="detailFechaAdj">-</dd>
+                            <dt>F. Firma Adenda</dt>
+                            <dd id="detailFechaAdendaPlazos">-</dd>
+                            <dt>F. Término Contractual</dt>
+                            <dd id="detailFechaTerminoOrig">-</dd>
+                            <dt>Estatus de Plazo</dt>
+                            <dd id="detailRetraso">-</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <!-- Sección 4: Acordeón - Expediente Jurídico y Adendas (Cerrado por defecto) -->
+                <div class="accordion-section" id="accJuridico">
+                    <button type="button" class="accordion-header" onclick="App.UI.toggleAccordion('accJuridico')">
+                        <span>⚖️ Expediente Jurídico y Adendas</span>
+                        <span class="accordion-chevron">▾</span>
+                    </button>
+                    <div class="accordion-body">
+                        <div class="legal-dossier-list">
+                            <div class="legal-row-split">
+                                <span class="legal-tag-label">Estatus Contractual</span>
+                                <span id="detailTieneAdenda"><span class="badge-adenda">No</span></span>
+                            </div>
+                            <div class="legal-field-block">
+                                <div class="legal-field-title">Proceso / Adenda No.</div>
+                                <div id="detailProcesoLegal" class="legal-field-content highlight-cyan">-</div>
+                            </div>
+                            <div class="legal-field-block">
+                                <div class="legal-field-title">Documento Soporte (PDF)</div>
+                                <div id="detailDocSoporteLegal" class="legal-field-content file-name-code">-</div>
+                            </div>
+                            <div class="legal-field-block">
+                                <div class="legal-field-title">Fuente de Información</div>
+                                <div id="detailFuenteLegal" class="legal-field-content text-muted">-</div>
+                            </div>
+                            <div class="legal-field-block">
+                                <div class="legal-field-title">Detalle de Adenda / Cesión</div>
+                                <div id="detailTipoAdenda" class="legal-field-content">-</div>
+                            </div>
+                            <div class="legal-row-split">
+                                <span class="legal-tag-label">F. Firma Adenda</span>
+                                <span id="detailFechaAdenda" class="legal-val-text">-</span>
+                            </div>
+                            <div class="legal-row-split">
+                                <span class="legal-tag-label">Cláusula Rescisión</span>
+                                <span id="detailClausulaRescision" class="legal-val-text">-</span>
+                            </div>
+                            <div class="legal-row-split">
+                                <span class="legal-tag-label">Penalidad 5% (Art. 23)</span>
+                                <span id="detailClausulaPenalidad" class="legal-val-text">-</span>
+                            </div>
+                            <div class="legal-field-block" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
+                                <div class="legal-field-title">Dictamen Jurídico</div>
+                                <div id="detailDictamenLegal" class="legal-field-content highlight-bold">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección 5: Acordeón - Observaciones de Campo (Cerrado por defecto) -->
+                <div class="accordion-section" id="accObservaciones">
+                    <button type="button" class="accordion-header" onclick="App.UI.toggleAccordion('accObservaciones')">
+                        <span>📝 Observaciones de Fiscalización</span>
+                        <span class="accordion-chevron">▾</span>
+                    </button>
+                    <div class="accordion-body">
+                        <p id="detailObservaciones" class="observations">-</p>
+                    </div>
                 </div>
 
                 <!-- Print Button -->
-                <button class="btn-action btn-print" id="btnPrint">
+                <button class="btn-action btn-print" id="btnPrint" style="margin-top: 10px;">
                     🖨️ Imprimir Ficha Técnica
                 </button>
             </div>
         </aside>
     </main>
 
+    <!-- =========================================== -->
+    <!-- MODAL: Listado Interactivo de Datos (Excel)  -->
+    <!-- =========================================== -->
+    <div class="vbc-table-modal-overlay" id="vbcListadoModalOverlay">
+        <div class="vbc-table-modal" id="vbcListadoModal" role="dialog" aria-modal="true" aria-labelledby="modalListadoTitle">
+            <!-- Header -->
+            <div class="vbc-table-modal-header">
+                <div class="vbc-table-modal-title-group">
+                    <div class="vbc-table-modal-title" id="modalListadoTitle">
+                        <span>📊</span> Listado Detallado de Lotes Filtrados
+                    </div>
+                    <div class="vbc-modal-filter-badge" id="modalActiveFilterBadge">
+                        🎯 Capa Activa: Todos los Lotes
+                    </div>
+                </div>
+                
+                <div class="vbc-table-modal-actions">
+                    <div class="modal-search-box">
+                        <span>🔍</span>
+                        <input type="text" id="modalTableSearchInput" placeholder="Buscar por ID, empresa, proyecto, adenda...">
+                    </div>
+                    <button class="btn-modal-action" id="btnCopyTableTSV" title="Copiar filas para pegar directamente en Excel (formato TSV)">
+                        <span>📋</span> Copiar a Excel
+                    </button>
+                    <button class="btn-modal-action" id="btnDownloadTableCSV" title="Descargar como archivo CSV">
+                        <span>📥</span> CSV
+                    </button>
+                    <button class="vbc-table-modal-close" id="btnCloseListadoModal" title="Cerrar ventana (ESC)">✕</button>
+                </div>
+            </div>
+
+            <!-- Mini Summary KPI Ribbon -->
+            <div class="vbc-modal-kpi-ribbon">
+                <div class="modal-kpi-item">
+                    <span class="modal-kpi-lbl">Total Lotes:</span>
+                    <span class="modal-kpi-val" id="modalKpiTotalLotes">0</span>
+                </div>
+                <div class="modal-kpi-item">
+                    <span class="modal-kpi-lbl">Viviendas:</span>
+                    <span class="modal-kpi-val" id="modalKpiViviendas">0</span>
+                </div>
+                <div class="modal-kpi-item">
+                    <span class="modal-kpi-lbl">Locales Com.:</span>
+                    <span class="modal-kpi-val" id="modalKpiLocales">0</span>
+                </div>
+                <div class="modal-kpi-item">
+                    <span class="modal-kpi-lbl">Superficie Total:</span>
+                    <span class="modal-kpi-val" id="modalKpiArea">0 m²</span>
+                </div>
+                <div class="modal-kpi-item">
+                    <span class="modal-kpi-lbl">Con Adendas:</span>
+                    <span class="modal-kpi-val highlight-green" id="modalKpiAdendas">0</span>
+                </div>
+                <div class="modal-kpi-item">
+                    <span class="modal-kpi-lbl">En Atraso:</span>
+                    <span class="modal-kpi-val highlight-red" id="modalKpiAtraso">0</span>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="vbc-table-modal-body">
+                <div class="vbc-table-responsive-wrapper">
+                    <table class="vbc-excel-table" id="vbcModalDataTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 45px; text-align: center;">#</th>
+                                <th style="width: 105px;">ID Lote</th>
+                                <th style="width: 220px;">Proyecto / Nombre</th>
+                                <th style="width: 110px;">Tipo</th>
+                                <th style="width: 210px;">Desarrollador</th>
+                                <th style="width: 130px;">Estado Obra</th>
+                                <th style="width: 115px; text-align: right;">Superficie</th>
+                                <th style="width: 105px; text-align: right;">Unidades</th>
+                                <th style="width: 110px;">F. Adjudicación Orig.</th>
+                                <th style="width: 110px;">F. Firma Adenda</th>
+                                <th style="width: 110px;">F. Término Vigente</th>
+                                <th style="width: 140px;">Estatus Plazo</th>
+                                <th style="width: 240px;">Expediente Jurídico / Adenda</th>
+                                <th style="width: 105px; text-align: center;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vbcModalTableBody">
+                            <!-- Injected dynamically via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Footer / Status Bar -->
+            <div class="vbc-table-modal-footer">
+                <span id="modalTableFooterInfo">Mostrando 0 de 0 lotes</span>
+                <span class="modal-hint-text">💡 Haz clic en cualquier fila o en 📍 para ubicar el lote directamente en el mapa 3D/2D</span>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
+    <script src="../vbc-core/vbc-eventbus.js"></script>
+    <script src="../vbc-core/vbc-smartcity.js"></script>
+    <script src="../vbc-core/vbc-reporter.js"></script>
     <script src="../Timelapse%20CJB/shared-core.js"></script>
     <script src="js/app.js"></script>
     <script src="js/elite-features.js"></script>

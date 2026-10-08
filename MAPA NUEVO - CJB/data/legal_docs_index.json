@@ -1,0 +1,639 @@
+{
+  "00-10-02": {
+    "lot_id": "00-10-02",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf",
+      "url": "documentos_legales/Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf",
+        "url": "documentos_legales/Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf"
+      }
+    ]
+  },
+  "00-10-04": {
+    "lot_id": "00-10-04",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf",
+      "url": "documentos_legales/Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf",
+        "url": "documentos_legales/Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf"
+      }
+    ]
+  },
+  "00-14-02": {
+    "lot_id": "00-14-02",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf",
+      "url": "documentos_legales/Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf",
+        "url": "documentos_legales/Contrato Patio de la Colombia  lotes 00-14-02 11-10-02 y 00-10-04.pdf"
+      }
+    ]
+  },
+  "01-01-03": {
+    "lot_id": "01-01-03",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Desarrollo 01-01-03 corregido 384.pdf",
+      "url": "documentos_legales/Contrato Desarrollo 01-01-03 corregido 384.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Desarrollo 01-01-03 corregido 384.pdf",
+        "url": "documentos_legales/Contrato Desarrollo 01-01-03 corregido 384.pdf"
+      }
+    ]
+  },
+  "01-01-04": {
+    "lot_id": "01-01-04",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato de desarrollo de lotes habitacionales num. 01-01-04 y 0.pdf",
+      "url": "documentos_legales/Contrato de desarrollo de lotes habitacionales num. 01-01-04 y 0.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato de desarrollo de lotes habitacionales num. 01-01-04 y 0.pdf",
+        "url": "documentos_legales/Contrato de desarrollo de lotes habitacionales num. 01-01-04 y 0.pdf"
+      }
+    ]
+  },
+  "01-01-05": {
+    "lot_id": "01-01-05",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato de desarrollo de lotes habitacionales num. 01-01-04 y 0.pdf",
+      "url": "documentos_legales/Contrato de desarrollo de lotes habitacionales num. 01-01-04 y 0.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato de desarrollo de lotes habitacionales num. 01-01-04 y 0.pdf",
+        "url": "documentos_legales/Contrato de desarrollo de lotes habitacionales num. 01-01-04 y 0.pdf"
+      }
+    ]
+  },
+  "01-01-07": {
+    "lot_id": "01-01-07",
+    "has_adenda_doc": true,
+    "primary_pdf": {
+      "filename": "Adenda No. 1 Lotes 04-15-01 y 01-01-07 Rio Grande.pdf",
+      "url": "documentos_legales/Adenda No. 1 Lotes 04-15-01 y 01-01-07 Rio Grande.pdf"
+    },
+    "adenda_docs": [
+      {
+        "filename": "Adenda No. 1 Lotes 04-15-01 y 01-01-07 Rio Grande.pdf",
+        "url": "documentos_legales/Adenda No. 1 Lotes 04-15-01 y 01-01-07 Rio Grande.pdf"
+      }
+    ],
+    "contract_docs": [
+      {
+        "filename": "Contrato Desarrollo lote 01-01-07.pdf",
+        "url": "documentos_legales/Contrato Desarrollo lote 01-01-07.pdf"
+      }
+    ]
+  },
+  "01-01-09": {
+    "lot_id": "01-01-09",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Lote Habitacional 01-01-09 Consorcio CP.pdf",
+      "url": "documentos_legales/Contrato Lote Habitacional 01-01-09 Consorcio CP.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Lote Habitacional 01-01-09 Consorcio CP.pdf",
+        "url": "documentos_legales/Contrato Lote Habitacional 01-01-09 Consorcio CP.pdf"
+      }
+    ]
+  },
+  "01-02-04": {
+    "lot_id": "01-02-04",
+    "has_adenda_doc": true,
+    "primary_pdf": {
+      "filename": "Adenda PPV-Mota Engil-Firmada.pdf",
+      "url": "documentos_legales/Adenda PPV-Mota Engil-Firmada.pdf"
+    },
+    "adenda_docs": [
+      {
+        "filename": "Adenda PPV-Mota Engil-Firmada.pdf",
+        "url": "documentos_legales/Adenda PPV-Mota Engil-Firmada.pdf"
+      }
+    ],
+    "contract_docs": [
+      {
+        "filename": "Contrato Mota-Engil NCB 01-02-04.pdf",
+        "url": "documentos_legales/Contrato Mota-Engil NCB 01-02-04.pdf"
+      }
+    ]
+  },
+  "01-02-08": {
+    "lot_id": "01-02-08",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Lote 01-02-08 y 03-09-08.pdf",
+      "url": "documentos_legales/Contrato Lote 01-02-08 y 03-09-08.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Lote 01-02-08 y 03-09-08.pdf",
+        "url": "documentos_legales/Contrato Lote 01-02-08 y 03-09-08.pdf"
+      }
+    ]
+  },
+  "01-03-03": {
+    "lot_id": "01-03-03",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Lote 36 Catastral  01-03-03 Adventistas.pdf",
+      "url": "documentos_legales/Contrato Lote 36 Catastral  01-03-03 Adventistas.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Lote 36 Catastral  01-03-03 Adventistas.pdf",
+        "url": "documentos_legales/Contrato Lote 36 Catastral  01-03-03 Adventistas.pdf"
+      }
+    ]
+  },
+  "01-03-04": {
+    "lot_id": "01-03-04",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato San Remo 01-03-04.pdf",
+      "url": "documentos_legales/Contrato San Remo 01-03-04.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato San Remo 01-03-04.pdf",
+        "url": "documentos_legales/Contrato San Remo 01-03-04.pdf"
+      }
+    ]
+  },
+  "02-05-03": {
+    "lot_id": "02-05-03",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato adjudicación Lote 02-05-03.pdf",
+      "url": "documentos_legales/Contrato adjudicación Lote 02-05-03.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato adjudicación Lote 02-05-03.pdf",
+        "url": "documentos_legales/Contrato adjudicación Lote 02-05-03.pdf"
+      }
+    ]
+  },
+  "02-06-07": {
+    "lot_id": "02-06-07",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Lote Comercial 02-06-07.pdf",
+      "url": "documentos_legales/Contrato Lote Comercial 02-06-07.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Lote Comercial 02-06-07.pdf",
+        "url": "documentos_legales/Contrato Lote Comercial 02-06-07.pdf"
+      }
+    ]
+  },
+  "02-06-08": {
+    "lot_id": "02-06-08",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "CONTRATO CONSTRUCTORA NAGIR VENTURA SRL LOTE 06-06-07.pdf",
+      "url": "documentos_legales/CONTRATO CONSTRUCTORA NAGIR VENTURA SRL LOTE 06-06-07.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "CONTRATO CONSTRUCTORA NAGIR VENTURA SRL LOTE 06-06-07.pdf",
+        "url": "documentos_legales/CONTRATO CONSTRUCTORA NAGIR VENTURA SRL LOTE 06-06-07.pdf"
+      }
+    ]
+  },
+  "03-08-04": {
+    "lot_id": "03-08-04",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Lote 38 Catastral 03-08-04 Adventistas.pdf",
+      "url": "documentos_legales/Lote 38 Catastral 03-08-04 Adventistas.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Lote 38 Catastral 03-08-04 Adventistas.pdf",
+        "url": "documentos_legales/Lote 38 Catastral 03-08-04 Adventistas.pdf"
+      }
+    ]
+  },
+  "03-08-05": {
+    "lot_id": "03-08-05",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Lote 39 Catastral 03-08-05 Adventistas.pdf",
+      "url": "documentos_legales/Lote 39 Catastral 03-08-05 Adventistas.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Lote 39 Catastral 03-08-05 Adventistas.pdf",
+        "url": "documentos_legales/Lote 39 Catastral 03-08-05 Adventistas.pdf"
+      }
+    ]
+  },
+  "03-09-01": {
+    "lot_id": "03-09-01",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Adjudicación Mota-Engil NCB -01-02-04.pdf",
+      "url": "documentos_legales/Contrato Adjudicación Mota-Engil NCB -01-02-04.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Adjudicación Mota-Engil NCB -01-02-04.pdf",
+        "url": "documentos_legales/Contrato Adjudicación Mota-Engil NCB -01-02-04.pdf"
+      },
+      {
+        "filename": "Contrato Lote 03-09-01.pdf",
+        "url": "documentos_legales/Contrato Lote 03-09-01.pdf"
+      }
+    ]
+  },
+  "03-09-02": {
+    "lot_id": "03-09-02",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Lote 03-09-02.pdf",
+      "url": "documentos_legales/Contrato Lote 03-09-02.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Lote 03-09-02.pdf",
+        "url": "documentos_legales/Contrato Lote 03-09-02.pdf"
+      }
+    ]
+  },
+  "03-09-05": {
+    "lot_id": "03-09-05",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Desarrollo Lote Com. 003-09-05.pdf",
+      "url": "documentos_legales/Contrato Desarrollo Lote Com. 003-09-05.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Desarrollo Lote Com. 003-09-05.pdf",
+        "url": "documentos_legales/Contrato Desarrollo Lote Com. 003-09-05.pdf"
+      },
+      {
+        "filename": "Contrato venta formalizado lote 03-09-05.pdf",
+        "url": "documentos_legales/Contrato venta formalizado lote 03-09-05.pdf"
+      }
+    ]
+  },
+  "04-12-05": {
+    "lot_id": "04-12-05",
+    "has_adenda_doc": true,
+    "primary_pdf": {
+      "filename": "Adenda 2 contrato lote 04-12-05.pdf",
+      "url": "documentos_legales/Adenda 2 contrato lote 04-12-05.pdf"
+    },
+    "adenda_docs": [
+      {
+        "filename": "Adenda 2 contrato lote 04-12-05.pdf",
+        "url": "documentos_legales/Adenda 2 contrato lote 04-12-05.pdf"
+      },
+      {
+        "filename": "Adenda No. 1 Contrato OV Lote 04-12-05.pdf",
+        "url": "documentos_legales/Adenda No. 1 Contrato OV Lote 04-12-05.pdf"
+      }
+    ],
+    "contract_docs": [
+      {
+        "filename": "Contrato Constructora OV 04-12-05.pdf",
+        "url": "documentos_legales/Contrato Constructora OV 04-12-05.pdf"
+      }
+    ]
+  },
+  "04-13-03": {
+    "lot_id": "04-13-03",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Terrazas GIT 04-13-03.pdf",
+      "url": "documentos_legales/Contrato Terrazas GIT 04-13-03.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Terrazas GIT 04-13-03.pdf",
+        "url": "documentos_legales/Contrato Terrazas GIT 04-13-03.pdf"
+      }
+    ]
+  },
+  "04-15-01": {
+    "lot_id": "04-15-01",
+    "has_adenda_doc": true,
+    "primary_pdf": {
+      "filename": "LIMPIO.ADENDA 04-15-01 y 01-01-07 ConsorcioRioGrande.PromotoraPraderaVer.._.pdf",
+      "url": "documentos_legales/LIMPIO.ADENDA 04-15-01 y 01-01-07 ConsorcioRioGrande.PromotoraPraderaVer.._.pdf"
+    },
+    "adenda_docs": [
+      {
+        "filename": "LIMPIO.ADENDA 04-15-01 y 01-01-07 ConsorcioRioGrande.PromotoraPraderaVer.._.pdf",
+        "url": "documentos_legales/LIMPIO.ADENDA 04-15-01 y 01-01-07 ConsorcioRioGrande.PromotoraPraderaVer.._.pdf"
+      }
+    ],
+    "contract_docs": [
+      {
+        "filename": "Contrato Desarrollo lote 04-15-01.pdf",
+        "url": "documentos_legales/Contrato Desarrollo lote 04-15-01.pdf"
+      }
+    ]
+  },
+  "04-39-01": {
+    "lot_id": "04-39-01",
+    "has_adenda_doc": true,
+    "primary_pdf": {
+      "filename": "Adenda 1 contrato CONABESA 04-39-01.pdf",
+      "url": "documentos_legales/Adenda 1 contrato CONABESA 04-39-01.pdf"
+    },
+    "adenda_docs": [
+      {
+        "filename": "Adenda 1 contrato CONABESA 04-39-01.pdf",
+        "url": "documentos_legales/Adenda 1 contrato CONABESA 04-39-01.pdf"
+      }
+    ],
+    "contract_docs": [
+      {
+        "filename": "Contrato de Desarrollo.pdf",
+        "url": "documentos_legales/Contrato de Desarrollo.pdf"
+      }
+    ]
+  },
+  "04-40-01": {
+    "lot_id": "04-40-01",
+    "has_adenda_doc": true,
+    "primary_pdf": {
+      "filename": "Adenda 1Lote habitacional No. 04-40-01.pdf",
+      "url": "documentos_legales/Adenda 1Lote habitacional No. 04-40-01.pdf"
+    },
+    "adenda_docs": [
+      {
+        "filename": "Adenda 1Lote habitacional No. 04-40-01.pdf",
+        "url": "documentos_legales/Adenda 1Lote habitacional No. 04-40-01.pdf"
+      }
+    ],
+    "contract_docs": [
+      {
+        "filename": "Contrato lote hab. 04-40-01 - RODECO.pdf",
+        "url": "documentos_legales/Contrato lote hab. 04-40-01 - RODECO.pdf"
+      }
+    ]
+  },
+  "05-17-02": {
+    "lot_id": "05-17-02",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato San Remo 05-17-02.pdf",
+      "url": "documentos_legales/Contrato San Remo 05-17-02.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato San Remo 05-17-02.pdf",
+        "url": "documentos_legales/Contrato San Remo 05-17-02.pdf"
+      }
+    ]
+  },
+  "05-19-05": {
+    "lot_id": "05-19-05",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato lotes 05-19-05 y 05-19-06 - Consorcio Rizek-Herpesa.pdf",
+      "url": "documentos_legales/Contrato lotes 05-19-05 y 05-19-06 - Consorcio Rizek-Herpesa.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato lotes 05-19-05 y 05-19-06 - Consorcio Rizek-Herpesa.pdf",
+        "url": "documentos_legales/Contrato lotes 05-19-05 y 05-19-06 - Consorcio Rizek-Herpesa.pdf"
+      }
+    ]
+  },
+  "05-19-06": {
+    "lot_id": "05-19-06",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato lotes 05-19-05 y 05-19-06 - Consorcio Rizek-Herpesa.pdf",
+      "url": "documentos_legales/Contrato lotes 05-19-05 y 05-19-06 - Consorcio Rizek-Herpesa.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato lotes 05-19-05 y 05-19-06 - Consorcio Rizek-Herpesa.pdf",
+        "url": "documentos_legales/Contrato lotes 05-19-05 y 05-19-06 - Consorcio Rizek-Herpesa.pdf"
+      }
+    ]
+  },
+  "06-25-03": {
+    "lot_id": "06-25-03",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "FR Contrato Lote 06-25-03 CJB ECOVIAL.pdf",
+      "url": "documentos_legales/FR Contrato Lote 06-25-03 CJB ECOVIAL.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "FR Contrato Lote 06-25-03 CJB ECOVIAL.pdf",
+        "url": "documentos_legales/FR Contrato Lote 06-25-03 CJB ECOVIAL.pdf"
+      }
+    ]
+  },
+  "07-30-03": {
+    "lot_id": "07-30-03",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato IMATEC Lotes Comerciales 07-30-03 y 07-30-05.pdf",
+      "url": "documentos_legales/Contrato IMATEC Lotes Comerciales 07-30-03 y 07-30-05.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato IMATEC Lotes Comerciales 07-30-03 y 07-30-05.pdf",
+        "url": "documentos_legales/Contrato IMATEC Lotes Comerciales 07-30-03 y 07-30-05.pdf"
+      }
+    ]
+  },
+  "07-30-05": {
+    "lot_id": "07-30-05",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato IMATEC Lotes Comerciales 07-30-03 y 07-30-05.pdf",
+      "url": "documentos_legales/Contrato IMATEC Lotes Comerciales 07-30-03 y 07-30-05.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato IMATEC Lotes Comerciales 07-30-03 y 07-30-05.pdf",
+        "url": "documentos_legales/Contrato IMATEC Lotes Comerciales 07-30-03 y 07-30-05.pdf"
+      }
+    ]
+  },
+  "07-31-01": {
+    "lot_id": "07-31-01",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Lote 07-31-01.pdf",
+      "url": "documentos_legales/Contrato Lote 07-31-01.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Lote 07-31-01.pdf",
+        "url": "documentos_legales/Contrato Lote 07-31-01.pdf"
+      }
+    ]
+  },
+  "07-31-02": {
+    "lot_id": "07-31-02",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Lote 07-31-02.pdf",
+      "url": "documentos_legales/Contrato Lote 07-31-02.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Lote 07-31-02.pdf",
+        "url": "documentos_legales/Contrato Lote 07-31-02.pdf"
+      }
+    ]
+  },
+  "08-22-02": {
+    "lot_id": "08-22-02",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato de Venta de Inmueble 08-22-02.pdf",
+      "url": "documentos_legales/Contrato de Venta de Inmueble 08-22-02.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato de Venta de Inmueble 08-22-02.pdf",
+        "url": "documentos_legales/Contrato de Venta de Inmueble 08-22-02.pdf"
+      },
+      {
+        "filename": "FR- Contrato lote 08-22-02 Hermanos Maldonado.pdf",
+        "url": "documentos_legales/FR- Contrato lote 08-22-02 Hermanos Maldonado.pdf"
+      }
+    ]
+  },
+  "08-23-01": {
+    "lot_id": "08-23-01",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Lote 08-23-01.pdf",
+      "url": "documentos_legales/Contrato Lote 08-23-01.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Lote 08-23-01.pdf",
+        "url": "documentos_legales/Contrato Lote 08-23-01.pdf"
+      }
+    ]
+  },
+  "08-23-04": {
+    "lot_id": "08-23-04",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato de Venta de Inmubele Lote 08-23-04.pdf",
+      "url": "documentos_legales/Contrato de Venta de Inmubele Lote 08-23-04.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato de Venta de Inmubele Lote 08-23-04.pdf",
+        "url": "documentos_legales/Contrato de Venta de Inmubele Lote 08-23-04.pdf"
+      },
+      {
+        "filename": "Contrato Desarrollo  Lote Comercial  Lote Núm 3 08-23-04 Hermanos Maldonado.pdf",
+        "url": "documentos_legales/Contrato Desarrollo  Lote Comercial  Lote Núm 3 08-23-04 Hermanos Maldonado.pdf"
+      }
+    ]
+  },
+  "09-27-01": {
+    "lot_id": "09-27-01",
+    "has_adenda_doc": false,
+    "primary_pdf": {
+      "filename": "Contrato Lote 09-27-01.pdf",
+      "url": "documentos_legales/Contrato Lote 09-27-01.pdf"
+    },
+    "adenda_docs": [],
+    "contract_docs": [
+      {
+        "filename": "Contrato Lote 09-27-01.pdf",
+        "url": "documentos_legales/Contrato Lote 09-27-01.pdf"
+      }
+    ]
+  },
+  "09-28-02": {
+    "lot_id": "09-28-02",
+    "has_adenda_doc": true,
+    "primary_pdf": {
+      "filename": "Adenda 2 y contrato lote 09-28-02.pdf",
+      "url": "documentos_legales/Adenda 2 y contrato lote 09-28-02.pdf"
+    },
+    "adenda_docs": [
+      {
+        "filename": "Adenda 2 y contrato lote 09-28-02.pdf",
+        "url": "documentos_legales/Adenda 2 y contrato lote 09-28-02.pdf"
+      },
+      {
+        "filename": "Adenda 4-ICM-GTME firmada- Lote Hab. 09-28-02.pdf",
+        "url": "documentos_legales/Adenda 4-ICM-GTME firmada- Lote Hab. 09-28-02.pdf"
+      },
+      {
+        "filename": "Adenda No. 1 ICM 09-28-02.pdf",
+        "url": "documentos_legales/Adenda No. 1 ICM 09-28-02.pdf"
+      },
+      {
+        "filename": "Adenda No. 3.pdf",
+        "url": "documentos_legales/Adenda No. 3.pdf"
+      }
+    ],
+    "contract_docs": [
+      {
+        "filename": "Contrato ICM 09-28-02.pdf",
+        "url": "documentos_legales/Contrato ICM 09-28-02.pdf"
+      }
+    ]
+  }
+}

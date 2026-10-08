@@ -289,8 +289,8 @@ App.Map.zoomToLot = function (id) {
     this.transform.x = offsetX;
     this.transform.y = offsetY;
 
-    svg.style.transform = `translate(${this.transform.x}px, ${this.transform.y}px) scale(${this.transform.scale})`;
-    svg.style.transformOrigin = '0 0';
+    svg.style.transform = 'none';
+    this.updateMapTransform();
 
     // Update zoom display
     const zoomEl = document.getElementById('zoomLevel');
@@ -410,6 +410,7 @@ App.Map.getStatusClass = function (estado) {
     if (s.includes('construcc')) return 'construccion';
     if (s.includes('disponible')) return 'disponible';
     if (s.includes('paralizado')) return 'paralizado';
+    if (s.includes('licita')) return 'licitacion';
     if (s.includes('adjudicado')) return 'adjudicado';
     return '';
 };
@@ -658,9 +659,12 @@ App.UI.closeBIModal = function () {
 const ESTADO_COLORS = {
     'Terminado': '#10b981',
     'En construcción': '#f59e0b',
+    'En Construcción': '#f59e0b',
     'Disponible': '#3b82f6',
     'Paralizado': '#ef4444',
     'Adjudicado': '#a855f7',
+    'En Licitación': '#06b6d4',
+    'En Licitacion': '#06b6d4',
     'No Iniciado': '#64748b'
 };
 
@@ -1292,12 +1296,6 @@ App.Elite = {
         // Load historical stats
         await App.Data.loadStats();
 
-        // Create UI elements
-        App.UI.createEliteToolbar();
-        App.UI.createHeatmapLegend();
-        App.UI.renderBIDashboard();
-        App.UI.createAlertsModal();
-
         // Setup smart tooltip
         App.Map.setupSmartTooltip();
 
@@ -1307,31 +1305,10 @@ App.Elite = {
         // Enable manual zoom input
         this.enhanceZoomInput();
 
-        // Bind alerts button
-        this.bindAlertsButton();
-
-        console.log('✅ Elite Features activados');
+        console.log('✅ Elite Features activados (Lienzo Limpio)');
     },
 
-    bindAlertsButton() {
-        const btn = document.getElementById('btnAlerts');
-        console.log('🔔 Binding Alerts button:', btn ? 'found' : 'NOT FOUND');
-        if (btn) {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log('🔔 Alerts button clicked');
-                App.UI.openAlertsModal();
-            });
-        } else {
-            // Fallback: Try with event delegation on document
-            document.addEventListener('click', (e) => {
-                if (e.target.closest('#btnAlerts')) {
-                    console.log('🔔 Alerts button clicked (delegated)');
-                    App.UI.openAlertsModal();
-                }
-            });
-        }
-    },
+    bindAlertsButton() {},
 
     enhanceZoomInput() {
         const zoomInput = document.getElementById('zoomLevel');
@@ -1382,7 +1359,8 @@ App.Elite = {
         svg.classList.add('zooming');
 
         App.Map.transform.scale = clampedScale;
-        svg.style.transform = `translate(${App.Map.transform.x}px, ${App.Map.transform.y}px) scale(${App.Map.transform.scale})`;
+        svg.style.transform = 'none';
+        App.Map.updateMapTransform();
 
         // Update display
         document.getElementById('zoomLevel').value = Math.round(clampedScale * 100) + '%';
@@ -1610,8 +1588,9 @@ App.Persistence = {
 
                 const svg = document.querySelector('#svgContainer svg, #mapContainer svg');
                 if (svg) {
-                    svg.style.transform = `translate(${state.view.panX}px, ${state.view.panY}px) scale(${state.view.zoom})`;
+                    svg.style.transform = 'none';
                 }
+                App.Map.updateMapTransform();
             }
 
             // Apply theme

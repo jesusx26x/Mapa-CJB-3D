@@ -55,9 +55,10 @@ Mapa/
 
 ---
 
-## 📝 Último Estado (Feb 2026)
-- ✅ Proyecto reorganizado y limpio (de 37 archivos a 14)
-- ✅ Datos con nombres claros: `Datos de CPAG.csv` y `Datos de CJB.csv`
-- ✅ Servidor en puerto 9000
-- ✅ Presentación conectada al servidor
-- ✅ Archivos BHD y duplicados en `_RESPALDO/`
+## 📝 Último Estado (Agosto 2026)
+- ✅ Motor de cálculo de plazos y vencimientos dinámico en tiempo real (`new Date()`).
+- ✅ Rediseño de panel de detalles con acordeones minimalistas (Emil Kowalski / UX-UI-Pro-Max).
+- ✅ Eliminación global del campo duplicado Área en todos los lotes.
+- ✅ Expediente jurídico y adendas estructurado sin cortes visuales (`.legal-dossier-list`).
+- ✅ Filtro de plazos depurado con alertas preventivas (`⚡ Próximo a Vencer < 3 Meses`).
+- 🟡 **En espera de información:** Recepción de matriz financiera de Francisco Joa y Master Plans técnicos de desarrolladores.

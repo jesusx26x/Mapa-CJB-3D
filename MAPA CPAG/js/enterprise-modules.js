@@ -1361,24 +1361,18 @@ App.Enterprise = {
      * Initialize all enterprise modules
      */
     init() {
-        console.log('🏢 Initializing Enterprise Modules...');
-
-        // Initialize PWA
-        App.PWA.init();
-
-        // Add enterprise toolbar buttons (Wait for toolbar to exist)
-        this.waitForToolbar();
-
-        // Keyboard shortcuts
-        this.bindKeyboardShortcuts();
-
-        console.log('✅ Enterprise Modules ready');
+        console.log('🏢 Initializing Enterprise Modules (Clean Canvas)...');
+        // PWA and core utilities only
+        App.PWA?.init();
     },
 
     /**
      * Add enterprise buttons to the toolbar as a collapsible menu
      */
     addToolbarButtons() {
+        // Disabled to keep canvas clean
+        return;
+    },
         const toolbar = document.querySelector('.elite-toolbar');
         if (!toolbar) return;
 

@@ -1,0 +1,767 @@
+{
+  "01-03-04": {
+    "id": "01-03-04",
+    "empresa_financiera": "SAN REMO VALORES (LEGAL)",
+    "capital_adeudado": 16430847.69,
+    "total_programado": 0.0,
+    "total_pagado": 0.0,
+    "total_pendiente": 16430847.69,
+    "progreso_pct": 0.0,
+    "estatus_financiero": "Legal - Cobranzas",
+    "semaforo": "critico",
+    "color": "#ef4444",
+    "estado_label": "En Legal",
+    "meses_atraso_txt": "Cobranzas Legal",
+    "tiene_plan_pagos": false,
+    "fecha_fin_pagos": "Sin definir (En Legal)",
+    "cuotas_count": 0,
+    "cuotas_pagadas_count": 0,
+    "cuotas_pendientes_count": 0,
+    "cuotas": [],
+    "match_cjb": true
+  },
+  "04-12-04": {
+    "id": "04-12-04",
+    "empresa_financiera": "GRUPO INMOBILIARIO TERRAZA GIT",
+    "capital_adeudado": 3560000.0,
+    "total_programado": 0.0,
+    "total_pagado": 0.0,
+    "total_pendiente": 0.0,
+    "progreso_pct": 0.0,
+    "estatus_financiero": "Pendiente",
+    "semaforo": "pendiente_acuerdo",
+    "color": "#f97316",
+    "estado_label": "Sin Cronograma Acordado",
+    "meses_atraso_txt": "Pendiente acuerdo",
+    "tiene_plan_pagos": false,
+    "fecha_fin_pagos": "Sin definir",
+    "cuotas_count": 0,
+    "cuotas_pagadas_count": 0,
+    "cuotas_pendientes_count": 0,
+    "cuotas": [],
+    "match_cjb": true
+  },
+  "04-40-01": {
+    "id": "04-40-01",
+    "empresa_financiera": "RODECO (SERVINSCO)",
+    "capital_adeudado": 120339922.5,
+    "total_programado": 139541307.65,
+    "total_pagado": 62001723.89,
+    "total_pendiente": 77539583.75999999,
+    "progreso_pct": 44.4,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "3 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Nov-26",
+    "cuotas_count": 5,
+    "cuotas_pagadas_count": 2,
+    "cuotas_pendientes_count": 3,
+    "cuotas": [
+      {
+        "mes": "Jul-26",
+        "monto": 19201385.15,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Aug-26",
+        "monto": 42800338.74,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Sep-26",
+        "monto": 23896854.52,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Oct-26",
+        "monto": 25784972.67,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Nov-26",
+        "monto": 27857756.57,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "05-17-02": {
+    "id": "05-17-02",
+    "empresa_financiera": "SAN REMO VALORES (LEGAL)",
+    "capital_adeudado": 5517003.52,
+    "total_programado": 0.0,
+    "total_pagado": 0.0,
+    "total_pendiente": 5517003.52,
+    "progreso_pct": 0.0,
+    "estatus_financiero": "Legal - Cobranzas",
+    "semaforo": "critico",
+    "color": "#ef4444",
+    "estado_label": "En Legal",
+    "meses_atraso_txt": "Cobranzas Legal",
+    "tiene_plan_pagos": false,
+    "fecha_fin_pagos": "Sin definir (En Legal)",
+    "cuotas_count": 0,
+    "cuotas_pagadas_count": 0,
+    "cuotas_pendientes_count": 0,
+    "cuotas": [],
+    "match_cjb": true
+  },
+  "06-25-03": {
+    "id": "06-25-03",
+    "empresa_financiera": "EMPRESAS CONSTRUCTORAS DE OBRAS VIALES, SRL (ECOVIAL)",
+    "capital_adeudado": 7763720.07,
+    "total_programado": 0.0,
+    "total_pagado": 0.0,
+    "total_pendiente": 0.0,
+    "progreso_pct": 0.0,
+    "estatus_financiero": "Pendiente",
+    "semaforo": "pendiente_acuerdo",
+    "color": "#f97316",
+    "estado_label": "Sin Cronograma Acordado",
+    "meses_atraso_txt": "Pendiente acuerdo",
+    "tiene_plan_pagos": false,
+    "fecha_fin_pagos": "Sin definir",
+    "cuotas_count": 0,
+    "cuotas_pagadas_count": 0,
+    "cuotas_pendientes_count": 0,
+    "cuotas": [],
+    "match_cjb": true
+  },
+  "07-30-03": {
+    "id": "07-30-03",
+    "empresa_financiera": "IMATEC-DIAGNOSIS, SRL",
+    "capital_adeudado": 430650.96,
+    "total_programado": 0.0,
+    "total_pagado": 0.0,
+    "total_pendiente": 0.0,
+    "progreso_pct": 0.0,
+    "estatus_financiero": "Intereses",
+    "semaforo": "pendiente_acuerdo",
+    "color": "#f97316",
+    "estado_label": "Sin Cronograma Acordado",
+    "meses_atraso_txt": "Pendiente acuerdo",
+    "tiene_plan_pagos": false,
+    "fecha_fin_pagos": "Sin definir",
+    "cuotas_count": 0,
+    "cuotas_pagadas_count": 0,
+    "cuotas_pendientes_count": 0,
+    "cuotas": [],
+    "match_cjb": true
+  },
+  "07-30-05": {
+    "id": "07-30-05",
+    "empresa_financiera": "IMATEC-DIAGNOSIS, SRL",
+    "capital_adeudado": 188261.61,
+    "total_programado": 0.0,
+    "total_pagado": 0.0,
+    "total_pendiente": 0.0,
+    "progreso_pct": 0.0,
+    "estatus_financiero": "Intereses",
+    "semaforo": "pendiente_acuerdo",
+    "color": "#f97316",
+    "estado_label": "Sin Cronograma Acordado",
+    "meses_atraso_txt": "Pendiente acuerdo",
+    "tiene_plan_pagos": false,
+    "fecha_fin_pagos": "Sin definir",
+    "cuotas_count": 0,
+    "cuotas_pagadas_count": 0,
+    "cuotas_pendientes_count": 0,
+    "cuotas": [],
+    "match_cjb": true
+  },
+  "04-12-05": {
+    "id": "04-12-05",
+    "empresa_financiera": "CONSTRUCTORA OV, SRL  (TERRAZAS GIT)",
+    "capital_adeudado": 43439070.150000006,
+    "total_programado": 82305606.6,
+    "total_pagado": 38866536.45,
+    "total_pendiente": 43439070.150000006,
+    "progreso_pct": 47.2,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "17 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Dec-27",
+    "cuotas_count": 19,
+    "cuotas_pagadas_count": 2,
+    "cuotas_pendientes_count": 17,
+    "cuotas": [
+      {
+        "mes": "Apr-26",
+        "monto": 36580269.6,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Jul-26",
+        "monto": 2286266.85,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Aug-26",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Sep-26",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Oct-26",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Nov-26",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Dec-26",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Jan-27",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Feb-27",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Mar-27",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Apr-27",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "May-27",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Jun-27",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Jul-27",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Aug-27",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Sep-27",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Oct-27",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Nov-27",
+        "monto": 2286266.85,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Dec-27",
+        "monto": 6858800.550000001,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "09-28-01": {
+    "id": "09-28-01",
+    "empresa_financiera": "CONSORCIO TEAM DOMINICO-ESPAÑOL",
+    "capital_adeudado": 1740051.76,
+    "total_programado": 0.0,
+    "total_pagado": 0.0,
+    "total_pendiente": 0.0,
+    "progreso_pct": 0.0,
+    "estatus_financiero": "Pendiente",
+    "semaforo": "pendiente_acuerdo",
+    "color": "#f97316",
+    "estado_label": "Sin Cronograma Acordado",
+    "meses_atraso_txt": "Pendiente acuerdo",
+    "tiene_plan_pagos": false,
+    "fecha_fin_pagos": "Sin definir",
+    "cuotas_count": 0,
+    "cuotas_pagadas_count": 0,
+    "cuotas_pendientes_count": 0,
+    "cuotas": [],
+    "match_cjb": true
+  },
+  "01-01-03": {
+    "id": "01-01-03",
+    "empresa_financiera": "Constructora Bisono",
+    "capital_adeudado": 54110840.0,
+    "total_programado": 97399512.0,
+    "total_pagado": 43288672.0,
+    "total_pendiente": 54110840.0,
+    "progreso_pct": 44.4,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "1 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Jul-27",
+    "cuotas_count": 2,
+    "cuotas_pagadas_count": 1,
+    "cuotas_pendientes_count": 1,
+    "cuotas": [
+      {
+        "mes": "Jul-26",
+        "monto": 43288672.0,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Jul-27",
+        "monto": 54110840.0,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "04-11-06": {
+    "id": "04-11-06",
+    "empresa_financiera": "Jopacons",
+    "capital_adeudado": 6136768.0,
+    "total_programado": 6136768.0,
+    "total_pagado": 0.0,
+    "total_pendiente": 6136768.0,
+    "progreso_pct": 0.0,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "2 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Jan-27",
+    "cuotas_count": 2,
+    "cuotas_pagadas_count": 0,
+    "cuotas_pendientes_count": 2,
+    "cuotas": [
+      {
+        "mes": "Aug-26",
+        "monto": 3068384.0,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Jan-27",
+        "monto": 3068384.0,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "00-33-01": {
+    "id": "00-33-01",
+    "empresa_financiera": "Civil Art, SRL",
+    "capital_adeudado": 18211956.4,
+    "total_programado": 36423912.8,
+    "total_pagado": 18211956.4,
+    "total_pendiente": 18211956.4,
+    "progreso_pct": 50.0,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "1 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Feb-27",
+    "cuotas_count": 2,
+    "cuotas_pagadas_count": 1,
+    "cuotas_pendientes_count": 1,
+    "cuotas": [
+      {
+        "mes": "Jul-26",
+        "monto": 18211956.4,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Feb-27",
+        "monto": 18211956.4,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "00-33-03": {
+    "id": "00-33-03",
+    "empresa_financiera": "CONSORCIO VELARBO, SRL",
+    "capital_adeudado": 37942732.800000004,
+    "total_programado": 42685574.400000006,
+    "total_pagado": 23714208.000000004,
+    "total_pendiente": 18971366.400000002,
+    "progreso_pct": 55.6,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "1 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Feb-27",
+    "cuotas_count": 3,
+    "cuotas_pagadas_count": 2,
+    "cuotas_pendientes_count": 1,
+    "cuotas": [
+      {
+        "mes": "Mar-26",
+        "monto": 4742841.600000001,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Aug-26",
+        "monto": 18971366.400000002,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Feb-27",
+        "monto": 18971366.400000002,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "04-12-01": {
+    "id": "04-12-01",
+    "empresa_financiera": "CONSORCIO VELARBO, SRL",
+    "capital_adeudado": 36659195.99999999,
+    "total_programado": 41241595.49999999,
+    "total_pagado": 22911997.499999996,
+    "total_pendiente": 18329597.999999996,
+    "progreso_pct": 55.6,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "1 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Feb-27",
+    "cuotas_count": 3,
+    "cuotas_pagadas_count": 2,
+    "cuotas_pendientes_count": 1,
+    "cuotas": [
+      {
+        "mes": "Mar-26",
+        "monto": 4582399.5,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Aug-26",
+        "monto": 18329597.999999996,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Feb-27",
+        "monto": 18329597.999999996,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "03-09-01": {
+    "id": "03-09-01",
+    "empresa_financiera": "CONSORCIO RIO GRANDE (INTIMADOS 10/16/23) LEGAL",
+    "capital_adeudado": 89577921.26,
+    "total_programado": 0.0,
+    "total_pagado": 0.0,
+    "total_pendiente": 89577921.26,
+    "progreso_pct": 0.0,
+    "estatus_financiero": "Legal - Cobranzas (Intimados desde 16-10-2023)",
+    "semaforo": "critico",
+    "color": "#ef4444",
+    "estado_label": "En Legal (Intimados desde 16-10-2023)",
+    "meses_atraso_txt": "Intimados formalmente desde 16-10-2023",
+    "tiene_plan_pagos": false,
+    "fecha_fin_pagos": "Sin definir (En Legal)",
+    "cuotas_count": 0,
+    "cuotas_pagadas_count": 0,
+    "cuotas_pendientes_count": 0,
+    "cuotas": [],
+    "match_cjb": true
+  },
+  "02-06-09": {
+    "id": "02-06-09",
+    "empresa_financiera": "CONSORCIO CODEMSA",
+    "capital_adeudado": 11938634.24,
+    "total_programado": 15419457.440000001,
+    "total_pagado": 3480823.2,
+    "total_pendiente": 11938634.24,
+    "progreso_pct": 22.6,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "2 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Mar-27",
+    "cuotas_count": 4,
+    "cuotas_pagadas_count": 2,
+    "cuotas_pendientes_count": 2,
+    "cuotas": [
+      {
+        "mes": "Apr-26",
+        "monto": 1000000.0,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "May-26",
+        "monto": 2480823.2,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Oct-26",
+        "monto": 5969317.12,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Mar-27",
+        "monto": 5969317.12,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "04-40-02": {
+    "id": "04-40-02",
+    "empresa_financiera": "SERVINSCO, SRL",
+    "capital_adeudado": 204197880.0,
+    "total_programado": 245037456.0,
+    "total_pagado": 40839576.0,
+    "total_pendiente": 204197880.0,
+    "progreso_pct": 16.7,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "2 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Mar-27",
+    "cuotas_count": 3,
+    "cuotas_pagadas_count": 1,
+    "cuotas_pendientes_count": 2,
+    "cuotas": [
+      {
+        "mes": "Apr-26",
+        "monto": 40839576.0,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Oct-26",
+        "monto": 102098940.0,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Mar-27",
+        "monto": 102098940.0,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "00-14-04": {
+    "id": "00-14-04",
+    "empresa_financiera": "SERVINSCO, SRL",
+    "capital_adeudado": 82532736.0,
+    "total_programado": 99039283.2,
+    "total_pagado": 16506547.200000001,
+    "total_pendiente": 82532736.0,
+    "progreso_pct": 16.7,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "2 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Mar-27",
+    "cuotas_count": 3,
+    "cuotas_pagadas_count": 1,
+    "cuotas_pendientes_count": 2,
+    "cuotas": [
+      {
+        "mes": "Apr-26",
+        "monto": 16506547.200000001,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Oct-26",
+        "monto": 41266368.0,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Mar-27",
+        "monto": 41266368.0,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "00-14-05": {
+    "id": "00-14-05",
+    "empresa_financiera": "SERVINSCO, SRL",
+    "capital_adeudado": 82606968.0,
+    "total_programado": 99128361.6,
+    "total_pagado": 16521393.600000001,
+    "total_pendiente": 82606968.0,
+    "progreso_pct": 16.7,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "2 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Mar-27",
+    "cuotas_count": 3,
+    "cuotas_pagadas_count": 1,
+    "cuotas_pendientes_count": 2,
+    "cuotas": [
+      {
+        "mes": "Apr-26",
+        "monto": 16521393.600000001,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Oct-26",
+        "monto": 41303484.0,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Mar-27",
+        "monto": 41303484.0,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "01-02-04": {
+    "id": "01-02-04",
+    "empresa_financiera": "CONSORCIO MOTA-ENGIL-NCB - RISEK",
+    "capital_adeudado": 101034933.88,
+    "total_programado": 122685276.85,
+    "total_pagado": 21650342.97,
+    "total_pendiente": 101034933.88,
+    "progreso_pct": 17.6,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "2 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Mar-27",
+    "cuotas_count": 3,
+    "cuotas_pagadas_count": 1,
+    "cuotas_pendientes_count": 2,
+    "cuotas": [
+      {
+        "mes": "Apr-26",
+        "monto": 21650342.97,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Sep-26",
+        "monto": 50517466.94,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Mar-27",
+        "monto": 50517466.94,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cjb": true
+  },
+  "02-06-08": {
+    "id": "02-06-08",
+    "empresa_financiera": "CONSTRUCTORA NAGIR VENTURA, SRL (LEGAL)",
+    "capital_adeudado": 22253788.76,
+    "total_programado": 0.0,
+    "total_pagado": 0.0,
+    "total_pendiente": 22253788.76,
+    "progreso_pct": 0.0,
+    "estatus_financiero": "Legal - Cobranzas",
+    "semaforo": "critico",
+    "color": "#ef4444",
+    "estado_label": "En Legal",
+    "meses_atraso_txt": "Cobranzas Legal",
+    "tiene_plan_pagos": false,
+    "fecha_fin_pagos": "Sin definir (En Legal)",
+    "cuotas_count": 0,
+    "cuotas_pagadas_count": 0,
+    "cuotas_pendientes_count": 0,
+    "cuotas": [],
+    "match_cjb": true
+  }
+}

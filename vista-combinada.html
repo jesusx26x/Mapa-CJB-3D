@@ -426,6 +426,40 @@
             cjb: new Map()
         };
 
+        function normalizeId(rawId) {
+            if (!rawId) return '';
+            let val = String(rawId).trim().replace(/^poly-/i, '');
+            if (/^\d{2}-\d{2}-\d{2}$/.test(val)) return val;
+            if (/^[Cc]-\d{1,2}$/.test(val)) return val.toUpperCase();
+            
+            const matchDate = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (matchDate) {
+                const c = parseInt(matchDate[1], 10);
+                const mz = parseInt(matchDate[2], 10);
+                const yr = parseInt(matchDate[3], 10);
+                const lote = yr >= 2000 ? yr - 2000 : yr;
+                return `${String(c).padStart(2, '0')}-${String(mz).padStart(2, '0')}-${String(lote).padStart(2, '0')}`;
+            }
+
+            const matchShortDate = val.match(/^(\d{1,2})\/(\d{1,2})\/(\d{1,2})$/);
+            if (matchShortDate) {
+                const c = parseInt(matchShortDate[1], 10);
+                const mz = parseInt(matchShortDate[2], 10);
+                const lote = parseInt(matchShortDate[3], 10);
+                return `${String(c).padStart(2, '0')}-${String(mz).padStart(2, '0')}-${String(lote).padStart(2, '0')}`;
+            }
+
+            const matchHyphen = val.match(/^(\d{1,2})-(\d{1,2})-(\d{1,2})$/);
+            if (matchHyphen) {
+                const c = parseInt(matchHyphen[1], 10);
+                const mz = parseInt(matchHyphen[2], 10);
+                const lote = parseInt(matchHyphen[3], 10);
+                return `${String(c).padStart(2, '0')}-${String(mz).padStart(2, '0')}-${String(lote).padStart(2, '0')}`;
+            }
+
+            return val;
+        }
+
         // Parse CSV
         function parseCSV(text) {
             const results = Papa.parse(text, { header: true, skipEmptyLines: true });
@@ -436,6 +470,10 @@
                 const cleanRow = {};
                 for (const key in row) {
                     cleanRow[key.trim()] = row[key] ? String(row[key]).trim() : '';
+                }
+                const rawId = cleanRow.id || cleanRow['Lote'] || cleanRow['No. Lote'] || cleanRow['No. Lote '] || cleanRow['Lote '] || '';
+                if (rawId) {
+                    cleanRow.id = normalizeId(rawId);
                 }
                 return cleanRow;
             });
