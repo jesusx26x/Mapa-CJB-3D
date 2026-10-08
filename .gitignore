@@ -23,3 +23,6 @@ _RESPALDO/
 # Temporary files
 *.tmp
 ~$*
+
+# Datos financieros generados por "Actualizar Flujo 2027.bat" (saldos de clientes: no publicar)
+data/flujo_2027.json
