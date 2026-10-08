@@ -461,8 +461,10 @@
         // Filas de detalle que entran en la vista (en Consolidado también las «Por confirmar»)
         const enVista = p => consolidado() || p === S.proyecto;
         const proyDeClave = clave => (clave || '').split('-')[0];
-        // Claves sin lote en el mapa: «-GENERAL» (partidas generales) y «POR-CONFIRMAR»/«PORCONF-» (ubicación por confirmar)
-        const etiquetaVirtual = clave => /GENERAL$/.test(clave) ? 'general · sin lote en el mapa' : 'ubicación por confirmar';
+        // Claves sin lote en el mapa: «-GENERAL» (partidas generales), «-ACCESO-…» (vías de acceso fuera del límite)
+        // y «POR-CONFIRMAR»/«PORCONF-» (ubicación por confirmar)
+        const etiquetaVirtual = clave => /GENERAL$/.test(clave) ? 'general · sin lote en el mapa'
+            : /-ACCESO-/.test(clave) ? 'vía de acceso fuera del límite · sin lote' : 'ubicación por confirmar';
         const proximo = (serie, meses) => {
             const i = serie.findIndex(v => v > 0.5);
             return i < 0 ? '—' : `${fmtMes(meses[i])} · ${fmtM(serie[i])}`;
