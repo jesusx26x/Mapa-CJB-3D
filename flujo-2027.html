@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flujo 2027 - Fideicomiso VBC-RD</title>
+    <meta name="view-transition" content="same-origin">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* ============ VARIABLES (oscuro por defecto, igual que css/styles.css) ============ */
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --card-2: #172033;
+            --line: rgba(255, 255, 255, 0.1);
+            --line-soft: rgba(255, 255, 255, 0.05);
+            --tx: #f1f5f9;
+            --tx2: #94a3b8;
+            --mut: #64748b;
+            --pri: #00a8ff;
+            --pri-soft: rgba(0, 168, 255, 0.15);
+            --pri-line: rgba(0, 168, 255, 0.45);
+            --ok: #10b981;
+            --bad: #f87171;
+            --track: #0f172a;
+            --map-bg: #0b1220;
+            --lot-neutral: #1e293b;
+            --lot-stroke: #0b1220;
+            --dxf-line: #475569;
+            --sc-on-bg: #f1f5f9;
+            --sc-on-tx: #0f172a;
+            --caja-bg: linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(30, 41, 59, 0.9));
+            --caja-line: rgba(249, 115, 22, 0.45);
+            --caja-h: #fdba74;
+            --shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+            --chart-line: #e2e8f0;
+            --chart-grid: rgba(255, 255, 255, 0.06);
+        }
+
+        body.light-mode {
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --card-2: #f8fafc;
+            --line: #e2e8f0;
+            --line-soft: #f1f5f9;
+            --tx: #0f172a;
+            --tx2: #475569;
+            --mut: #94a3b8;
+            --pri: #0066cc;
+            --pri-soft: #e0efff;
+            --pri-line: #b6d7ff;
+            --ok: #059669;
+            --bad: #dc2626;
+            --track: #f1f5f9;
+            --map-bg: #f8fafc;
+            --lot-neutral: #e9edf2;
+            --lot-stroke: #ffffff;
+            --dxf-line: #94a3b8;
+            --sc-on-bg: #0f172a;
+            --sc-on-tx: #ffffff;
+            --caja-bg: linear-gradient(135deg, #fff7ed, #ffffff);
+            --caja-line: #fed7aa;
+            --caja-h: #9a3412;
+            --shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+            --chart-line: #0f172a;
+            --chart-grid: #eef2f6;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Inter, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--tx);
+            font-size: 13px;
+            min-height: 100vh;
+        }
+
+        .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+        button { font-family: inherit; }
+
+        /* ============ HEADER ============ */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 10px 20px;
+            background: var(--card);
+            border-bottom: 1px solid var(--line);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            flex-wrap: wrap;
+        }
+
+        .logo { display: flex; align-items: center; gap: 10px; }
+        .logo-box {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: linear-gradient(135deg, #0066cc, #00a8ff);
+            display: grid; place-items: center; font-size: 20px;
+        }
+        .logo h1 { font-size: 14px; line-height: 1.15; }
+        .logo p { font-size: 10px; color: var(--mut); }
+
+        .header-nav { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+        .header-nav a {
+            padding: 8px 12px; border-radius: 8px; color: var(--tx2); text-decoration: none;
+            font-weight: 600; font-size: 12px; border: 1px solid transparent; white-space: nowrap;
+        }
+        .header-nav a:hover { background: var(--pri-soft); color: var(--pri); }
+        .header-nav a.active { background: var(--pri-soft); color: var(--pri); border-color: var(--pri-line); }
+        .header-nav a.new::after {
+            content: 'NUEVO'; font-size: 8px; background: var(--pri); color: #fff;
+            border-radius: 4px; padding: 1px 4px; margin-left: 6px; vertical-align: 2px;
+        }
+
+        .acts { display: flex; gap: 8px; }
+        .btn {
+            border: 1px solid var(--line); background: var(--card); border-radius: 8px; padding: 8px 12px;
+            font-weight: 600; font-size: 12px; color: var(--tx2); cursor: pointer; white-space: nowrap;
+        }
+        .btn:hover { border-color: var(--pri-line); color: var(--pri); }
+        .btn.pri { background: var(--pri); color: #fff; border-color: var(--pri); }
+        .btn.pri:hover { filter: brightness(1.08); color: #fff; }
+
+        /* ============ TOOLBAR ============ */
+        .toolbar { display: flex; align-items: center; gap: 16px; padding: 12px 20px; flex-wrap: wrap; }
+        .seg { display: flex; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+        .seg button {
+            padding: 7px 14px; border-radius: 7px; font-size: 12px; color: var(--tx2); font-weight: 600;
+            border: 0; background: none; cursor: pointer;
+        }
+        .seg button:hover { color: var(--tx); }
+        .seg button.on { background: var(--pri); color: #fff; box-shadow: 0 2px 6px rgba(0, 102, 204, 0.3); }
+        .seg.sc button.on { background: var(--sc-on-bg); color: var(--sc-on-tx); box-shadow: none; }
+        .lbl { font-size: 10px; font-weight: 700; color: var(--mut); letter-spacing: .06em; text-transform: uppercase; margin-right: -8px; }
+        .stamp { margin-left: auto; font-size: 11px; color: var(--mut); text-align: right; line-height: 1.5; }
+        .stamp b { color: var(--tx2); }
+
+        /* ============ KPIs ============ */
+        .kpis { display: grid; grid-template-columns: repeat(4, 1fr) 1.35fr; gap: 12px; padding: 0 20px; }
+        .k { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+        .k h4 { font-size: 11px; color: var(--tx2); font-weight: 600; }
+        .k .v { font-family: 'JetBrains Mono', monospace; font-size: 24px; font-weight: 700; margin-top: 6px; }
+        .k .v small { font-size: 12px; color: var(--mut); font-weight: 500; }
+        .k p { font-size: 11px; color: var(--mut); margin-top: 3px; }
+        .k.caja { background: var(--caja-bg); border-color: var(--caja-line); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .k.caja h4 { grid-column: 1 / 3; color: var(--caja-h); }
+        .k .warn { color: #d97706; font-weight: 600; }
+        .neg { color: var(--bad); }
+        .pos { color: var(--ok); }
+
+        /* ============ GRID PRINCIPAL ============ */
+        .grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 12px; padding: 12px 20px; }
+        .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; position: relative; min-width: 0; }
+        .card h3 { font-size: 13px; font-weight: 700; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+        .card h3 span { font-weight: 500; color: var(--mut); font-size: 11px; }
+        .card h3 a { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--pri); text-decoration: none; cursor: pointer; }
+
+        .mapwrap { display: grid; grid-template-columns: 1fr 210px; gap: 12px; margin-top: 10px; height: 600px; }
+        .maps { display: grid; gap: 10px; min-width: 0; }
+        .maps.dos { grid-template-columns: 1fr 1fr; }
+        .map {
+            background: var(--map-bg); border: 1px solid var(--line); border-radius: 10px;
+            overflow: hidden; position: relative; min-width: 0; touch-action: none; cursor: grab;
+        }
+        .map.drag { cursor: grabbing; }
+        .map .svgbox { position: absolute; inset: 0; }
+        .mapsvg { width: 100%; height: 100%; display: block; }
+        .mapsvg text, .mapsvg tspan, .mapsvg use { display: none; }
+        .mapsvg .lote { cursor: pointer; transition: fill-opacity .15s; }
+        .mapsvg .lote:hover { fill-opacity: .75 !important; }
+        .mapsvg .lote.sel { stroke: #0f172a !important; stroke-width: 2.2px !important; }
+        body:not(.light-mode) .mapsvg .lote.sel { stroke: #ffffff !important; }
+        .map-label {
+            position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); z-index: 3;
+            padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+            background: var(--card); border: 1px solid var(--line); color: var(--tx2); white-space: nowrap;
+        }
+        .map-note {
+            position: absolute; left: 10px; right: 50px; bottom: 40px; z-index: 3; font-size: 11px; color: var(--tx2);
+            background: var(--card); border: 1px dashed var(--line); border-radius: 8px; padding: 8px 10px;
+        }
+        .map-msg { display: grid; place-items: center; height: 100%; color: var(--mut); text-align: center; padding: 20px; }
+        .spinner { width: 34px; height: 34px; border: 3px solid var(--line); border-top-color: var(--pri); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .zoom { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; z-index: 4; }
+        .zoom button {
+            width: 28px; height: 28px; background: var(--card); border: 1px solid var(--line); border-radius: 7px;
+            display: grid; place-items: center; color: var(--tx2); cursor: pointer; font-size: 14px;
+        }
+        .zoom button:hover { color: var(--pri); border-color: var(--pri-line); }
+
+        /* Ficha flotante */
+        .ficha {
+            position: absolute; left: 12px; top: 12px; width: 250px; z-index: 5; max-height: calc(100% - 24px); overflow: auto;
+            background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+            padding: 12px 14px; cursor: default;
+        }
+        .ficha .t { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding-right: 18px; }
+        .ficha h5 { font-size: 14px; margin: 2px 0 6px; line-height: 1.25; }
+        .ficha .x { position: absolute; right: 8px; top: 6px; border: 0; background: none; color: var(--mut); font-size: 18px; cursor: pointer; line-height: 1; }
+        .ficha .x:hover { color: var(--tx); }
+        .ficha table { width: 100%; font-size: 11px; border-collapse: collapse; }
+        .ficha td { padding: 2px 0; color: var(--tx2); vertical-align: top; }
+        .ficha td:last-child { text-align: right; font-family: 'JetBrains Mono', monospace; color: var(--tx); font-weight: 600; padding-left: 8px; }
+        .ficha td.txt { font-family: Inter, sans-serif; font-weight: 600; }
+        .ficha .bars { display: flex; gap: 2px; align-items: flex-end; height: 34px; margin-top: 8px; }
+        .ficha .bars i { flex: 1; border-radius: 2px 2px 0 0; min-height: 1px; }
+        .ficha .ax { display: flex; justify-content: space-between; font-size: 9px; color: var(--mut); }
+        .ficha .also { font-size: 10px; color: var(--mut); margin-top: 6px; }
+
+        .tip {
+            position: fixed; z-index: 100; pointer-events: none; display: none; max-width: 260px;
+            background: var(--card); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow);
+            padding: 6px 9px; font-size: 11px; color: var(--tx2);
+        }
+        .tip b { color: var(--tx); }
+
+        /* Leyenda */
+        .leg { display: flex; flex-direction: column; gap: 6px; overflow: auto; }
+        .li {
+            display: grid; grid-template-columns: 14px 1fr; gap: 8px; padding: 8px 10px; border: 1px solid var(--line);
+            border-radius: 9px; background: var(--card); cursor: pointer; text-align: left; color: var(--tx); font: inherit;
+        }
+        .li:hover { border-color: var(--pri-line); }
+        .li i { width: 12px; height: 12px; border-radius: 3px; margin-top: 2px; }
+        .li b { font-size: 12px; }
+        .li p { font-size: 11px; color: var(--tx2); }
+        .li .mono { font-size: 12px; font-weight: 700; }
+        .li.off { opacity: .45; }
+        .li.info { cursor: default; border-style: dashed; }
+        .hint { font-size: 11px; color: var(--mut); margin-top: 6px; }
+
+        .right { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+        .bars2 .r { display: grid; grid-template-columns: 140px 1fr 70px; align-items: center; gap: 8px; margin: 7px 0; font-size: 12px; }
+        .bars2 .t { height: 14px; background: var(--track); border-radius: 4px; overflow: hidden; }
+        .bars2 .t i { display: block; height: 100%; border-radius: 4px; }
+        .bars2 .r b { text-align: right; }
+        .bars2 .foot { font-size: 11px; color: var(--mut); margin-top: 4px; }
+        .empty { color: var(--mut); font-size: 12px; padding: 14px 0; }
+
+        /* ============ TABLAS ============ */
+        .tables { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px 20px; }
+        .tbwrap { overflow-x: auto; }
+        table.tb { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        .tb th {
+            font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--mut); text-align: left;
+            padding: 6px; border-bottom: 1px solid var(--line); white-space: nowrap; cursor: pointer; user-select: none;
+        }
+        .tb th:hover { color: var(--tx2); }
+        .tb th.sorted::after { content: ' ▾'; }
+        .tb th.sorted.asc::after { content: ' ▴'; }
+        .tb td { padding: 7px 6px; border-bottom: 1px solid var(--line-soft); font-size: 12px; vertical-align: middle; }
+        .tb td span.sub { display: block; font-size: 10px; color: var(--mut); }
+        .tb td span.porconf { color: #d97706; }
+        .tb tbody tr { cursor: pointer; }
+        .tb tbody tr:hover td { background: var(--pri-soft); }
+        .tb tbody tr.sel td { background: var(--pri-soft); }
+        .tb tfoot td { font-weight: 700; border-bottom: 0; border-top: 1px solid var(--line); }
+        .tb .n { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; white-space: nowrap; }
+        .tb th.n { text-align: right; }
+        .heat { display: grid; grid-template-columns: repeat(15, 1fr); gap: 2px; width: 170px; }
+        .heat i { height: 14px; border-radius: 2px; background: var(--track); }
+        .tag { font-style: normal; font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 20px; white-space: nowrap; display: inline-block; margin: 1px 0; }
+        .tg-adj { background: #ccfbf1; color: #0f766e; }
+        .tg-lic { background: #dcfce7; color: #15803d; }
+        .tg-op { background: #ecfccb; color: #4d7c0f; }
+        .tg-off { background: #f1f5f9; color: #64748b; }
+        body:not(.light-mode) .tg-adj { background: rgba(13, 148, 136, .2); color: #5eead4; }
+        body:not(.light-mode) .tg-lic { background: rgba(34, 197, 94, .18); color: #86efac; }
+        body:not(.light-mode) .tg-op { background: rgba(163, 230, 53, .15); color: #bef264; }
+        body:not(.light-mode) .tg-off { background: rgba(148, 163, 184, .15); color: #94a3b8; }
+        .note { font-size: 11px; color: var(--mut); margin-top: 8px; }
+
+        .error-card { margin: 40px auto; max-width: 560px; text-align: center; }
+        .error-card h3 { justify-content: center; color: var(--bad); margin-bottom: 8px; }
+        .error-card code { display: block; margin-top: 10px; font-size: 11px; color: var(--tx2); word-break: break-all; }
+
+        @media (max-width: 1200px) {
+            .kpis { grid-template-columns: repeat(2, 1fr); }
+            .k.caja { grid-column: 1 / -1; }
+            .grid, .tables { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 720px) {
+            .header, .toolbar { padding-left: 16px; padding-right: 16px; }
+            .kpis, .grid, .tables { padding-left: 16px; padding-right: 16px; }
+            .kpis { grid-template-columns: 1fr; }
+            .header-nav { margin-left: 0; }
+            .stamp { margin-left: 0; text-align: left; }
+            .mapwrap { grid-template-columns: 1fr; height: auto; }
+            .maps { height: 460px; }
+            .maps.dos { grid-template-columns: 1fr; height: 820px; }
+            .bars2 .r { grid-template-columns: 90px 1fr 60px; }
+        }
+    </style>
+</head>
+
+<body class="light-mode">
+    <header class="header">
+        <div class="logo">
+            <div class="logo-box">🏗️</div>
+            <div>
+                <h1>Fideicomiso VBC-RD</h1>
+                <p>Flujo de Caja y Presupuesto 2027</p>
+            </div>
+        </div>
+        <nav class="header-nav">
+            <a href="MAPA NUEVO - CJB/timelapse.html" class="nav-link">Timelapse</a>
+            <a href="MAPA NUEVO - CJB/evolucion.html" class="nav-link">Evolución</a>
+            <a href="MAPA NUEVO - CJB/index.html" class="nav-link">Mapa de Lotes</a>
+            <a href="flujo-2027.html" class="nav-link active new">💰 Flujo 2027</a>
+            <a href="MAPA CPAG/index.html" class="nav-link" title="Ver CPAG">🏛️ CPAG</a>
+            <a href="vista-combinada.html" class="nav-link" title="Ver ambos mapas">📊 Combinada</a>
+        </nav>
+        <div class="acts">
+            <button class="btn" id="themeToggle" title="Cambiar tema"><span class="ico">🌙</span> <span class="txt">Modo oscuro</span></button>
+            <button class="btn" id="btnFullscreen" title="Pantalla completa">⛶ Pantalla completa</button>
+            <button class="btn pri" id="btnPdf" title="Exportar esta vista a PDF">⬇ Exportar PDF</button>
+        </div>
+    </header>
+
+    <main id="contenido">
+        <div class="toolbar">
+            <span class="lbl">Proyecto</span>
+            <div class="seg" id="segProyecto">
+                <button data-v="CJB">CJB · Ciudad Juan Bosch</button>
+                <button data-v="CPAG">CPAG · Santiago</button>
+                <button data-v="Consolidado">Consolidado</button>
+            </div>
+            <span class="lbl">Escenario</span>
+            <div class="seg sc" id="segEscenario">
+                <button data-v="Conservador">Conservador</button>
+                <button data-v="Base">Base</button>
+                <button data-v="Optimista">Optimista</button>
+            </div>
+            <div class="stamp" id="stamp"></div>
+        </div>
+
+        <section class="kpis" id="kpis"></section>
+
+        <section class="grid">
+            <div class="card" id="cardMapa">
+                <h3 id="mapTitle">Mapa de flujos <span>clic en un lote para ver sus pagos y cobros</span></h3>
+                <div class="mapwrap">
+                    <div class="maps" id="maps"></div>
+                    <div class="leg" id="leg"></div>
+                </div>
+            </div>
+            <div class="right">
+                <div class="card">
+                    <h3 id="c1Title"></h3>
+                    <div style="height:250px;margin-top:8px"><canvas id="c1"></canvas></div>
+                </div>
+                <div class="card bars2" id="barsIn"></div>
+                <div class="card bars2" id="barsOut"></div>
+            </div>
+        </section>
+
+        <section class="tables">
+            <div class="card" id="cardObras"></div>
+            <div class="card" id="cardLic"></div>
+        </section>
+    </main>
+
+    <div class="tip" id="tip"></div>
+
+    <script>
+        // ================================================================
+        // Pestaña «Flujo 2027» – lee data/flujo_2027.json (generado por
+        // «Actualizar Flujo 2027.bat») y pinta el mapa, gráficos y tablas.
+        // ================================================================
+        const DATA_URL = 'data/flujo_2027.json';
+        const PROYECTOS = {
+            CJB: { nombre: 'Ciudad Juan Bosch', svg: 'MAPA NUEVO - CJB/assets/mapa.svg' },
+            CPAG: { nombre: 'Ciudad Pres. Antonio Guzmán', svg: 'MAPA CPAG/assets/mapa.svg' }
+        };
+        const CAT = {
+            obra: { label: 'Obras en ejecución', titulo: 'Obra en ejecución', color: '#f97316', fichaTx: '#c2410c' },
+            adjudicada: { label: 'Adjudicados LIC 2026-01', titulo: 'Adjudicado LIC 2026-01', color: '#0d9488', fichaTx: '#0f766e' },
+            licitar: { label: 'Por licitar 2027', titulo: 'Por licitar 2027', color: '#22c55e', fichaTx: '#15803d' },
+            opcional: { label: 'Lotes adicionales', titulo: 'Lote adicional', color: '#a3e635', fichaTx: '#4d7c0f' },
+            cartera: { label: 'Cartera con plan de pagos', titulo: 'Cartera con plan de pagos', color: '#3b82f6', fichaTx: '#1d4ed8' },
+            legal: { label: 'Cartera en gestión legal', titulo: 'Cartera en gestión legal', color: '#ef4444', fichaTx: '#b91c1c' }
+        };
+        const ORDEN_CAT = ['obra', 'adjudicada', 'licitar', 'opcional', 'cartera', 'legal'];
+        const RE_LOTE = /^(\d{2}-\d{2}-\d{2}|C-\d{2})$/;
+        const MESES_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+        const S = {
+            data: null,
+            proyecto: 'CJB',
+            escenario: 'Base',
+            off: new Set(),
+            svgText: {},
+            maps: {},
+            chart: null,
+            sel: null,
+            sortObras: { k: 'pagos', dir: -1 },
+            sortLic: { k: 'cobro', dir: -1 }
+        };
+
+        // ---------------------------------------------------------------- utilidades
+        const $ = (sel, root = document) => root.querySelector(sel);
+        const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const sum = a => (a || []).reduce((x, y) => x + (+y || 0), 0);
+        const addArr = (a, b) => a.map((v, i) => v + (b[i] || 0));
+        const zeros = () => new Array(15).fill(0);
+        const fmtM = v => (v / 1e6).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        const fmtN = v => Math.round(v).toLocaleString('en-US');
+        const fmtMes = k => { const [y, m] = k.split('-'); return MESES_ES[+m - 1] + '-' + y.slice(2); };
+        const fmtFecha = iso => { if (!iso) return '—'; const [y, m, d] = iso.split('-'); return `${d}-${MESES_ES[+m - 1]}-${y.slice(2)}`; };
+        const isLight = () => document.body.classList.contains('light-mode');
+        const cssVar = n => getComputedStyle(document.body).getPropertyValue(n).trim();
+        const esc = () => S.data.escenarios[S.escenario];
+        const consolidado = () => S.proyecto === 'Consolidado';
+        const proyectosVista = () => consolidado() ? ['CJB', 'CPAG'] : [S.proyecto];
+        // Filas de detalle que entran en la vista (en Consolidado también las «Por confirmar»)
+        const enVista = p => consolidado() || p === S.proyecto;
+        const proyDeClave = clave => (clave || '').split('-')[0];
+        // Claves sin lote en el mapa: «-GENERAL» (partidas generales) y «POR-CONFIRMAR»/«PORCONF-» (ubicación por confirmar)
+        const etiquetaVirtual = clave => /GENERAL$/.test(clave) ? 'general · sin lote en el mapa' : 'ubicación por confirmar';
+        const proximo = (serie, meses) => {
+            const i = serie.findIndex(v => v > 0.5);
+            return i < 0 ? '—' : `${fmtMes(meses[i])} · ${fmtM(serie[i])}`;
+        };
+
+        // ---------------------------------------------------------------- estado en la URL
+        function leerHash() {
+            const q = new URLSearchParams(location.hash.slice(1));
+            if (['CJB', 'CPAG', 'Consolidado'].includes(q.get('proyecto'))) S.proyecto = q.get('proyecto');
+            if (['Conservador', 'Base', 'Optimista'].includes(q.get('escenario'))) S.escenario = q.get('escenario');
+        }
+        function escribirHash() {
+            history.replaceState(null, '', `#proyecto=${S.proyecto}&escenario=${S.escenario}`);
+        }
+
+        // ---------------------------------------------------------------- cálculos de la vista
+        function totalesVista() {
+            const e = esc();
+            const P = S.proyecto;
+            const meses = S.data.meses;
+            let ing, obrasMes, ingSerie, detalleIng, detalleEgr;
+            if (consolidado()) {
+                const mi = e.mensual.ingresos, me = e.mensual.egresos;
+                ingSerie = mi.total;
+                obrasMes = addArr(addArr(me.obrasCJB, me.obrasCPAG), me.mantGeneral);
+                ing = e.kpis.ingresos;
+                detalleIng = [
+                    ['Cartera', sum(mi.cartera), CAT.cartera.color],
+                    ['Recuperación legal', sum(mi.recupLegal), CAT.legal.color],
+                    ['LIC 2026-01', sum(mi.lic2026), CAT.adjudicada.color],
+                    ['LIC 2027-01', sum(mi.lic2027), CAT.licitar.color],
+                    ['ZFI', sum(mi.zfi), '#16a34a'],
+                    ['Lotes adicionales', sum(mi.adicionales), CAT.opcional.color],
+                    ['Otros ingresos', sum(mi.otros), '#94a3b8']
+                ];
+                detalleEgr = [
+                    ['Obras CJB', sum(me.obrasCJB), '#f97316'],
+                    ['Obras CPAG', sum(me.obrasCPAG), '#fb923c'],
+                    ['Reserva mant. general', sum(me.mantGeneral), '#fdba74'],
+                    ['Retenidos', sum(me.retenidos), '#fed7aa'],
+                    ['Gastos fijos', sum(me.gastosFijos), '#64748b']
+                ];
+            } else {
+                const pp = e.porProyecto[P] || { ingresos: {}, egresos: {} };
+                const pi = pp.ingresos, pe = pp.egresos;
+                ingSerie = pi.total || zeros();
+                obrasMes = addArr(pe.obras || zeros(), pe.mantGeneral || zeros());
+                ing = sum(ingSerie);
+                detalleIng = [
+                    ['Cartera', sum(pi.cartera), CAT.cartera.color],
+                    ['Recuperación legal', sum(pi.recupLegal), CAT.legal.color],
+                    ['LIC 2026-01', sum(pi.lic2026), CAT.adjudicada.color],
+                    ['LIC 2027-01', sum(pi.lic2027), CAT.licitar.color],
+                    ['ZFI', sum(pi.zfi), '#16a34a'],
+                    ['Lotes adicionales', sum(pi.adicionales), CAT.opcional.color]
+                ];
+                detalleEgr = [
+                    ['Obras ' + P, sum(pe.obras), '#f97316'],
+                    ['Reserva mant. general', sum(pe.mantGeneral), '#fdba74'],
+                    ['Retenidos ' + P, sum(pe.retenidos), '#fed7aa']
+                ];
+            }
+            const obras = sum(obrasMes);
+            const obrasRows = e.obras.filter(o => enVista(o.proyecto));
+            const contratos = obrasRows.filter(o => o.tipo.toLowerCase() !== 'reserva' && o.totalHorizonte > 0).length;
+            const reserva = obrasRows.some(o => o.tipo.toLowerCase() === 'reserva' && o.totalHorizonte > 0);
+            const lotes = Object.entries(e.lotes).filter(([k]) => proyectosVista().includes(proyDeClave(k)));
+            const nLotes = Object.entries(S.data.maestro)
+                .filter(([k, m]) => proyectosVista().includes(m.proyecto) && RE_LOTE.test(m.id)).length;
+            const porCat = c => lotes.filter(([, l]) => l.categoria === c).length;
+            return {
+                meses, ing, ingSerie, obras, obrasMes, contratos, reserva, nLotes, detalleIng, detalleEgr,
+                nMov: lotes.length,
+                nObra: porCat('obra'),
+                nLic: porCat('adjudicada') + porCat('licitar') + porCat('opcional'),
+                nCart: porCat('cartera') + porCat('legal')
+            };
+        }
+
+        // Capas de la leyenda: conteo por categoría principal y monto por fuente
+        function capasVista() {
+            const e = esc();
+            const P = proyectosVista();
+            const lotes = Object.entries(e.lotes).filter(([k]) => P.includes(proyDeClave(k)));
+            const cap = {};
+            ORDEN_CAT.forEach(c => {
+                const ls = lotes.filter(([, l]) => l.categoria === c);
+                cap[c] = { n: ls.length, monto: 0, saldo: 0, apagados: ls.length > 0 && ls.every(([, l]) => l.atenuado) };
+            });
+            const grupoCat = { 'LIC 2026-01': 'adjudicada', 'LIC 2027-01': 'licitar', 'ZFI 2027-02': 'licitar', 'Lotes adicionales': 'opcional' };
+            let obrasVirt = 0, ingVirt = 0, nVirt = 0;
+            e.obras.filter(o => enVista(o.proyecto)).forEach(o => {
+                if (o.enMapa) cap.obra.monto += o.totalHorizonte; else { obrasVirt += o.totalHorizonte; nVirt++; }
+            });
+            e.licitaciones.filter(l => enVista(l.proyecto)).forEach(l => {
+                if (l.enMapa) cap[grupoCat[l.grupo] || 'opcional'].monto += l.cobroHorizonte; else ingVirt += l.cobroHorizonte;
+            });
+            e.cartera.filter(c => enVista(c.proyecto)).forEach(c => {
+                const cobro = c.totalHorizonte + c.recupLegal;
+                if (!c.enMapa) { ingVirt += cobro; if (cobro) nVirt++; return; }
+                if (c.situacion.startsWith('Sin plan')) { cap.legal.monto += cobro; cap.legal.saldo += c.saldo; }
+                else cap.cartera.monto += cobro;
+            });
+            return { cap, obrasVirt, ingVirt, nVirt };
+        }
+
+        // ---------------------------------------------------------------- render general
+        function render() {
+            document.querySelectorAll('#segProyecto button').forEach(b => b.classList.toggle('on', b.dataset.v === S.proyecto));
+            document.querySelectorAll('#segEscenario button').forEach(b => b.classList.toggle('on', b.dataset.v === S.escenario));
+            escribirHash();
+            const T = totalesVista();
+            renderStamp();
+            renderKpis(T);
+            renderLeyenda();
+            renderMapas();
+            renderChart(T);
+            renderBarras(T);
+            renderObras();
+            renderLicitaciones();
+            verificarTotales(T);
+        }
+
+        function renderStamp() {
+            const d = S.data;
+            const g = d.generado ? new Date(d.generado) : null;
+            const fecha = g ? `${String(g.getDate()).padStart(2, '0')}-${MESES_ES[g.getMonth()]}-${g.getFullYear()}` : '—';
+            const m0 = d.meses[0].split('-'), m1 = d.meses[d.meses.length - 1].split('-');
+            $('#stamp').innerHTML = `Período <b>${MESES_ES[+m0[1] - 1]}-${m0[0]} → ${MESES_ES[+m1[1] - 1]}-${m1[0]}</b> · cifras en RD$ millones<br>` +
+                `Fuente: ${h(d.fuente)} · actualizado ${fecha}`;
+        }
+
+        function renderKpis(T) {
+            const e = esc();
+            const k = e.kpis;
+            const P = S.proyecto;
+            const nom = consolidado() ? 'del Fideicomiso' : 'del proyecto';
+            const aporte = T.ing - T.obras;
+            const fuentes = consolidado() ? 'Cartera + licitaciones, CJB y CPAG' : `Cartera + licitaciones de lotes ${P}`;
+            const obrasTx = `${T.contratos} contratos con pagos` + (T.reserva ? ' + reserva mant. general' : '');
+            const sinIni = Math.abs(k.saldoInicial) < 1;
+            $('#kpis').innerHTML = `
+                <div class="k"><h4>💵 Ingresos ${nom}</h4><div class="v ${T.ing > 0 ? 'pos' : ''}">${fmtM(T.ing)}</div><p>${fuentes}</p></div>
+                <div class="k"><h4>🏗️ Pagos a obras ${consolidado() ? 'CJB + CPAG' : P}</h4><div class="v">${fmtM(T.obras)}</div><p>${obrasTx}</p></div>
+                <div class="k"><h4>📈 Aporte neto ${consolidado() ? 'de los proyectos' : P}</h4><div class="v ${aporte >= 0 ? 'pos' : 'neg'}">${fmtM(aporte)}</div><p>Ingresos − obras (antes de gastos fijos)</p></div>
+                <div class="k"><h4>🗺️ Lotes con movimiento</h4><div class="v">${T.nMov} <small>de ${T.nLotes}</small></div>
+                    <p>${T.nObra} obras · ${T.nLic} a licitar/adjudicados · ${T.nCart} cartera</p></div>
+                <div class="k caja"><h4>🏦 Caja del Fideicomiso (consolidado, incluye gastos fijos)</h4>
+                    <div><p>Saldo más bajo</p><div class="v ${k.saldoMin < 0 ? 'neg' : 'pos'}">${fmtM(k.saldoMin)}</div>
+                        <p>${k.mesSaldoMin ? fmtMes(k.mesSaldoMin).replace(/-(\d\d)$/, '-20$1') : '—'} · ${k.mesesNegativos} ${k.mesesNegativos === 1 ? 'mes' : 'meses'} en negativo</p></div>
+                    <div><p>Disponible para áreas (PACC)</p><div class="v">${fmtM(k.disponiblePACC)}</div>
+                        <p>${sinIni ? '<span class="warn">Falta saldo inicial al 1-oct</span>' : 'Saldo inicial ' + fmtM(k.saldoInicial)}</p></div>
+                </div>`;
+        }
+
+        // ---------------------------------------------------------------- leyenda
+        function renderLeyenda() {
+            const { cap, obrasVirt, ingVirt, nVirt } = capasVista();
+            const items = [];
+            ORDEN_CAT.forEach(c => {
+                const x = cap[c];
+                if (!x.n && !x.monto) return;
+                let p;
+                if (c === 'obra') p = `${x.n} lotes · pagos <span class="mono">${fmtM(x.monto)}</span>`;
+                else if (c === 'legal') p = `${x.n} lotes · saldo <span class="mono">${fmtM(x.saldo)}</span>` + (x.monto ? ` · recup. <span class="mono">${fmtM(x.monto)}</span>` : '');
+                else if (x.apagados && !x.monto) p = `${x.n} lotes · apagados en el escenario`;
+                else p = `${x.n} lotes · cobro <span class="mono">${fmtM(x.monto)}</span>`;
+                const off = S.off.has(c) || (x.apagados && !x.monto);
+                items.push(`<button class="li ${off ? 'off' : ''}" data-cat="${c}" aria-pressed="${!S.off.has(c)}">
+                    <i style="background:${CAT[c].color}"></i><div><b>${CAT[c].label}</b><p>${p}</p></div></button>`);
+            });
+            if (obrasVirt || ingVirt) {
+                const partes = [];
+                if (obrasVirt) partes.push(`obras <span class="mono">${fmtM(obrasVirt)}</span>`);
+                if (ingVirt) partes.push(`ingresos <span class="mono">${fmtM(ingVirt)}</span>`);
+                items.push(`<div class="li info"><i style="background:transparent;border:1px dashed var(--mut)"></i><div><b>Sin lote en el mapa</b>
+                    <p>${nVirt} partidas generales o con ubicación por confirmar · ${partes.join(' · ')}</p></div></div>`);
+            }
+            items.push(`<button class="li ${S.off.has('ninguno') ? 'off' : ''}" data-cat="ninguno">
+                <i style="background:var(--lot-neutral);border:1px solid var(--line)"></i><div><b>Sin movimiento</b><p>resto de lotes</p></div></button>`);
+            items.push(`<p class="hint">Clic en la leyenda para mostrar u ocultar cada capa.</p>`);
+            $('#leg').innerHTML = items.join('');
+        }
+
+        // ---------------------------------------------------------------- mapas
+        async function cargarSvg(p) {
+            if (!S.svgText[p]) {
+                const r = await fetch(PROYECTOS[p].svg);
+                if (!r.ok) throw new Error(`No se pudo cargar ${PROYECTOS[p].svg} (${r.status})`);
+                S.svgText[p] = await r.text();
+            }
+            return S.svgText[p];
+        }
+
+        async function renderMapas() {
+            const P = proyectosVista();
+            const host = $('#maps');
+            const titulo = consolidado() ? 'CJB + CPAG' : PROYECTOS[S.proyecto].nombre;
+            $('#mapTitle').innerHTML = `Mapa de flujos · ${h(titulo)} <span>clic en un lote para ver sus pagos y cobros</span>`;
+            const clave = P.join('+');
+            if (host.dataset.vista !== clave) {
+                host.dataset.vista = clave;
+                host.className = 'maps' + (P.length > 1 ? ' dos' : '');
+                host.innerHTML = P.map(p => `<div class="map" data-p="${p}"><div class="svgbox"><div class="map-msg"><div class="spinner"></div></div></div></div>`).join('');
+                S.maps = {};
+                await Promise.all(P.map(p => montarMapa(p, host.querySelector(`.map[data-p="${p}"]`))));
+            }
+            P.forEach(pintarMapa);
+        }
+
+        async function montarMapa(p, cont) {
+            try {
+                const txt = await cargarSvg(p);
+                if (!cont.isConnected) return;
+                const box = cont.querySelector('.svgbox');
+                box.innerHTML = txt;
+                const svg = box.querySelector('svg');
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                svg.classList.add('mapsvg');
+                svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                const lots = new Map();
+                svg.querySelectorAll('[id]').forEach(el => {
+                    if (RE_LOTE.test(el.id) && !lots.has(el.id)) { lots.set(el.id, el); el.classList.add('lote'); }
+                });
+                // Dibujo del DXF: sin rellenos de color (no confundir con las capas) y líneas en gris del tema
+                svg.querySelectorAll('path, polygon, polyline, rect, circle, ellipse').forEach(el => {
+                    if (el.classList.contains('lote') || el.closest('defs')) return;
+                    const cs = getComputedStyle(el);
+                    if (cs.fill !== 'none') el.style.fill = 'none';
+                    if (cs.stroke !== 'none') el.style.stroke = 'var(--dxf-line)';
+                });
+                const bbox = encuadre(svg, lots);
+                const m = { p, cont, svg, lots, bbox, vb: { ...bbox } };
+                S.maps[p] = m;
+                setVB(m);
+                cont.insertAdjacentHTML('beforeend', `
+                    <div class="zoom"><button data-z="in" title="Acercar">+</button><button data-z="out" title="Alejar">−</button><button data-z="reset" title="Encuadrar">⟲</button></div>
+                    <div class="map-label">${p} · ${h(PROYECTOS[p].nombre)}</div>`);
+                const nota = notaMapa(p);
+                if (nota) cont.insertAdjacentHTML('beforeend', `<div class="map-note">${nota}</div>`);
+                activarZoomPan(m);
+                activarEventos(m);
+            } catch (err) {
+                console.error(err);
+                cont.querySelector('.svgbox').innerHTML = `<div class="map-msg">⚠️ ${h(err.message)}</div>`;
+            }
+        }
+
+        function notaMapa(p) {
+            const e = esc();
+            const hayLotes = Object.keys(e.lotes).some(k => proyDeClave(k) === p);
+            const virt = e.obras.filter(o => o.proyecto === p && !o.enMapa && o.totalHorizonte > 0);
+            if (hayLotes || !virt.length) return '';
+            return `Hoy no hay lotes ${p} en venta ni en cartera. Sus obras (${virt.map(o => h(o.obra)).join(', ')}) ` +
+                `no tienen todavía ID de vía: <b>ubicación por confirmar</b>. Se muestran en las tablas y los totales.`;
+        }
+
+        // Encuadre: caja que envuelve todos los lotes, en coordenadas del SVG raíz
+        function encuadre(svg, lots) {
+            const inv = svg.getScreenCTM()?.inverse();
+            let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+            lots.forEach(el => {
+                let b;
+                try { b = el.getBBox(); } catch (_) { return; }
+                if (!b.width && !b.height) return;
+                const ctm = inv && el.getScreenCTM() ? inv.multiply(el.getScreenCTM()) : null;
+                [[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]].forEach(([x, y]) => {
+                    let pt = { x, y };
+                    if (ctm) pt = new DOMPoint(x, y).matrixTransform(ctm);
+                    x0 = Math.min(x0, pt.x); y0 = Math.min(y0, pt.y); x1 = Math.max(x1, pt.x); y1 = Math.max(y1, pt.y);
+                });
+            });
+            if (!isFinite(x0)) {
+                const vb = svg.viewBox.baseVal;
+                return { x: vb.x, y: vb.y, w: vb.width, h: vb.height };
+            }
+            const pad = Math.max(x1 - x0, y1 - y0) * 0.03;
+            return { x: x0 - pad, y: y0 - pad, w: x1 - x0 + 2 * pad, h: y1 - y0 + 2 * pad };
+        }
+
+        function setVB(m) {
+            m.svg.setAttribute('viewBox', `${m.vb.x} ${m.vb.y} ${m.vb.w} ${m.vb.h}`);
+        }
+
+        function zoomEn(m, f, cx, cy) {
+            const vb = m.vb;
+            const nw = Math.min(Math.max(vb.w * f, m.bbox.w / 12), m.bbox.w * 3);
+            const k = nw / vb.w;
+            vb.x = cx - (cx - vb.x) * k;
+            vb.y = cy - (cy - vb.y) * k;
+            vb.w *= k;
+            vb.h *= k;
+            setVB(m);
+        }
+
+        function puntoSvg(m, ev) {
+            const ctm = m.svg.getScreenCTM();
+            return new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse());
+        }
+
+        function activarZoomPan(m) {
+            const c = m.cont;
+            c.querySelector('.zoom').addEventListener('click', ev => {
+                const z = ev.target.closest('button')?.dataset.z;
+                if (!z) return;
+                ev.stopPropagation();
+                const cx = m.vb.x + m.vb.w / 2, cy = m.vb.y + m.vb.h / 2;
+                if (z === 'in') zoomEn(m, 0.7, cx, cy);
+                else if (z === 'out') zoomEn(m, 1 / 0.7, cx, cy);
+                else { m.vb = { ...m.bbox }; setVB(m); }
+            });
+            c.addEventListener('wheel', ev => {
+                ev.preventDefault();
+                const pt = puntoSvg(m, ev);
+                zoomEn(m, ev.deltaY > 0 ? 1.15 : 1 / 1.15, pt.x, pt.y);
+            }, { passive: false });
+            let drag = null;
+            c.addEventListener('pointerdown', ev => {
+                if (ev.button !== 0 || ev.target.closest('.zoom, .ficha')) return;
+                drag = { x: ev.clientX, y: ev.clientY, vb: { ...m.vb }, mov: false, k: m.svg.getScreenCTM().a };
+            });
+            window.addEventListener('pointermove', ev => {
+                if (!drag) return;
+                const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+                if (!drag.mov && Math.hypot(dx, dy) < 4) return;
+                drag.mov = true;
+                c.classList.add('drag');
+                m.vb.x = drag.vb.x - dx / drag.k;
+                m.vb.y = drag.vb.y - dy / drag.k;
+                setVB(m);
+            });
+            window.addEventListener('pointerup', () => {
+                if (drag?.mov) m.suprimirClic = true;
+                drag = null;
+                c.classList.remove('drag');
+            });
+        }
+
+        function activarEventos(m) {
+            const tip = $('#tip');
+            m.svg.addEventListener('pointermove', ev => {
+                const el = ev.target.closest('.lote');
+                if (!el) { tip.style.display = 'none'; return; }
+                tip.innerHTML = tooltipHTML(m.p + '-' + el.id);
+                tip.style.display = 'block';
+                const r = tip.getBoundingClientRect();
+                tip.style.left = Math.min(ev.clientX + 14, innerWidth - r.width - 8) + 'px';
+                tip.style.top = Math.min(ev.clientY + 14, innerHeight - r.height - 8) + 'px';
+            });
+            m.svg.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
+            m.svg.addEventListener('click', ev => {
+                if (m.suprimirClic) { m.suprimirClic = false; return; }
+                const el = ev.target.closest('.lote');
+                if (el) seleccionar(m.p + '-' + el.id, false);
+                else cerrarFicha();
+            });
+        }
+
+        function pintarMapa(p) {
+            const m = S.maps[p];
+            if (!m) return;
+            const e = esc();
+            const neutral = cssVar('--lot-neutral');
+            const stroke = cssVar('--lot-stroke');
+            m.lots.forEach((el, id) => {
+                const clave = p + '-' + id;
+                const l = e.lotes[clave];
+                let fill = neutral, op = 1;
+                if (l && !S.off.has(l.categoria)) {
+                    fill = CAT[l.categoria].color;
+                    op = l.atenuado ? 0.35 : 0.92;
+                } else if (!l && S.off.has('ninguno')) {
+                    op = 0.15;
+                }
+                el.style.fill = fill;
+                el.style.fillOpacity = op;
+                el.style.stroke = stroke;
+                el.style.strokeWidth = '0.6';
+                el.classList.toggle('sel', S.sel === clave);
+            });
+            const f = m.cont.querySelector('.ficha');
+            if (f && S.sel && proyDeClave(S.sel) === p) f.outerHTML = fichaHTML(S.sel);
+            else if (f) f.remove();
+        }
+
+        function tooltipHTML(clave) {
+            const e = esc();
+            const l = e.lotes[clave];
+            const mae = S.data.maestro[clave] || {};
+            const nombre = mae.nombre || '';
+            if (!l) return `<b>${h(clave)}</b>${nombre ? ' · ' + h(nombre) : ''}<br>Sin movimiento en el período`;
+            const monto = l.categoria === 'obra' ? `pagos ${fmtM(l.egresos)}` : `cobros ${fmtM(l.ingresos)}`;
+            return `<b>${h(clave)}</b>${nombre ? ' · ' + h(nombre) : ''}<br>${CAT[l.categoria].titulo} · ${monto}`;
+        }
+
+        function fichaHTML(clave) {
+            const e = esc();
+            const meses = S.data.meses;
+            const l = e.lotes[clave];
+            const mae = S.data.maestro[clave] || {};
+            const obras = e.obras.filter(o => o.clave === clave);
+            const lics = e.licitaciones.filter(x => x.clave === clave);
+            const cart = e.cartera.filter(c => c.clave === clave);
+            const ret = e.retenidos.filter(r => r.clave === clave);
+            const cat = l?.categoria;
+            const filas = [];
+            let titulo = mae.nombre || obras[0]?.obra || clave;
+            let serie = null;
+            if (cat === 'obra') {
+                titulo = mae.nombre || obras.map(o => o.obra).join(' · ');
+                if (obras.length > 1 || !mae.nombre) filas.push(['Obras', obras.map(o => o.obra).join(' · '), true]);
+                filas.push(['Contratista', [...new Set(obras.map(o => o.contratista))].join(' · '), true]);
+                filas.push(['Restante por pagar', fmtM(sum(obras.map(o => o.restante)))]);
+                filas.push([`Pagos ${fmtMes(meses[0])} → ${fmtMes(meses[14])}`, fmtM(sum(obras.map(o => o.totalHorizonte)))]);
+                const r = sum(ret.map(x => x.totalHorizonte));
+                if (r > 0.5) filas.push(['Devolución de retenidos', fmtM(r)]);
+                const post = sum(obras.map(o => o.posterior)) + sum(ret.map(x => x.posterior));
+                if (post > 0.5) filas.push(['Posterior (2028+)', fmtM(post)]);
+                filas.push(['Próximo pago', proximo(l.egresosMes, meses)]);
+                serie = l.egresosMes;
+            } else if (cat === 'adjudicada' || cat === 'licitar' || cat === 'opcional') {
+                const x = lics[0];
+                filas.push(['Adjudicatario', x.adjudicatario || '— por licitar', true]);
+                filas.push(['Grupo', x.grupo, true]);
+                filas.push(['Área', fmtN(x.area) + ' m²']);
+                filas.push(['Valor de venta', fmtM(x.valor)]);
+                filas.push(['Firma', fmtFecha(x.fechaFirma)]);
+                if (!x.incluida) filas.push(['En el escenario', 'Excluido', true]);
+                else if (x.probabilidad < 1) filas.push(['Probabilidad', Math.round(x.probabilidad * 100) + '%']);
+                filas.push([`Cobro ${fmtMes(meses[0])} → ${fmtMes(meses[14])}`, fmtM(x.cobroHorizonte)]);
+                if (x.posterior > 0.5) filas.push(['Posterior (2028+)', fmtM(x.posterior)]);
+                filas.push(['Próximo cobro', proximo(l.ingresosMes, meses)]);
+                serie = l.ingresosMes;
+            } else if (cat === 'cartera' || cat === 'legal') {
+                const c = cart[0];
+                filas.push(['Cliente', c.cliente, true]);
+                filas.push(['Situación', c.situacion, true]);
+                filas.push(['Saldo', fmtM(c.saldo)]);
+                filas.push([`Cobro ${fmtMes(meses[0])} → ${fmtMes(meses[14])}`, fmtM(c.totalHorizonte)]);
+                if (c.recupLegal > 0.5) filas.push([`Recuperación legal (${fmtMes(c.mesRecupLegal)})`, fmtM(c.recupLegal)]);
+                if (c.posterior > 0.5) filas.push(['Posterior (2028+)', fmtM(c.posterior)]);
+                filas.push(['Próximo cobro', proximo(l.ingresosMes, meses)]);
+                serie = l.ingresosMes;
+            } else {
+                if (mae.tipo) filas.push(['Tipo', [mae.tipo, mae.subtipo].filter(Boolean).join(' · '), true]);
+                if (mae.desarrollador) filas.push(['Desarrollador', mae.desarrollador, true]);
+                if (mae.area) filas.push(['Área', fmtN(mae.area) + ' m²']);
+                filas.push(['Flujo', 'Sin movimiento en el período', true]);
+            }
+            const color = cat ? CAT[cat].color : 'var(--mut)';
+            const tx = cat ? (isLight() ? CAT[cat].fichaTx : CAT[cat].color) : 'var(--mut)';
+            let bars = '';
+            if (serie) {
+                const mx = Math.max(...serie, 1);
+                bars = `<div class="bars">${serie.map((v, i) => `<i style="height:${Math.max(2, v / mx * 100)}%;background:${v > 0.5 ? color : 'var(--track)'};opacity:${v > 0.5 ? .75 : 1}" title="${fmtMes(meses[i])} · ${fmtM(v)}"></i>`).join('')}</div>
+                    <div class="ax"><span>${fmtMes(meses[0])}</span><span>${fmtMes(meses[14])}</span></div>`;
+            }
+            const otras = (l?.categorias || []).slice(1).map(c => CAT[c].label.toLowerCase());
+            return `<div class="ficha" role="dialog" aria-label="Ficha del lote ${h(clave)}">
+                <button class="x" title="Cerrar" onclick="cerrarFicha()">×</button>
+                <div class="t" style="color:${tx}">${cat ? CAT[cat].titulo : 'Sin movimiento'} · ${h(clave)}</div>
+                <h5>${h(titulo)}</h5>
+                <table>${filas.map(([a, b, txt]) => `<tr><td>${h(a)}</td><td class="${txt ? 'txt' : ''}">${h(b)}</td></tr>`).join('')}</table>
+                ${bars}
+                ${otras.length ? `<div class="also">También: ${h(otras.join(', '))}</div>` : ''}
+            </div>`;
+        }
+
+        function seleccionar(clave, desdeTabla) {
+            const p = proyDeClave(clave);
+            if (!S.maps[p]) return;
+            const l = esc().lotes[clave];
+            if (l && S.off.has(l.categoria)) { S.off.delete(l.categoria); renderLeyenda(); }
+            S.sel = clave;
+            const m = S.maps[p];
+            m.cont.querySelector('.ficha')?.remove();
+            m.cont.insertAdjacentHTML('beforeend', fichaHTML(clave));
+            proyectosVista().forEach(pintarMapa);
+            marcarFilas();
+            if (desdeTabla) $('#cardMapa').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function cerrarFicha() {
+            S.sel = null;
+            document.querySelectorAll('.ficha').forEach(f => f.remove());
+            proyectosVista().forEach(pintarMapa);
+            marcarFilas();
+        }
+
+        // ---------------------------------------------------------------- gráficos
+        function renderChart(T) {
+            const e = esc();
+            const labels = T.meses.map(fmtMes);
+            const M = v => v / 1e6;
+            let ing, egr, linea, lineaLbl, extra = [];
+            if (consolidado()) {
+                $('#c1Title').innerHTML = 'Ingresos vs. egresos por mes <span>caja consolidada del Fideicomiso</span>';
+                ing = e.mensual.ingresos.total;
+                egr = e.mensual.egresos.total;
+                linea = e.mensual.saldo;
+                lineaLbl = 'Saldo de caja';
+                extra.push({
+                    type: 'line', label: 'Colchón mínimo', data: e.mensual.colchon.map(M), borderColor: '#d97706',
+                    borderDash: [5, 4], borderWidth: 1.5, pointRadius: 0, order: 0
+                });
+            } else {
+                $('#c1Title').innerHTML = `Ingresos vs. pagos a obras por mes <span>solo ${h(S.proyecto)}</span>` +
+                    `<a onclick="cambiarProyecto('Consolidado')">ver caja consolidada →</a>`;
+                ing = T.ingSerie;
+                egr = T.obrasMes;
+                let acc = 0;
+                linea = ing.map((v, i) => (acc += v - egr[i]));
+                lineaLbl = 'Aporte neto acumulado';
+            }
+            const lc = cssVar('--chart-line'), bad = cssVar('--bad');
+            const tick = cssVar('--tx2'), grid = cssVar('--chart-grid');
+            const cfg = {
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            type: 'line', label: lineaLbl, data: linea.map(M), borderColor: lc, backgroundColor: lc, borderWidth: 2.5,
+                            pointRadius: 2, tension: 0, order: 0,
+                            segment: { borderColor: c => (c.p1.parsed.y < 0 || c.p0.parsed.y < 0) ? bad : lc },
+                            pointBackgroundColor: c => (c.parsed?.y < 0 ? bad : lc), pointBorderColor: c => (c.parsed?.y < 0 ? bad : lc)
+                        },
+                        ...extra,
+                        { type: 'bar', label: 'Ingresos', data: ing.map(M), backgroundColor: '#22c55e', borderRadius: 3, order: 1 },
+                        { type: 'bar', label: consolidado() ? 'Egresos' : 'Pagos a obras', data: egr.map(M), backgroundColor: '#f97316', borderRadius: 3, order: 1 }
+                    ]
+                },
+                options: {
+                    animation: false,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, color: tick, font: { family: 'Inter', size: 11 } } },
+                        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}` } }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: tick, font: { size: 10 } } },
+                        y: { grid: { color: grid }, ticks: { color: tick, font: { size: 10 } } }
+                    }
+                }
+            };
+            if (S.chart) S.chart.destroy();
+            S.chart = new Chart($('#c1'), cfg);
+        }
+
+        function barrasHTML(titulo, filas, pie) {
+            const visibles = filas.filter(r => r[1] > 0.5);
+            const ceros = filas.filter(r => r[1] <= 0.5).map(r => r[0]);
+            const mx = Math.max(...visibles.map(r => r[1]), 1);
+            const m0 = fmtMes(S.data.meses[0]), m1 = fmtMes(S.data.meses[14]);
+            let html = `<h3>${titulo} <span>${m0} → ${m1}</span></h3>`;
+            if (!visibles.length) html += `<p class="empty">Sin montos en este proyecto para el escenario.</p>`;
+            html += visibles.map(([n, v, c]) => `<div class="r"><span>${h(n)}</span><div class="t"><i style="width:${(v / mx * 100).toFixed(1)}%;background:${c}"></i></div><b class="mono">${fmtM(v)}</b></div>`).join('');
+            if (ceros.length && visibles.length) html += `<p class="foot">En 0 en este escenario: ${h(ceros.join(', '))}.</p>`;
+            if (pie) html += `<p class="foot">${pie}</p>`;
+            return html;
+        }
+
+        function renderBarras(T) {
+            $('#barsIn').innerHTML = barrasHTML('¿De dónde viene el dinero?', T.detalleIng);
+            let pie = '';
+            if (!consolidado()) {
+                const gf = sum(esc().mensual.egresos.gastosFijos);
+                pie = `Gastos fijos (${fmtM(gf)}) son comunes del Fideicomiso y no se reparten por proyecto.`;
+            }
+            $('#barsOut').innerHTML = barrasHTML('¿A dónde va?', T.detalleEgr, pie);
+        }
+
+        // ---------------------------------------------------------------- tablas
+        function ordenar(rows, sort, getters) {
+            const g = getters[sort.k];
+            return rows.sort((a, b) => {
+                const x = g(a), y = g(b);
+                return (typeof x === 'string' ? x.localeCompare(y, 'es') : x - y) * sort.dir;
+            });
+        }
+
+        function thHTML(cols, sort) {
+            return cols.map(([k, txt, cls]) =>
+                `<th data-k="${k}" class="${cls || ''} ${sort.k === k ? 'sorted' + (sort.dir > 0 ? ' asc' : '') : ''}">${txt}</th>`).join('');
+        }
+
+        function renderObras() {
+            const e = esc();
+            const meses = S.data.meses;
+            const todas = e.obras.filter(o => enVista(o.proyecto));
+            const rows = todas.filter(o => o.totalHorizonte > 0.5);
+            const resto = todas.filter(o => o.totalHorizonte <= 0.5);
+            const getters = {
+                obra: o => o.obra, contratista: o => o.contratista, restante: o => o.restante,
+                proximo: o => { const i = o.pagos.findIndex(v => v > 0.5); return i < 0 ? 99 : i; }, pagos: o => o.totalHorizonte
+            };
+            ordenar(rows, S.sortObras, getters);
+            const mx = Math.max(...rows.flatMap(o => o.pagos), 1);
+            const titulo = consolidado() ? 'CJB + CPAG' : S.proyecto;
+            const cols = [['obra', 'Obra'], ['contratista', 'Contratista'], ['restante', 'Restante', 'n'], ['proximo', 'Próximo pago', 'n'], ['pagos', 'Período', 'n'], ['heat', `Pagos ${fmtMes(meses[0])} → ${fmtMes(meses[14])}`]];
+            $('#cardObras').innerHTML = `<h3>🏗️ Obras en ejecución · ${titulo} <span>ordenadas por pagos en el período</span></h3>
+                <div class="tbwrap"><table class="tb" id="tbObras"><thead><tr>${thHTML(cols, S.sortObras)}</tr></thead><tbody>
+                ${rows.map(o => `<tr data-clave="${h(o.clave)}" data-mapa="${o.enMapa}">
+                    <td><b>${h(o.obra)}</b><span class="sub ${o.enMapa ? '' : 'porconf'}">${o.enMapa ? h(o.clave) : h(o.clave) + ' · ' + etiquetaVirtual(o.clave)}</span></td>
+                    <td>${h(o.contratista)}</td>
+                    <td class="n">${fmtM(o.restante)}</td>
+                    <td class="n">${proximo(o.pagos, meses)}</td>
+                    <td class="n"><b>${fmtM(o.totalHorizonte)}</b></td>
+                    <td><div class="heat">${o.pagos.map((v, i) => v > 0.5
+                        ? `<i style="background:rgba(249,115,22,${(0.12 + 0.88 * v / mx).toFixed(2)})" title="${fmtMes(meses[i])} · ${fmtM(v)}"></i>` : '<i></i>').join('')}</div></td>
+                </tr>`).join('')}
+                </tbody><tfoot><tr><td colspan="4">Total pagos a obras</td><td class="n">${fmtM(sum(rows.map(o => o.totalHorizonte)))}</td><td></td></tr></tfoot></table></div>
+                ${resto.length ? `<p class="note">+ ${resto.length} obras sin pagos en el período (restante ${fmtM(sum(resto.map(o => o.restante)))}).</p>` : ''}`;
+            $('#tbObras thead').addEventListener('click', ev => cambiarOrden(ev, S.sortObras, renderObras));
+            $('#tbObras tbody').addEventListener('click', clicFila);
+            marcarFilas();
+        }
+
+        function chipLic(l) {
+            const base = {
+                'LIC 2026-01': ['Adjudicada', 'tg-adj'], 'LIC 2027-01': ['Por licitar 2027-01', 'tg-lic'],
+                'ZFI 2027-02': ['ZFI 2027', 'tg-lic'], 'Lotes adicionales': ['Adicional', 'tg-op']
+            }[l.grupo] || [l.grupo, 'tg-off'];
+            let extra = '';
+            if (!l.incluida) extra = ' <em class="tag tg-off">Excluido</em>';
+            else if (l.probabilidad === 0) extra = ' <em class="tag tg-off">Prob. 0%</em>';
+            else if (l.probabilidad < 1) extra = ` <em class="tag tg-off">Prob. ${Math.round(l.probabilidad * 100)}%</em>`;
+            return `<em class="tag ${base[1]}">${base[0]}</em>${extra}`;
+        }
+
+        function renderLicitaciones() {
+            const e = esc();
+            const rows = e.licitaciones.filter(l => enVista(l.proyecto));
+            const titulo = consolidado() ? 'CJB + CPAG' : S.proyecto;
+            const head = `<h3>🏷️ Lotes a licitar y adjudicados · ${titulo} <span>cobro dentro del período</span></h3>`;
+            if (!rows.length) {
+                $('#cardLic').innerHTML = head + `<p class="empty">Hoy no hay lotes ${h(S.proyecto)} en venta ni en cartera.</p>`;
+                return;
+            }
+            const getters = {
+                lote: l => l.id, estado: l => l.grupo, area: l => l.area, valor: l => l.valor,
+                firma: l => l.fechaFirma || '', cobro: l => l.cobroHorizonte
+            };
+            ordenar(rows, S.sortLic, getters);
+            const cols = [['lote', 'Lote'], ['estado', 'Estado'], ['area', 'Área m²', 'n'], ['valor', 'Valor', 'n'], ['firma', 'Firma', 'n'], ['cobro', 'Cobro', 'n']];
+            $('#cardLic').innerHTML = head + `<div class="tbwrap"><table class="tb" id="tbLic"><thead><tr>${thHTML(cols, S.sortLic)}</tr></thead><tbody>
+                ${rows.map(l => `<tr data-clave="${h(l.clave)}" data-mapa="${l.enMapa}">
+                    <td><b>${h(consolidado() ? l.clave : l.id)}</b><span class="sub">${h(l.adjudicatario || '—')}</span></td>
+                    <td>${chipLic(l)}</td>
+                    <td class="n">${fmtN(l.area)}</td>
+                    <td class="n">${fmtM(l.valor)}</td>
+                    <td class="n">${fmtFecha(l.fechaFirma)}</td>
+                    <td class="n"><b>${fmtM(l.cobroHorizonte)}</b></td>
+                </tr>`).join('')}
+                </tbody><tfoot><tr><td colspan="5">Total cobro en el período</td><td class="n">${fmtM(sum(rows.map(l => l.cobroHorizonte)))}</td></tr></tfoot></table></div>`;
+            $('#tbLic thead').addEventListener('click', ev => cambiarOrden(ev, S.sortLic, renderLicitaciones));
+            $('#tbLic tbody').addEventListener('click', clicFila);
+            marcarFilas();
+        }
+
+        function cambiarOrden(ev, sort, fn) {
+            const k = ev.target.closest('th')?.dataset.k;
+            if (!k || k === 'heat') return;
+            if (sort.k === k) sort.dir *= -1; else { sort.k = k; sort.dir = ['obra', 'contratista', 'lote', 'estado', 'firma', 'proximo'].includes(k) ? 1 : -1; }
+            fn();
+        }
+
+        function clicFila(ev) {
+            const tr = ev.target.closest('tr[data-clave]');
+            if (!tr) return;
+            if (tr.dataset.mapa !== 'true') {
+                const t = $('#tip');
+                t.innerHTML = `<b>${h(tr.dataset.clave)}</b><br>Sin lote en el mapa (${etiquetaVirtual(tr.dataset.clave)}).`;
+                t.style.display = 'block';
+                t.style.left = (ev.clientX + 12) + 'px';
+                t.style.top = (ev.clientY + 12) + 'px';
+                setTimeout(() => { t.style.display = 'none'; }, 1800);
+                return;
+            }
+            seleccionar(tr.dataset.clave, true);
+        }
+
+        function marcarFilas() {
+            document.querySelectorAll('.tb tbody tr').forEach(tr => tr.classList.toggle('sel', tr.dataset.clave === S.sel));
+        }
+
+        // ---------------------------------------------------------------- control de cuadre
+        // La suma de las capas (lotes en el mapa + «ubicación por confirmar») debe dar los KPIs.
+        function verificarTotales(T) {
+            const { cap, obrasVirt, ingVirt } = capasVista();
+            const obrasCapas = cap.obra.monto + obrasVirt;
+            const ingCapas = ['adjudicada', 'licitar', 'opcional', 'cartera', 'legal'].reduce((a, c) => a + cap[c].monto, 0) + ingVirt;
+            const otros = consolidado() ? sum(esc().mensual.ingresos.otros) : 0;
+            const ok1 = Math.abs(obrasCapas - T.obras) < 1, ok2 = Math.abs(ingCapas + otros - T.ing) < 1;
+            const msg = `[Flujo 2027] ${S.proyecto} · ${S.escenario}: obras capas ${fmtM(obrasCapas)} vs KPI ${fmtM(T.obras)} · ingresos capas ${fmtM(ingCapas + otros)} vs KPI ${fmtM(T.ing)}`;
+            if (ok1 && ok2) console.info('✔ ' + msg); else console.warn('✖ ' + msg);
+            return ok1 && ok2;
+        }
+
+        // ---------------------------------------------------------------- acciones
+        function cambiarProyecto(p) {
+            if (p === S.proyecto) return;
+            S.proyecto = p;
+            S.sel = null;
+            render();
+        }
+
+        function actualizarBotonTema() {
+            const b = $('#themeToggle');
+            const light = isLight();
+            b.querySelector('.ico').textContent = light ? '🌙' : '☀️';
+            b.querySelector('.txt').textContent = light ? 'Modo oscuro' : 'Modo claro';
+        }
+
+        function exportarPDF() {
+            const acts = document.querySelectorAll('.acts, .header-nav, .zoom');
+            acts.forEach(el => el.style.visibility = 'hidden');
+            const opts = {
+                margin: 6,
+                filename: `Flujo_2027_${S.proyecto}_${S.escenario}_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: cssVar('--bg') },
+                jsPDF: { unit: 'mm', format: 'a3', orientation: 'landscape' }
+            };
+            html2pdf().set(opts).from(document.body).save().finally(() => acts.forEach(el => el.style.visibility = ''));
+        }
+
+        function enlazarControles() {
+            $('#segProyecto').addEventListener('click', ev => {
+                const v = ev.target.closest('button')?.dataset.v;
+                if (v) cambiarProyecto(v);
+            });
+            $('#segEscenario').addEventListener('click', ev => {
+                const v = ev.target.closest('button')?.dataset.v;
+                if (v && v !== S.escenario) { S.escenario = v; render(); }
+            });
+            $('#leg').addEventListener('click', ev => {
+                const c = ev.target.closest('button.li')?.dataset.cat;
+                if (!c) return;
+                if (S.off.has(c)) S.off.delete(c); else S.off.add(c);
+                renderLeyenda();
+                proyectosVista().forEach(pintarMapa);
+            });
+            $('#themeToggle').addEventListener('click', () => document.body.classList.toggle('light-mode'));
+            $('#btnFullscreen').addEventListener('click', () => {
+                if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.();
+            });
+            $('#btnPdf').addEventListener('click', exportarPDF);
+            document.addEventListener('keydown', ev => { if (ev.key === 'Escape') cerrarFicha(); });
+            window.addEventListener('hashchange', () => {
+                const antes = S.proyecto;
+                leerHash();
+                if (S.proyecto !== antes) S.sel = null;
+                render();
+            });
+            // Al cambiar el tema: repintar mapas y gráfico con los colores del tema
+            new MutationObserver(() => {
+                actualizarBotonTema();
+                if (!S.data) return;
+                proyectosVista().forEach(pintarMapa);
+                renderChart(totalesVista());
+            }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        }
+
+        async function iniciar() {
+            leerHash();
+            actualizarBotonTema();
+            enlazarControles();
+            try {
+                const r = await fetch(DATA_URL, { cache: 'no-store' });
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                S.data = await r.json();
+            } catch (err) {
+                console.error('No se pudo leer ' + DATA_URL, err);
+                $('#contenido').innerHTML = `<div class="card error-card"><h3>⚠️ No se encontraron los datos del flujo</h3>
+                    <p>Ejecute <b>«Actualizar Flujo 2027.bat»</b> (raíz de Mapa) para generar <b>${DATA_URL}</b> desde el Excel,
+                    y abra esta página con <b>SISTEMA_VBC.bat</b> (http://127.0.0.1:9000/flujo-2027.html).</p><code>${h(err.message)}</code></div>`;
+                return;
+            }
+            render();
+        }
+
+        window.FlujoVBC = { S, verificarTotales: () => verificarTotales(totalesVista()) };
+        document.addEventListener('DOMContentLoaded', iniciar);
+    </script>
+</body>
+
+</html>
