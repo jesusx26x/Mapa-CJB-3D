@@ -26,3 +26,20 @@ _RESPALDO/
 
 # Datos financieros generados por "Actualizar Flujo 2027.bat" (saldos de clientes: no publicar)
 data/flujo_2027.json
+
+# Carpetas de trabajo interno, matrices pesadas y documentos legales confidenciales
+Informes/
+fuentes_y_matrices/
+documentos_legales/
+**/documentos_legales/
+scratch/
+*.zip
+
+# Informes ejecutivos internos y auditorías legales confidenciales
+INFORME_*
+GARANTIAS_*
+MATRIZ_OPERATIVA_*
+SOLICITUD_*
+MATRIZ_GENERAL_*
+
+

@@ -369,7 +369,7 @@
             </div>
             <span class="lbl">Escenario</span>
             <div class="seg sc" id="segEscenario">
-                <button data-v="Conservador">Conservador</button>
+                <button data-v="Pesimista">Pesimista</button>
                 <button data-v="Base">Base</button>
                 <button data-v="Optimista">Optimista</button>
             </div>
@@ -474,7 +474,7 @@
         function leerHash() {
             const q = new URLSearchParams(location.hash.slice(1));
             if (['CJB', 'CPAG', 'Consolidado'].includes(q.get('proyecto'))) S.proyecto = q.get('proyecto');
-            if (['Conservador', 'Base', 'Optimista'].includes(q.get('escenario'))) S.escenario = q.get('escenario');
+            if (['Pesimista', 'Base', 'Optimista'].includes(q.get('escenario'))) S.escenario = q.get('escenario');
         }
         function escribirHash() {
             history.replaceState(null, '', `#proyecto=${S.proyecto}&escenario=${S.escenario}`);
@@ -559,7 +559,12 @@
                     ['Reserva mant. general', sum(serie('mantGeneral')), '#fdba74'],
                     ['Retenidos', sum(retMes), '#fed7aa']
                 ];
-                if (!filtro) detalleEgr.push(['Gastos fijos', sum(e.mensual.egresos.gastosFijos), '#64748b']);
+                if (!filtro) {
+                    // Sin lote: solo en Consolidado sin filtros (v1.7+)
+                    if (e.mensual.egresos.complementarias) detalleEgr.push(['Obras complementarias (reserva)', sum(e.mensual.egresos.complementarias), '#fcd34d']);
+                    if (e.mensual.egresos.costoAtraso && sum(e.mensual.egresos.costoAtraso) > 0.5) detalleEgr.push(['Costo de atrasar obras', sum(e.mensual.egresos.costoAtraso), '#ef4444']);
+                    detalleEgr.push(['Gastos fijos', sum(e.mensual.egresos.gastosFijos), '#64748b']);
+                }
             } else {
                 detalleIng = detalleIng.filter(([k, v]) => P === 'CPAG' ? v > 0.5 : k !== 'Licitaciones CPAG 2027');
                 detalleEgr = [

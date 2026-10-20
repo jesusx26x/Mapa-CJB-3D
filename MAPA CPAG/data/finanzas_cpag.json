@@ -1,0 +1,82 @@
+{
+  "03-03-01": {
+    "id": "03-03-01",
+    "empresa_financiera": "Constructora RIR",
+    "capital_adeudado": 10731502.80,
+    "total_programado": 13047490.80,
+    "total_pagado": 2315988.00,
+    "total_pendiente": 10731502.80,
+    "progreso_pct": 17.8,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "2 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Jul-27",
+    "cuotas_count": 3,
+    "cuotas_pagadas_count": 1,
+    "cuotas_pendientes_count": 2,
+    "cuotas": [
+      {
+        "mes": "May-26",
+        "monto": 2315988.00,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Oct-26",
+        "monto": 4769556.80,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Jul-27",
+        "monto": 5961946.00,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cpag": true
+  },
+  "03-02-01": {
+    "id": "03-02-01",
+    "empresa_financiera": "Constructora Fernández",
+    "capital_adeudado": 21408894.00,
+    "total_programado": 23787660.00,
+    "total_pagado": 2378766.00,
+    "total_pendiente": 21408894.00,
+    "progreso_pct": 10.0,
+    "estatus_financiero": "Regular",
+    "semaforo": "al_dia",
+    "color": "#10b981",
+    "estado_label": "Al Día con Cronograma",
+    "meses_atraso_txt": "2 cuotas pendientes",
+    "tiene_plan_pagos": true,
+    "fecha_fin_pagos": "Oct-27",
+    "cuotas_count": 3,
+    "cuotas_pagadas_count": 1,
+    "cuotas_pendientes_count": 2,
+    "cuotas": [
+      {
+        "mes": "Jun-26",
+        "monto": 2378766.00,
+        "pagado": true,
+        "estatus": "Pagado / Aplicado"
+      },
+      {
+        "mes": "Dec-26",
+        "monto": 9515064.00,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      },
+      {
+        "mes": "Oct-27",
+        "monto": 11893830.00,
+        "pagado": false,
+        "estatus": "Por Pagar"
+      }
+    ],
+    "match_cpag": true
+  }
+}

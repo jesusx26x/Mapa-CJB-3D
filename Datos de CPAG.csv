@@ -1,4 +1,4 @@
-﻿id,tipo,subtipo,etapa,desarrollador,nombre,area_m2,unidades,estado,Fecha adjudicacion,Fecha entrega,propietario,observaciones,Pilar,Cuadrante,Unidades terminadas
+id,tipo,subtipo,etapa,desarrollador,nombre,area_m2,unidades,estado,Fecha adjudicacion,Fecha entrega,propietario,observaciones,Pilar,Cuadrante,Unidades terminadas
 02-08-02,AREA VERDE,,,,,469.056 m²,,,,,,,,,
 07-04-01,AREA VERDE,,,,,"1,002.649 m²",,,,,,,,,
 05-03-02,AREA VERDE,,,,,"1,321.491 m²",,,,,,,,,
@@ -45,8 +45,8 @@
 07-01-01,HABITACIONAL,,,,,"15,304.096 m²",,,,,,,,,
 07-02-01,HABITACIONAL,,,,,"15,305.861 m²",,,,,,,,,
 06-04-02,HABITACIONAL,,,,,"15,337.539 m²",,,,,,,,,
-03-03-01,HABITACIONAL,,,,,"15,424.655 m²",,,,,,,,,
-03-02-01,HABITACIONAL,,,,,"15,852.345 m²",,,,,,,,,
+03-03-01,HABITACIONAL,Multifamiliar,,Constructora RIR,Constructora RIR,"15,424.655 m²",,Adjudicado,,,,"Adjudicado a Constructora RIR (Saldo RD$ 10,731,502.80)",,,
+03-02-01,HABITACIONAL,Multifamiliar,,Constructora Fernández,Constructora Fernández,"15,852.345 m²",,Adjudicado,,,,"Adjudicado a Constructora Fernández (Saldo RD$ 21,408,894.00)",,,
 03-01-01,HABITACIONAL,,,,,"16,273.832 m²",,,,,,,,,
 06-03-02,HABITACIONAL,,,,,"16,449.123 m²",,,,,,,,,
 05-05-01,HABITACIONAL,,,,,"16,732.601 m²",,,,,,,,,

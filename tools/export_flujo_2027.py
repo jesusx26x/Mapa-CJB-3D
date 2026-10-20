@@ -35,7 +35,7 @@ MODELO_DIR = Path(
 )
 MODELO_PATRON = "Flujo de Caja VBC Oct2026-Dic2027 v*.xlsx"
 DEFAULT_OUT = ROOT / "data" / "flujo_2027.json"
-ESCENARIOS = ["Conservador", "Base", "Optimista"]
+ESCENARIOS = ["Pesimista", "Base", "Optimista"]
 TOL = 1.0  # RD$ de tolerancia al cuadrar
 
 # Claves con lote real en el mapa: CJB-04-13-01, CPAG-01-01-01, CPAG-C-05
@@ -235,6 +235,8 @@ FLUJO_FILAS = {
     "obrasCJB": "Cubicaciones obras CJB",
     "obrasCPAG": "Cubicaciones obras CPAG",
     "mantGeneral": "Reserva Mantenimiento General",
+    "complementarias": "Obras complementarias",
+    "costoAtraso": "Costo de atrasar obras",
     "retenidos": "Devolución de retenidos",
     "gfRRHH": "Gastos fijos – Recursos Humanos",
     "gfCargaFija": "Gastos fijos – Carga Fija",
@@ -243,6 +245,10 @@ FLUJO_FILAS = {
     "gfBienes": "Bienes muebles",
     "totalEgresos": "TOTAL EGRESOS",
     "neto": "FLUJO NETO DEL MES",
+    "lineaDesembolso": "Desembolso de línea de crédito",
+    "lineaPago": "Pago de línea de crédito",
+    "lineaIntereses": "Intereses de línea de crédito",
+    "lineaDeuda": "Deuda de la línea de crédito",
     "saldo": "SALDO FINAL DE CAJA",
     "colchon": "Colchón mínimo",
     "estado": "Estado",
@@ -338,17 +344,16 @@ def leer_obras(wb, meses):
 def leer_cuotas(wb, meses):
     ws = wb["Cuotas"]
     heads, rows = table_rows(ws, "tCuotas")
-    need = ["Grupo", "Proyecto", "IDLote", "ClaveMapa", "Cuota", "Mes", "MontoEsperado", "EnHorizonte", "MontoEnHorizonte"]
+    # Desde v1.7 cada cuota se reparte por mes (retraso, renegociación, legal, terreno) en «Cobro aaaa-mm»
+    cols_mes = [f"Cobro {m}" for m in meses]
+    need = ["Grupo", "Proyecto", "IDLote", "ClaveMapa", "Cuota"] + cols_mes
     for h in need:
         if h not in heads:
             fail(f"Cuotas/tCuotas: falta la columna «{h}»")
-    idx = {m: i for i, m in enumerate(meses)}
     por_clave = defaultdict(lambda: zeros(len(meses)))
     for d in rows:
-        m = mes_key(d["Mes"])
-        monto = num(d["MontoEnHorizonte"])
-        if m in idx and monto:
-            por_clave[d["ClaveMapa"]][idx[m]] += monto
+        for i, c in enumerate(cols_mes):
+            por_clave[d["ClaveMapa"]][i] += num(d[c])
     return por_clave
 
 
@@ -436,7 +441,7 @@ def leer_retenidos(wb, meses):
     ws = wb["Retenidos"]
     S = "Retenidos"
     hr, hdr = find_header_row(ws, ["#", "Proyecto", "ID lote", "Clave mapa", "Contratista", "Obra", "Monto retenido",
-                                   "Mes de pago ajustado", "Total horizonte", "Posterior (2028+)"])
+                                   "Mes de pago (calculado)", "Total horizonte", "Posterior (2028+)"])
     mc = month_cols(ws, hr, meses)
     out = []
     for r in data_rows(ws, hr + 1, col(hdr, "#", S)):
@@ -450,7 +455,7 @@ def leer_retenidos(wb, meses):
             "contratista": str(g("Contratista") or "").strip(),
             "obra": str(g("Obra") or "").strip(),
             "monto": r2(num(g("Monto retenido"))),
-            "mes": mes_key(g("Mes de pago ajustado")),
+            "mes": mes_key(g("Mes de pago (calculado)")),
             "pagos": [r2(v) for v in pagos],
             "totalHorizonte": r2(num(g("Total horizonte"))),
             "posterior": r2(num(g("Posterior (2028+)"))),
@@ -514,7 +519,8 @@ def armar_escenario(wb, meses):
 
     gastos_fijos = [sum(v) for v in zip(f["gfRRHH"], f["gfCargaFija"], f["gfAdmin"], f["gfMant"], f["gfBienes"])]
     tot_ing = [sum(v) for v in zip(*(f[k] for k in ING_KEYS + ["otros"]))]
-    tot_egr = [sum(v) for v in zip(f["obrasCJB"], f["obrasCPAG"], f["mantGeneral"], f["retenidos"], gastos_fijos)]
+    tot_egr = [sum(v) for v in zip(f["obrasCJB"], f["obrasCPAG"], f["mantGeneral"], f["complementarias"],
+                                   f["costoAtraso"], f["retenidos"], gastos_fijos)]
     check("TOTAL INGRESOS", tot_ing, f["totalIngresos"])
     check("TOTAL EGRESOS", tot_egr, f["totalEgresos"])
 
@@ -621,6 +627,7 @@ def armar_escenario(wb, meses):
             "ingresos": {k: R(f[k]) for k in ING_KEYS + ["otros"]}
             | {"total": R(f["totalIngresos"])},
             "egresos": {"obrasCJB": R(f["obrasCJB"]), "obrasCPAG": R(f["obrasCPAG"]), "mantGeneral": R(f["mantGeneral"]),
+                        "complementarias": R(f["complementarias"]), "costoAtraso": R(f["costoAtraso"]),
                         "retenidos": R(f["retenidos"]), "gastosFijos": R(gastos_fijos),
                         "gastosFijosDetalle": {"rrhh": R(f["gfRRHH"]), "cargaFija": R(f["gfCargaFija"]),
                                                "admin": R(f["gfAdmin"]), "mantenimientos": R(f["gfMant"]),
@@ -628,6 +635,8 @@ def armar_escenario(wb, meses):
                         "total": R(f["totalEgresos"])},
             "saldoInicial": R(f["saldoInicial"]),
             "neto": R(f["neto"]),
+            "lineaCredito": {"desembolso": R(f["lineaDesembolso"]), "pago": R(f["lineaPago"]),
+                             "intereses": R(f["lineaIntereses"]), "deuda": R(f["lineaDeuda"])},
             "saldo": R(f["saldo"]),
             "colchon": R(f["colchon"]),
             "estado": f["estado"],
