@@ -62,6 +62,25 @@ Se ve por proyecto (**CJB / CPAG / Consolidado**) y por escenario (**Conservador
   La leyenda apaga/prende capas. Tarjetas, gráfico y barras se recalculan con lo seleccionado.
   **✕ Quitar filtros** vuelve a todo (Consolidado). El botón ◎ del mapa acerca a los lotes con movimiento.
 
+## 🗺️ Activos de Ciudad (mapa CJB)
+
+Capa dentro de `MAPA NUEVO - CJB/index.html` (panel izquierdo, bloque **«Activos de Ciudad»**):
+vista satelital de Esri debajo del Master Plan y activos urbanos levantados en campo, con filtros
+por categoría, subcategoría, ubicación (calle / dentro de lote) y calle, y color por tipo o por cota.
+
+- **Georreferencia del Master Plan:** no hay plano de AutoCAD; el SVG se calibró con los imbornales
+  de Verasol (escala ≈ 4.318 m por unidad, sin rotación, UTM 19N) y se verificó sobre la foto de Esri
+  (precisión 1–2 m). Parámetros en `data/activos_cjb.json → meta.georreferencia_master_plan`.
+- **Datos:** `MAPA NUEVO - CJB/data/activos_cjb.json` (lo lee `js/activos-ciudad.js`).
+- **Actualizar con un nuevo levantamiento:** `python tools/generar_activos_cjb.py <archivo.xlsx>`
+  (por defecto `fuentes_y_matrices/LVTOInbornalesCJB20260727.xlsx`). Regenera la capa y
+  `Activos/INVENTARIO_ACTIVOS_CJB_IMBORNALES.xlsx`. `--recalibrar` recalcula la georreferencia.
+- **Charcos (Dirección Técnica):** plantilla `Activos/PLANTILLA_ANALISIS_CHARCOS_CJB.xlsx`
+  (`tools/generar_plantilla_charcos.py`). Cuando llegue llena se carga como categoría «Charcos».
+  Ojo: el repositorio es público; las versiones llenas con lotes «responsables» no deben subirse.
+- **Próximos activos:** postes de luz y rampas (aparecen como «Pendiente» en el panel).
+- La foto satelital necesita internet; sin conexión el resto del mapa funciona igual.
+
 ## 🌗 Modo claro / oscuro
 
 Todas las páginas tienen modo claro (`body.light-mode`). `vbc-core/vbc-theme-sync.js` guarda la
