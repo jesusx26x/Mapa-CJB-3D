@@ -74,7 +74,7 @@ TIPOS = {
 }
 SUBCATS = [
     ("filtrante_simple", "Filtrante simple", "#0ea5e9"),
-    ("filtrante_doble", "Filtrante doble", "#6366f1"),
+    ("filtrante_doble", "Filtrante doble", "#4f46e5"),
     ("cisterna", "Cisterna (PG)", "#14b8a6"),
 ]
 SUB_ID = {n: i for i, n, _ in SUBCATS}

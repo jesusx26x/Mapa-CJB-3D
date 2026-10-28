@@ -9,14 +9,22 @@ body.activos-sat-on #mapContainer svg .lote.highlighted { fill-opacity: max(var(
 body.activos-sat-on #mapContainer svg > g:not(#capaSatelite):not(#capaActivos):not(#capaCharcos):not(#capaRelaciones) path:not(.lote) {
     fill-opacity: .1;
 }
-#capaSatelite image { image-rendering: auto; }
+/* Satélite: lienzo fijo detrás del mapa (no se escala con el SVG, se repinta nítido) */
+.act-sat-canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+}
+body.activos-sat-on #mapContainer { position: relative; z-index: 1; background: transparent !important; }
+body.activos-sat-on #mapContainer svg { background: transparent !important; }
 
 .activos-atribucion {
     position: absolute; right: 8px; bottom: 6px; z-index: 9;
     font-size: 9px; color: #e2e8f0; background: rgba(15, 23, 42, .55);
     padding: 2px 6px; border-radius: 4px; pointer-events: none; display: none;
 }
-body.activos-sat-on .activos-atribucion { display: block; }
+body.activos-sat-on .activos-atribucion { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.act-sat-fecha { font-size: 10px; font-weight: 600; color: #fff; }
+.act-sat-fecha:empty { display: none; }
 
 /* ============================================================ IMBORNALES */
 #capaActivos { filter: drop-shadow(0 1px 1.2px rgba(0, 0, 0, .45)); }

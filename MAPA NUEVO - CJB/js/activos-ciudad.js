@@ -20,8 +20,7 @@
     const CRIT_ORDEN = { rojo: 3, amarillo: 2, verde: 1 };
     const EARTH = 40075016.686;
     const ZOOMS_SAT = [12, 13, 14, 15, 16, 17, 18, 19];
-    const MAX_TILES = 160;
-    // Símbolos para los imbornales (el usuario elige en el panel)
+        // Símbolos para los imbornales (el usuario elige en el panel)
     const SIMBOLOS = {
         rejilla: { nombre: 'Rejilla',  icono: '▦', w: 1.0, h: 1.0, ancla: 'centro' },
         pin:     { nombre: 'Marcador', icono: '📍', w: 1.0, h: 1.35, ancla: 'abajo' },
@@ -189,30 +188,37 @@
             return { semillas, aristas };
         },
 
-        /* ================================================ SATÉLITE (tiles) */
+        /* ================================================ SATÉLITE (lienzo de mosaicos)
+           La imagen se pinta en un <canvas> fijo detrás del mapa, no dentro del SVG:
+           · mover o hacer zoom solo vuelve a pintar imágenes ya descargadas (rápido);
+           · nunca se borra lo que se ve: mientras llega el detalle se muestra el nivel
+             anterior ampliado, y se cambia sin parpadeo cuando el nuevo está listo;
+           · se descargan solo los mosaicos visibles, del centro hacia afuera, y se
+             guardan en memoria para volver a usarlos. */
         buildSatellite() {
             const sat = this.data.meta.satelite;
             const A = sat.lonlat_a_svg;
+            const area = document.querySelector('.panel-map');
+            const cv = document.createElement('canvas');
+            cv.className = 'act-sat-canvas';
+            cv.setAttribute('aria-hidden', 'true');
+            cv.style.display = 'none';
+            area.insertBefore(cv, area.firstChild);
             this.sat = {
                 cfg: sat, A,
                 det: A[0] * A[4] - A[1] * A[3],
-                tiles: new Map(),       // "z/x/y" -> <image>
-                pending: 0,
-                zActual: null
+                canvas: cv, ctx: cv.getContext('2d'),
+                group: cv,                // compatibilidad: display / opacidad
+                cache: new Map(),         // "z/x/y" -> { img, ok, err, cargando, uso }
+                mats: new Map(),          // "z/x/y" -> matriz mosaico→SVG
+                cola: [], enVuelo: 0, pending: 0,
+                z: null, frame: 0, necesarios: []
             };
-            const g = document.createElementNS(NS, 'g');
-            g.id = 'capaSatelite';
-            g.style.display = 'none';
-            this.sat.base = document.createElementNS(NS, 'g');
-            this.sat.detalle = document.createElementNS(NS, 'g');
-            g.append(this.sat.base, this.sat.detalle);
-            this.svg.insertBefore(g, this.svg.firstChild);
-            this.sat.group = g;
-
             const attr = document.createElement('div');
             attr.className = 'activos-atribucion';
-            attr.textContent = sat.atribucion;
-            document.querySelector('.panel-map')?.appendChild(attr);
+            attr.innerHTML = `<span class="act-sat-fecha"></span><span>${sat.atribucion}</span>`;
+            area.appendChild(attr);
+            this.sat.fechaEl = attr.querySelector('.act-sat-fecha');
         },
 
         ll2svg(lon, lat) {
@@ -229,38 +235,6 @@
         tx2lon: (x, z) => x / 2 ** z * 360 - 180,
         ty2lat: (y, z) => { const n = Math.PI - 2 * Math.PI * y / 2 ** z; return 180 / Math.PI * Math.atan(Math.sinh(n)); },
 
-        tileImage(z, x, y) {
-            const key = `${z}/${x}/${y}`;
-            let img = this.sat.tiles.get(key);
-            if (img) return img;
-            const lon0 = this.tx2lon(x, z), lon1 = this.tx2lon(x + 1, z);
-            const lat0 = this.ty2lat(y, z), lat1 = this.ty2lat(y + 1, z);
-            const p00 = this.ll2svg(lon0, lat0), p10 = this.ll2svg(lon1, lat0), p01 = this.ll2svg(lon0, lat1);
-            const k = 1 / 256;
-            img = document.createElementNS(NS, 'image');
-            img.setAttribute('width', 256.8);
-            img.setAttribute('height', 256.8);
-            img.setAttribute('preserveAspectRatio', 'none');
-            img.setAttribute('transform', `matrix(${(p10[0] - p00[0]) * k} ${(p10[1] - p00[1]) * k} ${(p01[0] - p00[0]) * k} ${(p01[1] - p00[1]) * k} ${p00[0]} ${p00[1]})`);
-            this.sat.pending++;
-            this.satStatus();
-            const done = () => { this.sat.pending--; this.satStatus(); };
-            img.addEventListener('load', done, { once: true });
-            img.addEventListener('error', () => { done(); this.sat.errores = (this.sat.errores || 0) + 1; this.satStatus(); }, { once: true });
-            img.setAttribute('href', this.sat.cfg.tiles_url.replace('{z}', z).replace('{x}', x).replace('{y}', y));
-            this.sat.tiles.set(key, img);
-            return img;
-        },
-
-        satStatus() {
-            const el = document.getElementById('actSatStatus');
-            if (!el) return;
-            if (this.sat.pending > 0) el.textContent = 'Cargando…';
-            else if (this.sat.errores && !this.sat.okAlguna) el.textContent = 'Sin conexión';
-            else el.textContent = '';
-            if (this.sat.pending === 0 && !this.sat.errores) this.sat.okAlguna = true;
-        },
-
         rangoTiles(z, x0, y0, x1, y1) {
             const [lonA, latA] = this.svg2ll(x0, y0), [lonB, latB] = this.svg2ll(x1, y1);
             const [lonC, latC] = this.svg2ll(x0, y1), [lonD, latD] = this.svg2ll(x1, y0);
@@ -269,46 +243,250 @@
                     Math.floor(this.lat2ty(Math.max(...lats), z)), Math.floor(this.lat2ty(Math.min(...lats), z))];
         },
 
-        /** Mosaicos para TODA la zona visible (no solo el Master Plan), con el nivel según el zoom. */
-        updateTiles() {
-            if (!this.state.capas.satelite) return;
-            const vis = this.visibleBox();
-            if (!vis) return;
-            const [rx, ry, rw, rh] = this.sat.cfg.svg_rect;
-            const w = vis[2] - vis[0], h = vis[3] - vis[1];
-            const pad = 0.2;
-            // Zona a cubrir: lo visible + margen, acotado a 6 km alrededor de la ciudad
-            const lim = 6000 / M_POR_UNIDAD;
-            const box = [Math.max(rx - lim, vis[0] - w * pad), Math.max(ry - lim, vis[1] - h * pad),
-                         Math.min(rx + rw + lim, vis[2] + w * pad), Math.min(ry + rh + lim, vis[3] + h * pad)];
-            if (box[2] <= box[0] || box[3] <= box[1]) return;
-            const lat = this.svg2ll(rx + rw / 2, ry + rh / 2)[1];
-            const mPorPx = M_POR_UNIDAD / (this.px * (window.devicePixelRatio || 1));
-            let z = ZOOMS_SAT[0];
-            for (const zz of ZOOMS_SAT) {
-                z = zz;
-                if (EARTH * Math.cos(lat * Math.PI / 180) / 2 ** zz / 256 <= mPorPx * 1.4) break;
-            }
-            const contar = zz => { const [a, b, c, d] = this.rangoTiles(zz, ...box); return (b - a + 1) * (d - c + 1); };
-            while (z > ZOOMS_SAT[0] && contar(z) > MAX_TILES) z--;
-            // Base: dos niveles menos (pocas imágenes) para que nunca quede un hueco mientras carga el detalle
-            const zb = Math.max(ZOOMS_SAT[0], z - 2);
-            this.ponerTiles(this.sat.base, zb, box, false);
-            if (this.sat.zActual !== z) this.sat.detalle.replaceChildren();
-            this.sat.zActual = z;
-            if (z !== zb) this.ponerTiles(this.sat.detalle, z, box, true);
+        /** Matriz que lleva un píxel del mosaico (0‥256) a coordenadas del SVG. */
+        matTile(z, x, y) {
+            const k = `${z}/${x}/${y}`;
+            let m = this.sat.mats.get(k);
+            if (m) return m;
+            const lon0 = this.tx2lon(x, z), lon1 = this.tx2lon(x + 1, z);
+            const lat0 = this.ty2lat(y, z), lat1 = this.ty2lat(y + 1, z);
+            const p00 = this.ll2svg(lon0, lat0), p10 = this.ll2svg(lon1, lat0), p01 = this.ll2svg(lon0, lat1);
+            m = [(p10[0] - p00[0]) / 256, (p10[1] - p00[1]) / 256, (p01[0] - p00[0]) / 256, (p01[1] - p00[1]) / 256, p00[0], p00[1]];
+            if (this.sat.mats.size > 4000) this.sat.mats.clear();
+            this.sat.mats.set(k, m);
+            return m;
         },
 
-        ponerTiles(grupo, z, box, reemplazar) {
-            const [tx0, tx1, ty0, ty1] = this.rangoTiles(z, ...box);
-            if ((tx1 - tx0 + 1) * (ty1 - ty0 + 1) > MAX_TILES * 2) return;
-            for (let x = tx0; x <= tx1; x++) for (let y = ty0; y <= ty1; y++) {
-                const img = this.tileImage(z, x, y);
-                if (img.parentNode !== grupo) grupo.appendChild(img);
-            }
-            // La base se ordena de menor a mayor detalle para que el más nítido quede encima
-            if (!reemplazar && grupo.childElementCount > 900) grupo.replaceChildren();
+        tile(z, x, y) {
+            const k = `${z}/${x}/${y}`;
+            let t = this.sat.cache.get(k);
+            if (!t) { t = { k, z, x, y, img: null, ok: false, err: 0, cargando: false, uso: 0 }; this.sat.cache.set(k, t); }
+            return t;
         },
+
+        cargarTile(t) {
+            const s = this.sat;
+            t.cargando = true;
+            s.enVuelo++;
+            const img = new Image();
+            img.decoding = 'async';
+            const fin = ok => {
+                t.cargando = false; s.enVuelo--;
+                if (ok) { t.img = img; t.ok = true; s.okAlguna = true; this.satPintarPronto(); }
+                else { t.err = Date.now(); s.errores = (s.errores || 0) + 1; }
+                this.satBombear();
+                this.satStatus();
+            };
+            img.onload = () => { (img.decode ? img.decode() : Promise.resolve()).then(() => fin(true), () => fin(true)); };
+            img.onerror = () => fin(false);
+            img.src = s.cfg.tiles_url.replace('{z}', t.z).replace('{x}', t.x).replace('{y}', t.y);
+        },
+
+        satBombear() {
+            const s = this.sat;
+            while (s.enVuelo < 8 && s.cola.length) {
+                const t = s.cola.shift();
+                if (!t.ok && !t.cargando) this.cargarTile(t);
+            }
+            this.satStatus();
+        },
+
+        satStatus() {
+            const el = document.getElementById('actSatStatus');
+            const s = this.sat;
+            s.pending = s.enVuelo + s.cola.length;
+            if (!el) return;
+            if (s.pending > 0) el.textContent = 'Cargando…';
+            else if (s.errores && !s.okAlguna) el.textContent = 'Sin conexión';
+            else el.textContent = '';
+        },
+
+        /** Afín SVG → píxeles del lienzo (incluye la escala de pantalla del dispositivo). */
+        satAfin() {
+            const M = this.svg.getScreenCTM();
+            if (!M) return null;
+            const r = this.sat.canvas.parentNode.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            return { a: M.a * dpr, b: M.b * dpr, c: M.c * dpr, d: M.d * dpr, e: (M.e - r.left) * dpr, f: (M.f - r.top) * dpr, r, dpr };
+        },
+
+        /** Nivel de detalle: el más bajo que se ve nítido, con un margen para no saltar de nivel a cada paso. */
+        satNivel(pxDev, lat) {
+            const zc = Math.log2(EARTH * Math.cos(lat * Math.PI / 180) * pxDev / (256 * M_POR_UNIDAD));
+            const zMin = ZOOMS_SAT[0], zMax = ZOOMS_SAT[ZOOMS_SAT.length - 1];
+            const cur = this.sat.z;
+            if (cur !== null && cur >= Math.min(zc - 0.35, zMax) && cur <= Math.max(zc + 0.9, zMin)) return cur;
+            return Math.min(zMax, Math.max(zMin, Math.ceil(zc - 0.15)));
+        },
+
+        satPintarPronto() {
+            if (this.sat.raf) return;
+            this.sat.raf = requestAnimationFrame(() => { this.sat.raf = 0; this.satPintar(); });
+        },
+
+        /** Repinta en cada cuadro durante `ms` (cubre la animación de zoom y el arrastre). */
+        satAnimar(ms = 450) {
+            const s = this.sat;
+            s.hasta = Math.max(s.hasta || 0, performance.now() + ms);
+            if (s.loop) return;
+            const paso = () => {
+                this.satPintar();
+                s.loop = performance.now() < s.hasta ? requestAnimationFrame(paso) : 0;
+            };
+            s.loop = requestAnimationFrame(paso);
+        },
+
+        dibujarTile(ctx, T, img, m, sx, sy, sw) {
+            // Compone afín de pantalla ∘ matriz del mosaico
+            ctx.setTransform(
+                T.a * m[0] + T.c * m[1], T.b * m[0] + T.d * m[1],
+                T.a * m[2] + T.c * m[3], T.b * m[2] + T.d * m[3],
+                T.a * m[4] + T.c * m[5] + T.e, T.b * m[4] + T.d * m[5] + T.f);
+            // Medio píxel de solape para que no se vean costuras entre mosaicos
+            const escala = Math.hypot(T.a * m[0] + T.c * m[1], T.b * m[0] + T.d * m[1]) || 1;
+            const pad = 0.5 / escala;
+            ctx.drawImage(img, sx, sy, sw, sw, sx - pad, sy - pad, sw + 2 * pad, sw + 2 * pad);
+        },
+
+        satPintar() {
+            const s = this.sat;
+            if (!this.state.capas.satelite) return;
+            const T = this.satAfin();
+            if (!T) return;
+            const cv = s.canvas, ctx = s.ctx;
+            const W = Math.max(1, Math.round(T.r.width * T.dpr)), H = Math.max(1, Math.round(T.r.height * T.dpr));
+            if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, W, H);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            // Zona visible en coordenadas del SVG
+            const det = T.a * T.d - T.b * T.c;
+            if (!det) return;
+            const inv = (X, Y) => { const u = X - T.e, v = Y - T.f; return [(T.d * u - T.c * v) / det, (-T.b * u + T.a * v) / det]; };
+            const q = [inv(0, 0), inv(W, 0), inv(0, H), inv(W, H)];
+            const [rx, ry, rw, rh] = s.cfg.svg_rect;
+            const lim = 6000 / M_POR_UNIDAD;
+            const box = [Math.max(rx - lim, Math.min(...q.map(p => p[0]))), Math.max(ry - lim, Math.min(...q.map(p => p[1]))),
+                         Math.min(rx + rw + lim, Math.max(...q.map(p => p[0]))), Math.min(ry + rh + lim, Math.max(...q.map(p => p[1])))];
+            if (box[2] <= box[0] || box[3] <= box[1]) return;
+
+            const lat = this.svg2ll(rx + rw / 2, ry + rh / 2)[1];
+            let z = this.satNivel(Math.hypot(T.a, T.b), lat);
+            const contar = zz => { const [a, b, c, d] = this.rangoTiles(zz, ...box); return (b - a + 1) * (d - c + 1); };
+            while (z > ZOOMS_SAT[0] && contar(z) > 260) z--;
+            s.z = z;
+            s.frame++;
+
+            const [tx0, tx1, ty0, ty1] = this.rangoTiles(z, ...box);
+            const lista = [];
+            for (let x = tx0; x <= tx1; x++) for (let y = ty0; y <= ty1; y++) lista.push(this.tile(z, x, y));
+
+            // 1) Donde falta el detalle: nivel superior ya descargado (ampliado) o, al alejar, los hijos
+            const st = { exactos: 0, respaldo: 0, vacios: 0 };
+            lista.forEach(t => {
+                t.uso = s.frame;
+                if (t.ok) { st.exactos++; return; }
+                for (let k = 1; k <= 7 && z - k >= 0; k++) {
+                    const pz = z - k, px = t.x >> k, py = t.y >> k;
+                    const p = s.cache.get(`${pz}/${px}/${py}`);
+                    if (p && p.ok) {
+                        p.uso = s.frame;
+                        const tam = 256 / 2 ** k;
+                        this.dibujarTile(ctx, T, p.img, this.matTile(pz, px, py), (t.x - (px << k)) * tam, (t.y - (py << k)) * tam, tam);
+                        st.respaldo++;
+                        return;
+                    }
+                }
+                let hijos = 0;
+                for (let i = 0; i < 4; i++) {
+                    const cx = t.x * 2 + (i & 1), cy = t.y * 2 + (i >> 1);
+                    const h = s.cache.get(`${z + 1}/${cx}/${cy}`);
+                    if (h && h.ok) { h.uso = s.frame; hijos++; this.dibujarTile(ctx, T, h.img, this.matTile(z + 1, cx, cy), 0, 0, 256); }
+                }
+                if (hijos) st.respaldo++; else st.vacios++;
+            });
+            // 2) El nivel correcto encima
+            lista.forEach(t => { if (t.ok) this.dibujarTile(ctx, T, t.img, this.matTile(z, t.x, t.y), 0, 0, 256); });
+
+            s.stats = st;
+            s.necesarios = { z, box, lista };
+            clearTimeout(s.tq);
+            s.tq = setTimeout(() => this.satProgramar(), 90);
+        },
+
+        /** Arma la cola de descarga: primero una base liviana (z−3) y luego el detalle, del centro hacia afuera. */
+        satProgramar() {
+            const s = this.sat;
+            const n = s.necesarios;
+            if (!n || !n.lista) return;
+            const ahora = Date.now();
+            const util = t => !t.ok && !t.cargando && (!t.err || ahora - t.err > 30000);
+            const cx = (n.box[0] + n.box[2]) / 2, cy = (n.box[1] + n.box[3]) / 2;
+            const [clon, clat] = this.svg2ll(cx, cy);
+            const ordenar = (arr, z) => {
+                const fx = this.lon2tx(clon, z) - 0.5, fy = this.lat2ty(clat, z) - 0.5;
+                return arr.sort((a, b) => Math.hypot(a.x - fx, a.y - fy) - Math.hypot(b.x - fx, b.y - fy));
+            };
+            const zb = Math.max(ZOOMS_SAT[0], n.z - 3);
+            const base = [];
+            if (zb < n.z) {
+                const [a, b, c, d] = this.rangoTiles(zb, ...n.box);
+                for (let x = a; x <= b; x++) for (let y = c; y <= d; y++) base.push(this.tile(zb, x, y));
+                base.forEach(t => { t.uso = s.frame; });
+            }
+            s.cola = [...ordenar(base.filter(util), zb), ...ordenar(n.lista.filter(util), n.z)];
+            this.satBombear();
+            this.satPodar();
+            clearTimeout(s.tf);
+            s.tf = setTimeout(() => this.satFecha(clon, clat, n.z), 700);
+        },
+
+        /** Libera memoria: conserva lo usado recientemente. */
+        satPodar() {
+            const s = this.sat;
+            if (s.cache.size <= 700) return;
+            const viejos = [...s.cache.values()].filter(t => !t.cargando && t.uso < s.frame).sort((a, b) => a.uso - b.uso);
+            for (const t of viejos.slice(0, s.cache.size - 500)) { s.cache.delete(t.k); t.img = null; }
+        },
+
+        /** Fecha de la imagen que se está viendo (metadatos públicos de Esri). */
+        async satFecha(lon, lat, z) {
+            const s = this.sat;
+            if (!s.fechaEl) return;
+            try {
+                if (!s.metaSrv) {
+                    const r = await fetch('https://metadata.maptiles.arcgis.com/arcgis/rest/services?f=json');
+                    const j = await r.json();
+                    s.metaSrv = j.services.map(x => x.name).filter(x => /^World_Imagery_Metadata_\d{4}_r\d+$/.test(x)).sort().pop();
+                    if (!s.metaSrv) return;
+                }
+                const k = `${lon.toFixed(3)},${lat.toFixed(3)},${z >= 19 ? 19 : 18}`;
+                s.fechas = s.fechas || new Map();
+                let txt = s.fechas.get(k);
+                if (txt === undefined) {
+                    const d = 0.002;
+                    const u = `https://metadata.maptiles.arcgis.com/arcgis/rest/services/${s.metaSrv}/MapServer/identify?geometry=${lon},${lat}` +
+                        `&geometryType=esriGeometryPoint&sr=4326&layers=all:4,5&tolerance=0&mapExtent=${lon - d},${lat - d},${lon + d},${lat + d}` +
+                        `&imageDisplay=400,400,96&returnGeometry=false&f=json`;
+                    const j = await (await fetch(u)).json();
+                    const res = (j.results || []).map(x => x.attributes).find(a => +a.MinMapLevel <= z && z <= +a.MaxMapLevel) || (j.results || [])[0]?.attributes;
+                    txt = '';
+                    if (res && /^\d{8}$/.test(res.SRC_DATE)) {
+                        const f = new Date(+res.SRC_DATE.slice(0, 4), +res.SRC_DATE.slice(4, 6) - 1, +res.SRC_DATE.slice(6, 8));
+                        txt = `Imagen del ${f.toLocaleDateString('es-DO', { day: 'numeric', month: 'short', year: 'numeric' })}` +
+                              (res.SRC_RES ? ` · ${(+res.SRC_RES).toFixed(2).replace('.', ',')} m/píxel` : '');
+                    }
+                    s.fechas.set(k, txt);
+                }
+                s.fechaEl.textContent = txt;
+                s.fechaEl.style.display = txt ? '' : 'none';
+            } catch (e) { /* sin conexión a los metadatos: se omite la fecha */ }
+        },
+
+        /** Compatibilidad con llamadas anteriores. */
+        updateTiles() { this.satPintar(); },
 
         visibleBox() {
             const area = document.querySelector('.panel-map');
@@ -466,10 +644,7 @@
                 c.setAttribute('y', sim.ancla === 'abajo' ? a.svg_y - h : a.svg_y - h / 2);
             });
             this.layoutCharcos();
-            if (this.state.capas.satelite) {
-                clearTimeout(this._tt);
-                this._tt = setTimeout(() => this.updateTiles(), inmediato ? 0 : 180);
-            }
+            if (this.state.capas.satelite) this.satPintarPronto();
         },
 
         layoutCharcos() {
@@ -1000,11 +1175,12 @@
             const origUpd = App.Map.updateMapTransform.bind(App.Map);
             App.Map.updateMapTransform = function () {
                 origUpd();
+                if (self.state.capas.satelite) self.satAnimar(700);
                 clearTimeout(self._rz); clearTimeout(self._rz2);
                 self._rz = setTimeout(() => self.onZoom(), 140);
                 self._rz2 = setTimeout(() => self.onZoom(), 420);
             };
-            window.addEventListener('resize', () => setTimeout(() => this.onZoom(), 150));
+            window.addEventListener('resize', () => { if (this.state.capas.satelite) this.satAnimar(400); setTimeout(() => this.onZoom(), 150); });
             document.addEventListener('fullscreenchange', () => setTimeout(() => this.onZoom(), 300));
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape' && this.state.sel && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) this.clearSelection();
