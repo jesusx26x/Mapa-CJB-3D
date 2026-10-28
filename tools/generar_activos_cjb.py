@@ -484,7 +484,7 @@ def construir(ruta_lev, forzar_calibracion=False, ruta_kmz=PLANO_KMZ_DEF):
         "eliminados": [{k: a[k] for k in ("id", "tipo", "utm_e", "utm_n", "observaciones")} for a in eliminados],
         "resumen_por_lote": resumen, "filas_descartadas": descartadas,
     }
-    construir_charcos(geo, ubicar, filas, confirmados)
+    construir_charcos(geo, ubicar, filas, confirmados, lotes)
     os.makedirs(os.path.dirname(JSON_OUT), exist_ok=True)
     with open(JSON_OUT, "w", encoding="utf-8") as f:
         json.dump(salida, f, ensure_ascii=False, separators=(",", ":"))
@@ -498,80 +498,298 @@ def construir(ruta_lev, forzar_calibracion=False, ruta_kmz=PLANO_KMZ_DEF):
 # --------------------------------------------------------------------------
 # Charcos (análisis de la Dirección Técnica)
 # --------------------------------------------------------------------------
-def _coordenadas(texto):
-    """Acepta «18.494633, -69.746710» (Google Maps), «-69.74, 18.49» o UTM «421172.8, 2045074.2»."""
-    nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", str(texto or "").replace(",", " , ").replace(" , ", " "))]
-    if len(nums) < 2:
-        return None
-    a, b = nums[0], nums[1]
-    if abs(a) > 1000 and abs(b) > 1000:
-        e, n = (a, b) if a < b else (b, a)
-        return "utm", e, n
-    lat, lon = (a, b) if abs(a) < abs(b) else (b, a)
+# --- Ubicación de un charco: Google Maps (enlace, coordenadas, código plus), grados-minutos-segundos o UTM ---
+CJB_REF = (18.4915, -69.7452)          # centro aproximado de la ciudad (para códigos plus cortos)
+_OLC = "23456789CFGHJMPQRVWX"
+_OLC_RES = [20.0, 1.0, 0.05, 0.0025, 0.000125]
+
+
+def _olc_decodificar(codigo):
+    """Código plus completo (8 dígitos + 2/3) → (lat, lon) del centro."""
+    c = codigo.upper().replace("+", "").rstrip("0")
+    lat, lon = -90.0, -180.0
+    res_lat = res_lon = None
+    for i in range(0, min(len(c), 10), 2):
+        r = _OLC_RES[i // 2]
+        lat += _OLC.index(c[i]) * r
+        lon += _OLC.index(c[i + 1]) * r
+        res_lat = res_lon = r
+    if len(c) > 10:                      # dígito de cuadrícula fina (4 columnas × 5 filas)
+        v = _OLC.index(c[10])
+        res_lat, res_lon = res_lat / 5, res_lon / 4
+        lat += (v // 4) * res_lat
+        lon += (v % 4) * res_lon
+    return lat + res_lat / 2, lon + res_lon / 2
+
+
+def _olc_codificar8(lat, lon):
+    lat, lon = min(max(lat, -90), 89.9999999) + 90, ((lon + 180) % 360)
+    out = ""
+    for r in _OLC_RES[:4]:
+        a, b = int(lat // r), int(lon // r)
+        out += _OLC[a] + _OLC[b]
+        lat -= a * r
+        lon -= b * r
+    return out
+
+
+def _olc(codigo, ref=CJB_REF):
+    """Acepta código completo («77CGFHRW+J2») o corto («FHRW+J2 Santo Domingo»), recuperado cerca de CJB."""
+    pos = codigo.index("+")
+    if pos >= 8:
+        return _olc_decodificar(codigo)
+    relleno = 8 - pos
+    completo = _olc_codificar8(*ref)[:relleno] + codigo
+    lat, lon = _olc_decodificar(completo)
+    res = 20 ** (2 - relleno / 2)
+    mitad = res / 2
+    if lat - ref[0] > mitad:
+        lat -= res
+    elif ref[0] - lat > mitad:
+        lat += res
+    if lon - ref[1] > mitad:
+        lon -= res
+    elif ref[1] - lon > mitad:
+        lon += res
+    return lat, lon
+
+
+def _resolver_enlace_corto(url):
+    """maps.app.goo.gl / goo.gl/maps → URL completa (necesita internet)."""
+    import urllib.request
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+    with urllib.request.urlopen(req, timeout=12) as r:
+        final = r.geturl()
+        if re.search(r"-?\d{1,2}\.\d+\s*,\s*\+?-?\d{1,3}\.\d+|!3d", final):
+            return final
+        return final + " " + r.read(400_000).decode("utf-8", "ignore")
+
+
+_CACHE_ENLACES = {}
+
+
+def _ubicacion(texto):
+    """Devuelve (('geo', lon, lat) | ('utm', E, N) | None, nota)."""
+    from urllib.parse import unquote
+    t = str(texto or "").strip()
+    if not t:
+        return None, "sin ubicación"
+    nota = None
+    if re.search(r"(maps\.app\.goo\.gl|goo\.gl/maps|g\.co/kgs)/", t):
+        url = re.search(r"https?://\S+", t)
+        url = url.group(0) if url else "https://" + t.split("://")[-1].split()[0]
+        if url not in _CACHE_ENLACES:
+            try:
+                _CACHE_ENLACES[url] = _resolver_enlace_corto(url)
+            except Exception as e:  # sin internet o enlace vencido
+                _CACHE_ENLACES[url] = None
+                nota = f"no se pudo abrir el enlace corto ({type(e).__name__})"
+        if _CACHE_ENLACES[url]:
+            t = _CACHE_ENLACES[url]
+        else:
+            return None, nota or "no se pudo abrir el enlace corto"
+    u = unquote(unquote(t)).replace("−", "-")
+    num = r"(-?\d{1,3}\.\d+)"
+    patrones = [
+        (rf"!3d{num}!4d{num}", False),                                 # pin exacto del lugar
+        (rf"[?&](?:q|query|ll|destination|daddr|center)={num}\s*,\s*\+?{num}", False),
+        (rf"/(?:place|search|dir)/{num}\s*,\s*\+?{num}", False),
+        (rf"@{num},{num}", True),                                       # centro del mapa (aproximado)
+    ]
+    for pat, aprox in patrones:
+        m = re.search(pat, u)
+        if m:
+            lat, lon = float(m.group(1)), float(m.group(2))
+            if aprox:
+                nota = "el enlace solo trae el centro del mapa; conviene pegar las coordenadas del pin"
+            return _validar_geo(lat, lon, nota)
+    # Grados, minutos y segundos: 18°29'29.5"N 69°44'42.8"W
+    dms = re.findall(r"(\d{1,3})\s*°\s*(\d{1,2})\s*['′]\s*([\d.]+)\s*[\"″]?\s*([NSEWOnsewo])", u)
+    if len(dms) >= 2:
+        val = []
+        for g, m_, s_, h in dms[:2]:
+            v = int(g) + int(m_) / 60 + float(s_) / 3600
+            val.append((-v if h.upper() in "SWO" else v, h.upper()))
+        lat = next(v for v, h in val if h in "NS")
+        lon = next(v for v, h in val if h in "EWO")
+        return _validar_geo(lat, lon, None)
+    # Código plus
+    m = re.search(r"\b([23456789CFGHJMPQRVWX]{4,8}\+[23456789CFGHJMPQRVWX]{2,3})\b", u.upper())
+    if m:
+        lat, lon = _olc(m.group(1))
+        return _validar_geo(lat, lon, None)
+    # Números sueltos: «18.4915, -69.7452», «-69.74 18.49» o UTM
+    nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", u.replace(",", " "))]
+    if len(nums) >= 2:
+        a, b = nums[0], nums[1]
+        if abs(a) > 1000 and abs(b) > 1000:
+            e, n = (a, b) if a < b else (b, a)
+            return ("utm", e, n), None
+        lat, lon = (a, b) if abs(a) < abs(b) else (b, a)
+        if lon > 0 and 68 < lon < 72:      # se omitió el signo negativo de la longitud
+            lon = -lon
+        return _validar_geo(lat, lon, None)
+    return None, "formato de ubicación no reconocido"
+
+
+def _validar_geo(lat, lon, nota):
     if not (17 < lat < 20 and -72 < lon < -68):
-        return None
-    return "geo", lon, lat
+        return None, f"la ubicación ({lat:.5f}, {lon:.5f}) no está en República Dominicana"
+    return ("geo", lon, lat), nota
 
 
-def construir_charcos(geo, ubicar, filas, imbornales):
-    if not os.path.exists(CHARCOS_XLSX):
+def _coordenadas(texto):
+    """Compatibilidad: solo el resultado de _ubicacion."""
+    return _ubicacion(texto)[0]
+
+
+def _norm(s):
+    import unicodedata
+    s = unicodedata.normalize("NFD", str(s or "")).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", " ", s.replace(" *", "")).strip()
+
+
+# Encabezados de la plantilla (y de la versión anterior) → campo
+CAMPOS_CHARCOS = {
+    "id": ["ID del charco"],
+    "fecha": ["Fecha del levantamiento"],
+    "ubicacion": ["Ubicación en Google Maps", "Coordenadas"],
+    "referencia": ["Calle o punto de referencia", "Ubicación de referencia"],
+    "lugar": ["Lote o calle donde está"],
+    "subnombre": ["Sub-nombre o detalle del lugar"],
+    "criticidad": ["Criticidad"],
+    "origen_tipo": ["¿De dónde viene el agua?"],
+    "origen": ["Lote de donde sale el agua", "Lote de origen principal"],
+    "otros": ["Otros lotes de donde sale el agua", "Otros lotes de origen"],
+    "causa": ["Causa probable"],
+    "afecta": ["¿Qué afecta?"],
+    "area": ["Tamaño aproximado (m²)", "Área aproximada (m²)"],
+    "profundidad": ["Profundidad aproximada (cm)"],
+    "horas": ["Tiempo en secarse (horas)", "Tiempo en drenar (horas)"],
+    "imbornales": ["Imbornales cercanos"],
+    "evidencia": ["Fotos o video (enlace)", "Evidencia (enlace a foto o video)"],
+    "observaciones": ["Observaciones"],
+}
+ID_LOTE = r"\b(?:\d{2}-\d{2}-\d{2}|[Cc]-\d{1,2})\b"
+
+
+def _archivos_charcos():
+    """El análisis lleno: ANALISIS_CHARCOS_CJB.xlsx o cualquier ANALISIS_CHARCOS_CJB*.xlsx en Activos/."""
+    import glob
+    carpeta = os.path.dirname(CHARCOS_XLSX)
+    return sorted((p for p in glob.glob(os.path.join(carpeta, "ANALISIS_CHARCOS_CJB*.xlsx"))
+                   if not os.path.basename(p).startswith("~$")), key=os.path.getmtime)
+
+
+def construir_charcos(geo, ubicar, filas, imbornales, lotes_geo=None):
+    archivos = _archivos_charcos()
+    if not archivos:
         if os.path.exists(CHARCOS_JSON):      # sin análisis de charcos: no dejar una capa vieja
             os.remove(CHARCOS_JSON)
         return
-    ws = openpyxl.load_workbook(CHARCOS_XLSX, data_only=True)["Charcos"]
-    enc = {str(c.value).replace(" *", "").strip(): i for i, c in enumerate(ws[5]) if c.value}
-    val = lambda r, k: r[enc[k]] if k in enc else None
     a_utm = Transformer.from_crs("EPSG:4326", "EPSG:32619", always_xy=True)
     a_geo = Transformer.from_crs("EPSG:32619", "EPSG:4326", always_xy=True)
     sub = {"rojo": "rojo", "amarillo": "amarillo", "verde": "verde"}
-    charcos, problemas = [], []
-    for r in ws.iter_rows(min_row=6, values_only=True):
-        cid, coords = val(r, "ID del charco"), val(r, "Coordenadas")
-        if not cid or not coords:
+    charcos, problemas, vistos = [], [], {}
+    nombres = {_norm(r.get("nombre")): k for k, r in filas.items() if r.get("nombre")}
+
+    def fecha_txt(v):
+        if hasattr(v, "strftime"):
+            return v.strftime("%Y-%m-%d")
+        return str(v).strip() if v not in (None, "") else None
+
+    def num(v):
+        if isinstance(v, (int, float)):
+            return float(v)
+        m = re.search(r"\d+(?:[.,]\d+)?", str(v or ""))
+        return float(m.group(0).replace(",", ".")) if m else None
+
+    def ids_lote(txt):
+        """IDs escritos o elegidos de la lista («15-01-03 · Calle Rey David»); si solo hay nombre, se busca."""
+        txt = str(txt or "")
+        ids = [i.upper() for i in re.findall(ID_LOTE, txt)]
+        if not ids and txt.strip():
+            k = nombres.get(_norm(txt.split("·")[-1]))
+            if k:
+                ids = [k]
+        return ids
+
+    for ruta in archivos:
+        wb = openpyxl.load_workbook(ruta, data_only=True)
+        if "Charcos" not in wb.sheetnames:
+            problemas.append(f"{os.path.basename(ruta)}: no tiene la hoja «Charcos»")
             continue
-        c = _coordenadas(coords)
-        if not c:
-            problemas.append(f"{cid}: coordenadas no válidas «{coords}»")
-            continue
-        if c[0] == "geo":
-            E, N = a_utm.transform(c[1], c[2])
-        else:
-            E, N = c[1], c[2]
-        crit_txt = str(val(r, "Criticidad") or "").lower()
-        crit = next((v for k, v in sub.items() if crit_txt.startswith(k)), None)
-        if not crit:
-            problemas.append(f"{cid}: sin criticidad")
-            continue
-        principal = str(val(r, "Lote de origen principal") or "").strip()
-        otros = re.findall(r"\d{2}-\d{2}-\d{2}", str(val(r, "Otros lotes de origen") or ""))
-        origen = [l for l in [principal] + otros if l]
-        desconocidos = [l for l in origen if l not in filas]
-        if desconocidos:
-            problemas.append(f"{cid}: lotes no encontrados {', '.join(desconocidos)}")
-        origen = [l for l in dict.fromkeys(origen) if l in filas]
-        ubic, lote, calle, _ = ubicar(E, N)
-        x, y = geo.a_svg(E, N)
-        lon, lat = a_geo.transform(E, N)
-        cercanos = re.findall(r"IMB-\d{3}B?", str(val(r, "Imbornales cercanos") or "").upper())
-        if not cercanos:
-            cercanos = [a["id"] for a in sorted(imbornales, key=lambda a: math.hypot(a["utm_e"] - E, a["utm_n"] - N))
-                        if math.hypot(a["utm_e"] - E, a["utm_n"] - N) <= 40][:6]
-        num = lambda k: (float(val(r, k)) if isinstance(val(r, k), (int, float)) else None)
-        charcos.append({
-            "id": str(cid), "categoria": "charcos", "subcategoria": crit,
-            "tipo": next(s_["nombre"] for s_ in CHARCOS_CAT["subcategorias"] if s_["id"] == crit),
-            "referencia": val(r, "Ubicación de referencia"), "utm_e": round(E, 3), "utm_n": round(N, 3),
-            "lat": round(lat, 7), "lon": round(lon, 7), "svg_x": round(x, 3), "svg_y": round(y, 3),
-            "ubicacion": ubic, "calle_id": calle, "calle": filas[calle]["nombre"] if calle else None, "lote_id": lote,
-            "lotes_origen": origen, "causa": val(r, "Causa probable"), "area_m2": num("Área aproximada (m²)"),
-            "profundidad_cm": num("Profundidad aproximada (cm)"), "drenaje_horas": num("Tiempo en drenar (horas)"),
-            "imbornales_cercanos": cercanos, "evidencia": val(r, "Evidencia (enlace a foto o video)"),
-            "observaciones": val(r, "Observaciones"),
-        })
+        ws = wb["Charcos"]
+        enc = {_norm(c.value): i for i, c in enumerate(ws[5]) if c.value}
+        col = {campo: next((enc[_norm(a)] for a in alias if _norm(a) in enc), None)
+               for campo, alias in CAMPOS_CHARCOS.items()}
+        val = lambda r, k: r[col[k]] if col[k] is not None and col[k] < len(r) else None
+        for r in ws.iter_rows(min_row=6, values_only=True):
+            cid = val(r, "id")
+            datos = [val(r, k) for k in CAMPOS_CHARCOS if k != "id"]
+            if not cid or not any(v not in (None, "") for v in datos):
+                continue
+            cid = str(cid).strip()
+            if cid in vistos:                                   # varios archivos: el más reciente manda
+                charcos = [c for c in charcos if c["id"] != cid]
+                problemas[:] = [p for p in problemas if not p.startswith(cid + ":")]
+            vistos[cid] = ruta
+            c, nota = _ubicacion(val(r, "ubicacion"))
+            if not c:
+                problemas.append(f"{cid}: {nota} — «{str(val(r, 'ubicacion') or '')[:60]}»")
+                continue
+            E, N = a_utm.transform(c[1], c[2]) if c[0] == "geo" else (c[1], c[2])
+            crit_txt = str(val(r, "criticidad") or "").strip().lower()
+            crit = next((v for k, v in sub.items() if crit_txt.startswith(k)), None)
+            if not crit:
+                problemas.append(f"{cid}: sin criticidad")
+                continue
+            ubic, lote, calle, (dl, _) = ubicar(E, N)
+            if ubic == "Fuera de lotes del Master Plan" and dl > 300:
+                problemas.append(f"{cid}: la ubicación queda a {dl:.0f} m del Master Plan; revisar")
+                continue
+            if nota:
+                problemas.append(f"{cid}: {nota}")
+            # Lote o calle indicado vs. donde cae la ubicación
+            dice = ids_lote(val(r, "lugar"))
+            if dice and lotes_geo and dice[0] in lotes_geo:
+                d = lotes_geo[dice[0]].distance(Point(E, N))
+                if d > 60:
+                    cae = calle or lote or "fuera de lotes"
+                    problemas.append(f"{cid}: en el Excel dice {dice[0]} pero la ubicación cae en {cae} "
+                                     f"(a {d:.0f} m de {dice[0]}); revisar ubicación o lote")
+            origen = ids_lote(val(r, "origen")) + ids_lote(val(r, "otros"))
+            desconocidos = [l for l in origen if l not in filas]
+            if desconocidos:
+                problemas.append(f"{cid}: lotes no encontrados {', '.join(desconocidos)}")
+            origen = [l for l in dict.fromkeys(origen) if l in filas]
+            x, y = geo.a_svg(E, N)
+            lon, lat = a_geo.transform(E, N)
+            cercanos = re.findall(r"IMB-\d{3}B?", str(val(r, "imbornales") or "").upper())
+            if not cercanos:
+                cercanos = [a["id"] for a in sorted(imbornales, key=lambda a: math.hypot(a["utm_e"] - E, a["utm_n"] - N))
+                            if math.hypot(a["utm_e"] - E, a["utm_n"] - N) <= 40][:6]
+            referencia = " · ".join(str(v).strip() for v in (val(r, "referencia"), val(r, "subnombre")) if v)
+            charcos.append({
+                "id": cid, "categoria": "charcos", "subcategoria": crit,
+                "tipo": next(s_["nombre"] for s_ in CHARCOS_CAT["subcategorias"] if s_["id"] == crit),
+                "fecha": fecha_txt(val(r, "fecha")),
+                "referencia": referencia or None, "lugar_indicado": dice[0] if dice else None,
+                "utm_e": round(E, 3), "utm_n": round(N, 3),
+                "lat": round(lat, 7), "lon": round(lon, 7), "svg_x": round(x, 3), "svg_y": round(y, 3),
+                "ubicacion": ubic, "calle_id": calle, "calle": filas[calle]["nombre"] if calle else None,
+                "lote_id": lote, "origen_tipo": val(r, "origen_tipo"),
+                "lotes_origen": origen, "causa": val(r, "causa"), "afecta": val(r, "afecta"),
+                "area_m2": num(val(r, "area")), "profundidad_cm": num(val(r, "profundidad")),
+                "drenaje_horas": num(val(r, "horas")),
+                "imbornales_cercanos": cercanos, "evidencia": val(r, "evidencia"),
+                "observaciones": val(r, "observaciones"),
+            })
     with open(CHARCOS_JSON, "w", encoding="utf-8") as f:
         json.dump({"generado": __import__("datetime").date.today().isoformat(), "categoria": CHARCOS_CAT,
+                   "archivos": [os.path.basename(p) for p in archivos],
                    "charcos": charcos, "problemas": problemas}, f, ensure_ascii=False, separators=(",", ":"))
-    print(f"Charcos: {CHARCOS_JSON}  ({len(charcos)} charcos · {Counter(c['subcategoria'] for c in charcos)})")
+    print(f"Charcos: {CHARCOS_JSON}  ({len(charcos)} charcos · {dict(Counter(c['subcategoria'] for c in charcos))})")
     for pr in problemas:
         print("  Revisar:", pr)
 

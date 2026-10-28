@@ -236,3 +236,5 @@ body.vbc-solo-mapa .panel-pestana { display: none; }
 .color-mode-legend-box.colapsada .legend-box-items { display: none; }
 .color-mode-legend-box.colapsada .legend-toggle { transform: rotate(-90deg); }
 .color-mode-legend-box.colapsada .legend-box-header { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+
+.act-origen-tipo { margin: 0 0 6px; font-size: .78rem; font-weight: 600; color: var(--text-primary); }

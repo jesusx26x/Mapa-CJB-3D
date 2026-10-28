@@ -1130,19 +1130,21 @@
                     <dl class="detail-grid">
                         ${dato('Referencia', c.referencia)}
                         <dt>Vía</dt><dd>${this.esc(this.lugar(c))}</dd>
+                        ${dato('Levantado el', c.fecha ? c.fecha.split('-').reverse().join('/') : '')}
                         <dt>Lat / Lon</dt><dd>${c.lat.toFixed(6)}, ${c.lon.toFixed(6)}</dd>
                     </dl>
                 </div>
                 <div class="detail-section static-section">
                     <h4>💧 ¿De dónde viene el agua?</h4>
-                    ${lotes ? `<ul class="act-lotes">${lotes}</ul>` : '<p class="act-empty">Sin lotes de origen indicados.</p>'}
-                    <p class="act-note">En el mapa, las flechas salen de estos lotes hacia el charco.</p>
+                    ${c.origen_tipo ? `<p class="act-origen-tipo">${this.esc(c.origen_tipo)}</p>` : ''}
+                    ${lotes ? `<ul class="act-lotes">${lotes}</ul>` : (c.origen_tipo ? '' : '<p class="act-empty">Sin lotes de origen indicados.</p>')}
+                    <p class="act-note">${lotes ? 'En el mapa, las flechas salen de estos lotes hacia el charco; ' : 'En el mapa, '}las flechas azules marcan cómo baja el agua por la calle.</p>
                 </div>
                 <div class="detail-section static-section">
                     <h4>📏 Análisis técnico</h4>
                     <dl class="detail-grid">
-                        ${dato('Causa probable', c.causa)}${dato('Área aprox.', c.area_m2, ' m²')}
-                        ${dato('Profundidad', c.profundidad_cm, ' cm')}${dato('Drena en', c.drenaje_horas, ' h')}
+                        ${dato('Causa probable', c.causa)}${dato('Afecta', c.afecta)}${dato('Área aprox.', c.area_m2, ' m²')}
+                        ${dato('Profundidad', c.profundidad_cm, ' cm')}${dato('Se seca en', c.drenaje_horas, ' h')}
                         ${dato('Observaciones', c.observaciones)}
                     </dl>
                     ${imbs ? `<div class="act-sub-title">Imbornales cercanos</div><div class="act-lot-ids">${imbs}</div>` : ''}
