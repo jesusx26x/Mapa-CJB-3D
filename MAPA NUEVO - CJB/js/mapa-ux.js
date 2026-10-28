@@ -23,6 +23,7 @@
             if (!area || !window.App || !App.Map) { setTimeout(() => this.init(), 300); return; }
             this.area = area;
             this.pestanasPaneles();
+            this.leyendaPlegable();
             this.botonSoloMapa();
             this.eventos();
         },
@@ -100,6 +101,33 @@
                     this.toggleSoloMapa(false);
                 }
             });
+        },
+
+        /* ------------------------------------------------ leyenda plegable */
+        leyendaPlegable() {
+            const box = document.getElementById('colorModeLegendContainer');
+            const head = box?.querySelector('.legend-box-header');
+            if (!box || !head || head.querySelector('.legend-toggle')) return;
+            const flecha = document.createElement('span');
+            flecha.className = 'legend-toggle';
+            flecha.textContent = '▾';
+            head.appendChild(flecha);
+            head.setAttribute('role', 'button');
+            head.tabIndex = 0;
+            head.title = 'Mostrar u ocultar la leyenda';
+            let colapsada = true;            // por defecto plegada para ahorrar espacio
+            try { const v = localStorage.getItem('vbc-leyenda-cjb'); if (v !== null) colapsada = v === '1'; } catch (e) { /* */ }
+            const aplicar = () => {
+                box.classList.toggle('colapsada', colapsada);
+                head.setAttribute('aria-expanded', String(!colapsada));
+            };
+            const alternar = () => {
+                colapsada = !colapsada; aplicar();
+                try { localStorage.setItem('vbc-leyenda-cjb', colapsada ? '1' : '0'); } catch (e) { /* */ }
+            };
+            head.addEventListener('click', alternar);
+            head.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alternar(); } });
+            aplicar();
         },
 
         /* ------------------------------------------------ paneles laterales */

@@ -19,6 +19,16 @@
     const UBIC_LABEL = { 'Calle': 'En calles', 'Dentro de lote': 'Dentro de lotes', 'Fuera de lotes del Master Plan': 'Fuera del Master Plan' };
     const CRIT_ORDEN = { rojo: 3, amarillo: 2, verde: 1 };
     const EARTH = 40075016.686;
+    const ZOOMS_SAT = [12, 13, 14, 15, 16, 17, 18, 19];
+    const MAX_TILES = 160;
+    // Símbolos para los imbornales (el usuario elige en el panel)
+    const SIMBOLOS = {
+        rejilla: { nombre: 'Rejilla',  icono: '▦', w: 1.0, h: 1.0, ancla: 'centro' },
+        pin:     { nombre: 'Marcador', icono: '📍', w: 1.0, h: 1.35, ancla: 'abajo' },
+        embudo:  { nombre: 'Flecha',   icono: '▼', w: 1.0, h: 1.0, ancla: 'centro' },
+        punto:   { nombre: 'Punto',    icono: '●', w: 1.0, h: 1.0, ancla: 'centro' }
+    };
+    const M_POR_UNIDAD = 4.3184;
 
     const Activos = {
         data: null,
@@ -37,6 +47,7 @@
             ubic: { 'Calle': true, 'Dentro de lote': true, 'Fuera de lotes del Master Plan': true },
             calle: '',
             colorBy: 'tipo',
+            simbolo: 'rejilla',
             satOpacity: 1,
             lotOpacity: 0.3,
             sel: null           // { tipo: 'imb' | 'charco', id }
@@ -73,6 +84,7 @@
             });
             this.loadPrefs();
 
+            this.buildGrafo();
             this.buildSatellite();
             this.buildLayers();
             this.buildPanel();
@@ -103,14 +115,78 @@
                     }
                 });
                 if (p.subs) Object.assign(this.state.subs, p.subs);
-                ['colorBy', 'satOpacity', 'lotOpacity'].forEach(k => { if (p[k] !== undefined) this.state[k] = p[k]; });
+                ['colorBy', 'satOpacity', 'lotOpacity', 'simbolo'].forEach(k => { if (p[k] !== undefined) this.state[k] = p[k]; });
+                if (!SIMBOLOS[this.state.simbolo]) this.state.simbolo = 'rejilla';
             } catch (e) { /* almacenamiento no disponible */ }
         },
         savePrefs() {
             try {
-                const { capas, subs, colorBy, satOpacity, lotOpacity } = this.state;
-                localStorage.setItem(STORE_KEY, JSON.stringify({ capas, subs, colorBy, satOpacity, lotOpacity }));
+                const { capas, subs, colorBy, satOpacity, lotOpacity, simbolo } = this.state;
+                localStorage.setItem(STORE_KEY, JSON.stringify({ capas, subs, colorBy, satOpacity, lotOpacity, simbolo }));
             } catch (e) { /* almacenamiento no disponible */ }
+        },
+
+        /* ======================================== GRAFO DE ESCORRENTÍA */
+        /** Une cada imbornal con sus vecinos cercanos sobre la vía; la cota indica hacia dónde baja el agua. */
+        buildGrafo() {
+            const R = 95 / M_POR_UNIDAD;            // vecinos a menos de ~95 m
+            const pts = this.data.activos;
+            this.vecinos = new Map();
+            pts.forEach(a => {
+                const cand = [];
+                pts.forEach(b => {
+                    if (a === b) return;
+                    const d = Math.hypot(a.svg_x - b.svg_x, a.svg_y - b.svg_y);
+                    if (d > R) return;
+                    // misma calle, o muy cerca (cruces e intersecciones)
+                    if (a.calle_id && b.calle_id && a.calle_id !== b.calle_id && d > 30 / M_POR_UNIDAD) return;
+                    cand.push({ b, d });
+                });
+                cand.sort((p, q) => p.d - q.d);
+                this.vecinos.set(a.id, cand.slice(0, 6));
+            });
+        },
+
+        /** Camino que sigue el agua desde un imbornal hasta el charco: cuesta abajo y acercándose. */
+        caminoHasta(inicio, ch) {
+            const dist = a => Math.hypot(a.svg_x - ch.svg_x, a.svg_y - ch.svg_y);
+            const cerca = 35 / M_POR_UNIDAD;
+            const camino = [inicio];
+            const vistos = new Set([inicio.id]);
+            let act = inicio;
+            for (let i = 0; i < 40 && dist(act) > cerca; i++) {
+                const opciones = (this.vecinos.get(act.id) || [])
+                    .map(v => v.b)
+                    .filter(b => !vistos.has(b.id) && dist(b) < dist(act) - 3 / M_POR_UNIDAD && b.cota <= act.cota + 0.15);
+                if (!opciones.length) break;
+                // Preferir el que más baja; a igualdad, el que más se acerca
+                opciones.sort((p, q) => (p.cota - q.cota) || (dist(p) - dist(q)));
+                act = opciones[0];
+                vistos.add(act.id);
+                camino.push(act);
+            }
+            return camino;
+        },
+
+        /** Escorrentía de la calle que llega al charco: imbornales aguas arriba (más altos) conectados. */
+        aguasArriba(ch) {
+            const R0 = 45 / M_POR_UNIDAD, MAX = 320 / M_POR_UNIDAD;
+            const dist = a => Math.hypot(a.svg_x - ch.svg_x, a.svg_y - ch.svg_y);
+            const semillas = this.data.activos.filter(a => dist(a) <= R0);
+            const aristas = [];
+            const vistos = new Set(semillas.map(a => a.id));
+            let frente = semillas;
+            for (let nivel = 0; nivel < 8 && frente.length; nivel++) {
+                const sig = [];
+                frente.forEach(a => (this.vecinos.get(a.id) || []).forEach(({ b }) => {
+                    if (vistos.has(b.id) || dist(b) > MAX || b.cota < a.cota + 0.03 || dist(b) <= dist(a)) return;
+                    vistos.add(b.id);
+                    aristas.push([b, a]);                     // el agua va de b (más alto) a a
+                    sig.push(b);
+                }));
+                frente = sig;
+            }
+            return { semillas, aristas };
         },
 
         /* ================================================ SATÉLITE (tiles) */
@@ -193,40 +269,45 @@
                     Math.floor(this.lat2ty(Math.max(...lats), z)), Math.floor(this.lat2ty(Math.min(...lats), z))];
         },
 
+        /** Mosaicos para TODA la zona visible (no solo el Master Plan), con el nivel según el zoom. */
         updateTiles() {
             if (!this.state.capas.satelite) return;
-            const [rx, ry, rw, rh] = this.sat.cfg.svg_rect;
-            // Base: nivel 15 completo (pocas imágenes, siempre debajo)
-            if (!this.sat.baseLista) {
-                const [tx0, tx1, ty0, ty1] = this.rangoTiles(15, rx, ry, rx + rw, ry + rh);
-                for (let x = tx0; x <= tx1; x++) for (let y = ty0; y <= ty1; y++) this.sat.base.appendChild(this.tileImage(15, x, y));
-                this.sat.baseLista = true;
-            }
-            // Detalle: el nivel que corresponde al zoom, solo en la zona visible
-            const lat = this.svg2ll(rx + rw / 2, ry + rh / 2)[1];
-            const mPorPx = this.sat.cfg.m_por_unidad_svg / (this.px * (window.devicePixelRatio || 1));
-            let z = this.sat.cfg.zooms[0];
-            for (const zz of this.sat.cfg.zooms) {
-                const mTilePx = EARTH * Math.cos(lat * Math.PI / 180) / 2 ** zz / 256;
-                z = zz;
-                if (mTilePx <= mPorPx * 1.4) break;
-            }
-            if (z === 15) { this.sat.detalle.replaceChildren(); this.sat.zActual = 15; return; }
             const vis = this.visibleBox();
             if (!vis) return;
-            const pad = 0.25;
+            const [rx, ry, rw, rh] = this.sat.cfg.svg_rect;
             const w = vis[2] - vis[0], h = vis[3] - vis[1];
-            const box = [Math.max(rx, vis[0] - w * pad), Math.max(ry, vis[1] - h * pad),
-                         Math.min(rx + rw, vis[2] + w * pad), Math.min(ry + rh, vis[3] + h * pad)];
+            const pad = 0.2;
+            // Zona a cubrir: lo visible + margen, acotado a 6 km alrededor de la ciudad
+            const lim = 6000 / M_POR_UNIDAD;
+            const box = [Math.max(rx - lim, vis[0] - w * pad), Math.max(ry - lim, vis[1] - h * pad),
+                         Math.min(rx + rw + lim, vis[2] + w * pad), Math.min(ry + rh + lim, vis[3] + h * pad)];
             if (box[2] <= box[0] || box[3] <= box[1]) return;
-            const [tx0, tx1, ty0, ty1] = this.rangoTiles(z, ...box);
-            if ((tx1 - tx0 + 1) * (ty1 - ty0 + 1) > 220) return;   // demasiadas: se queda la base
+            const lat = this.svg2ll(rx + rw / 2, ry + rh / 2)[1];
+            const mPorPx = M_POR_UNIDAD / (this.px * (window.devicePixelRatio || 1));
+            let z = ZOOMS_SAT[0];
+            for (const zz of ZOOMS_SAT) {
+                z = zz;
+                if (EARTH * Math.cos(lat * Math.PI / 180) / 2 ** zz / 256 <= mPorPx * 1.4) break;
+            }
+            const contar = zz => { const [a, b, c, d] = this.rangoTiles(zz, ...box); return (b - a + 1) * (d - c + 1); };
+            while (z > ZOOMS_SAT[0] && contar(z) > MAX_TILES) z--;
+            // Base: dos niveles menos (pocas imágenes) para que nunca quede un hueco mientras carga el detalle
+            const zb = Math.max(ZOOMS_SAT[0], z - 2);
+            this.ponerTiles(this.sat.base, zb, box, false);
             if (this.sat.zActual !== z) this.sat.detalle.replaceChildren();
             this.sat.zActual = z;
+            if (z !== zb) this.ponerTiles(this.sat.detalle, z, box, true);
+        },
+
+        ponerTiles(grupo, z, box, reemplazar) {
+            const [tx0, tx1, ty0, ty1] = this.rangoTiles(z, ...box);
+            if ((tx1 - tx0 + 1) * (ty1 - ty0 + 1) > MAX_TILES * 2) return;
             for (let x = tx0; x <= tx1; x++) for (let y = ty0; y <= ty1; y++) {
                 const img = this.tileImage(z, x, y);
-                if (img.parentNode !== this.sat.detalle) this.sat.detalle.appendChild(img);
+                if (img.parentNode !== grupo) grupo.appendChild(img);
             }
+            // La base se ordena de menor a mayor detalle para que el más nítido quede encima
+            if (!reemplazar && grupo.childElementCount > 900) grupo.replaceChildren();
         },
 
         visibleBox() {
@@ -251,17 +332,29 @@
 
             // Flecha para las líneas de flujo lote → charco
             const defs = document.createElementNS(NS, 'defs');
-            defs.innerHTML = ['rojo', 'amarillo', 'verde'].map(c => `
-                <marker id="actFlecha-${c}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            defs.innerHTML = ['rojo', 'amarillo', 'verde', 'agua'].map(c => `
+                <marker id="actFlecha-${c}" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto">
                     <path d="M0,0 L10,5 L0,10 z" class="act-flecha-${c}"/>
                 </marker>`).join('');
             this.gRel.appendChild(defs);
 
-            this.data.activos.forEach(a => {
-                const c = document.createElementNS(NS, 'circle');
-                c.setAttribute('cx', a.svg_x);
-                c.setAttribute('cy', a.svg_y);
+            // Símbolos (se colorean con currentColor; detalles en blanco)
+            const defsSim = document.createElementNS(NS, 'defs');
+            defsSim.innerHTML = `
+                <symbol id="imb-pin" viewBox="0 0 24 32"><path d="M12 31C12 31 3 19.6 3 11.5a9 9 0 0 1 18 0C21 19.6 12 31 12 31z" fill="currentColor" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="11.5" r="3.6" fill="#fff"/></symbol>
+                <symbol id="imb-pin-doble" viewBox="0 0 24 32"><path d="M12 31C12 31 3 19.6 3 11.5a9 9 0 0 1 18 0C21 19.6 12 31 12 31z" fill="currentColor" stroke="#fff" stroke-width="1.6"/><rect x="7" y="8.2" width="4" height="6.6" rx=".8" fill="#fff"/><rect x="13" y="8.2" width="4" height="6.6" rx=".8" fill="#fff"/></symbol>
+                <symbol id="imb-rejilla" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="currentColor" stroke="#fff" stroke-width="1.8"/><path d="M8 7v10M12 7v10M16 7v10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></symbol>
+                <symbol id="imb-rejilla-doble" viewBox="0 0 24 24"><rect x="1.5" y="4.5" width="21" height="15" rx="3.5" fill="currentColor" stroke="#fff" stroke-width="1.8"/><path d="M12 6v12" stroke="#fff" stroke-width="1.6"/><path d="M5.5 8.5v7M8.5 8.5v7M15.5 8.5v7M18.5 8.5v7" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></symbol>
+                <symbol id="imb-embudo" viewBox="0 0 24 24"><path d="M3 4.5h18L12 21z" fill="currentColor" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+                <symbol id="imb-embudo-doble" viewBox="0 0 24 24"><path d="M3 4.5h18L12 21z" fill="currentColor" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 8.5h8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></symbol>
+                <symbol id="imb-punto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="currentColor" stroke="#fff" stroke-width="2.4"/></symbol>
+                <symbol id="imb-punto-doble" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="currentColor" stroke="#fff" stroke-width="2.4"/><circle cx="12" cy="12" r="3.2" fill="#fff"/></symbol>`;
+            this.gImb.appendChild(defsSim);
+
+            [...this.data.activos].sort((p, q) => p.svg_y - q.svg_y).forEach(a => {
+                const c = document.createElementNS(NS, 'use');
                 c.setAttribute('class', 'activo-punto');
+                c.dataset.id = a.id;
                 c.addEventListener('click', ev => { ev.stopPropagation(); this.select('imb', a.id); });
                 c.addEventListener('mouseenter', ev => this.showTip(ev, this.tipImb(a)));
                 c.addEventListener('mousemove', ev => App.Map.updateTooltipPosition(ev));
@@ -327,11 +420,15 @@
             document.documentElement.style.setProperty('--activos-lote-op', s.lotOpacity);
 
             let nImb = 0;
+            const simId = this.state.simbolo in SIMBOLOS ? this.state.simbolo : 'rejilla';
             this.data.activos.forEach(a => {
+                const u = this.els.get(a.id);
+                const href = `#imb-${simId}${a.subcategoria === 'filtrante_doble' ? '-doble' : ''}`;
+                if (u.getAttribute('href') !== href) u.setAttribute('href', href);
                 const c = this.els.get(a.id);
                 const v = this.visibleImb(a);
                 c.style.display = v ? '' : 'none';
-                c.style.fill = this.colorImb(a);
+                c.style.color = this.colorImb(a);
                 if (v) nImb++;
             });
             let nCh = 0;
@@ -353,14 +450,20 @@
             const ctm = this.gImb.getScreenCTM();
             this.px = (ctm && Math.hypot(ctm.a, ctm.b)) || 1;
             const px = this.px;
-            const rImbPx = Math.min(Math.max(2.3 * Math.pow(px / 0.65, 0.45), 2), 6);
+            // Tamaño en pantalla: crece suave con el zoom (7 px en la vista general → 18 px de cerca)
+            const tamPx = Math.min(Math.max(7 * Math.pow(px / 0.65, 0.5), 7), 18);
             const enFondo = this.gImb.classList.contains('en-segundo-plano');
-            const r = (enFondo ? rImbPx * 0.75 : rImbPx) / px;
-            this.gImb.style.setProperty('--act-sw', (1 / px).toFixed(3));
+            const base = (enFondo ? tamPx * 0.8 : tamPx) / px;
+            const sim = SIMBOLOS[this.state.simbolo] || SIMBOLOS.rejilla;
             this.els.forEach((c, id) => {
+                const a = this.byId.get(id);
                 const sel = this.state.sel?.tipo === 'imb' && this.state.sel.id === id;
-                const cerca = c.classList.contains('cercano');
-                c.setAttribute('r', sel ? r * 1.8 : cerca ? r * 1.5 : r);
+                const k = sel ? 1.7 : c.classList.contains('cercano') ? 1.35 : 1;
+                const w = base * sim.w * k, h = base * sim.h * k;
+                c.setAttribute('width', w);
+                c.setAttribute('height', h);
+                c.setAttribute('x', a.svg_x - w / 2);
+                c.setAttribute('y', sim.ancla === 'abajo' ? a.svg_y - h : a.svg_y - h / 2);
             });
             this.layoutCharcos();
             if (this.state.capas.satelite) {
@@ -472,34 +575,73 @@
             this.renderFlujos();
         },
 
-        /** Líneas de flujo desde los lotes de origen hasta cada charco. */
+        /** Sentido del agua: por la calle (según la cota de los imbornales) y desde los lotes de origen. */
         renderFlujos() {
-            [...this.gRel.querySelectorAll('.flujo')].forEach(e => e.remove());
+            [...this.gRel.querySelectorAll('.flujo, .flujo-salida, .flujo-borde')].forEach(e => e.remove());
             document.querySelectorAll('#mapContainer svg .lote.act-origen').forEach(e => e.classList.remove('act-origen'));
             const px = this.px;
             const colores = Object.fromEntries((this.cats.find(c => c.id === 'charcos')?.subcategorias || []).map(s => [s.id, s.color]));
+            const linea = (pts, clase, ancho, crit) => {
+                if (pts.length < 2) return;
+                const d = 'M' + pts.map(q => `${q[0]},${q[1]}`).join(' L');
+                const borde = document.createElementNS(NS, 'path');      // contorno blanco para que se lea sobre cualquier fondo
+                borde.setAttribute('d', d);
+                borde.setAttribute('class', 'flujo-borde');
+                borde.style.strokeWidth = ((ancho + 2.2) / px).toFixed(3);
+                this.gRel.appendChild(borde);
+                const p = document.createElementNS(NS, 'path');
+                p.setAttribute('d', d);
+                p.setAttribute('class', clase);
+                p.setAttribute('marker-mid', `url(#actFlecha-${crit})`);
+                p.setAttribute('marker-end', `url(#actFlecha-${crit})`);
+                p.style.strokeWidth = (ancho / px).toFixed(3);
+                p.style.strokeDasharray = `${6 / px} ${5 / px}`;
+                p.style.setProperty('--dash', `${-11 / px}`);
+                this.gRel.appendChild(p);
+            };
+            // recorta el último tramo para que la flecha no quede dentro del círculo del charco
+            const hastaCharco = (pts, ch) => {
+                const [x0, y0] = pts[pts.length - 1];
+                const d = Math.hypot(ch.svg_x - x0, ch.svg_y - y0) || 1, r = 14 / px;
+                if (d > r) pts.push([ch.svg_x - (ch.svg_x - x0) / d * r, ch.svg_y - (ch.svg_y - y0) / d * r]);
+                return pts;
+            };
             (this.flujos || []).forEach(({ ch, lotes }) => {
                 if (!ch || !this.visibleCharco(ch)) return;
+                const crit = ch.subcategoria;
+                // 1) Escorrentía por la calle hacia el charco
+                const { semillas, aristas } = this.aguasArriba(ch);
+                aristas.forEach(([b, a]) => linea([[b.svg_x, b.svg_y], [a.svg_x, a.svg_y]], `flujo calle crit-${crit}`, 2.4, 'agua'));
+                semillas.forEach(a => linea(hastaCharco([[a.svg_x, a.svg_y]], ch), `flujo calle crit-${crit}`, 2.4, 'agua'));
+                // 2) Agua que sale de cada lote de origen y corre por la vía hasta el charco
                 lotes.forEach((lid, i) => {
                     const el = App.State.svgElementsMap.get(lid);
                     if (!el) return;
                     el.classList.add('act-origen');
-                    el.style.setProperty('--act-origen-color', colores[ch.subcategoria] || '#dc2626');
-                    const b = el.getBBox();
-                    const x0 = b.x + b.width / 2, y0 = b.y + b.height / 2, x1 = ch.svg_x, y1 = ch.svg_y;
-                    const dx = x1 - x0, dy = y1 - y0, L = Math.hypot(dx, dy) || 1;
-                    const curva = L * 0.18 * (i % 2 ? -1 : 1);
-                    const cx = (x0 + x1) / 2 - dy / L * curva, cy = (y0 + y1) / 2 + dx / L * curva;
-                    // Recortar el final para que la flecha no tape el charco
-                    const d2 = Math.hypot(x1 - cx, y1 - cy) || 1, fin = 15 / px;
-                    const ex = x1 - (x1 - cx) / d2 * fin, ey = y1 - (y1 - cy) / d2 * fin;
-                    const p = document.createElementNS(NS, 'path');
-                    p.setAttribute('d', `M${x0},${y0} Q${cx},${cy} ${ex},${ey}`);
-                    p.setAttribute('class', `flujo crit-${ch.subcategoria}${i === 0 ? ' principal' : ''}`);
-                    p.setAttribute('marker-end', `url(#actFlecha-${ch.subcategoria})`);
-                    p.style.strokeWidth = ((i === 0 ? 2.6 : 1.8) / px).toFixed(3);
-                    p.style.strokeDasharray = `${7 / px} ${4 / px}`;
-                    this.gRel.appendChild(p);
+                    el.style.setProperty('--act-origen-color', colores[crit] || '#dc2626');
+                    const bb = el.getBBox();
+                    const dBox = a => Math.hypot(Math.max(bb.x - a.svg_x, 0, a.svg_x - bb.x - bb.width), Math.max(bb.y - a.svg_y, 0, a.svg_y - bb.y - bb.height));
+                    // Imbornal de su frente: el más cercano al lote, prefiriendo los que llevan al charco
+                    const cand = this.data.activos.map(a => ({ a, d: dBox(a) })).filter(o => o.d <= 60 / M_POR_UNIDAD)
+                        .sort((p, q) => (p.d + Math.hypot(p.a.svg_x - ch.svg_x, p.a.svg_y - ch.svg_y) * 0.25) - (q.d + Math.hypot(q.a.svg_x - ch.svg_x, q.a.svg_y - ch.svg_y) * 0.25));
+                    const ancho = i === 0 ? 3.6 : 2.8;
+                    if (!cand.length) {      // sin imbornales cerca: flecha directa
+                        const c = [bb.x + bb.width / 2, bb.y + bb.height / 2];
+                        linea(hastaCharco([c], ch), `flujo lote principal-${i === 0} crit-${crit}`, ancho, crit);
+                        return;
+                    }
+                    const ini = cand[0].a;
+                    // punto de salida: borde del lote frente a ese imbornal
+                    const sx = Math.min(Math.max(ini.svg_x, bb.x), bb.x + bb.width), sy = Math.min(Math.max(ini.svg_y, bb.y), bb.y + bb.height);
+                    const cx = bb.x + bb.width / 2, cy = bb.y + bb.height / 2;
+                    const salida = document.createElementNS(NS, 'path');
+                    salida.setAttribute('d', `M${cx + (sx - cx) * 0.55},${cy + (sy - cy) * 0.55} L${ini.svg_x},${ini.svg_y}`);
+                    salida.setAttribute('class', `flujo-salida crit-${crit}`);
+                    salida.setAttribute('marker-end', `url(#actFlecha-${crit})`);
+                    salida.style.strokeWidth = ((ancho + 1.4) / px).toFixed(3);
+                    this.gRel.appendChild(salida);
+                    const camino = this.caminoHasta(ini, ch).map(a => [a.svg_x, a.svg_y]);
+                    linea(hastaCharco(camino, ch), `flujo lote${i === 0 ? ' principal' : ''} crit-${crit}`, ancho, crit);
                 });
             });
         },
@@ -610,6 +752,9 @@
                                 <select id="actCalleSelect" class="act-select">
                                     <option value="">Todas las calles</option>${callesOpts}
                                 </select>
+                                <div class="act-simbolos" role="radiogroup" aria-label="Símbolo de los imbornales">
+                                    ${Object.entries(SIMBOLOS).map(([k, v]) => `<button type="button" role="radio" aria-checked="${this.state.simbolo === k}" data-simbolo="${k}" class="${this.state.simbolo === k ? 'active' : ''}" title="${v.nombre}"><svg viewBox="0 0 24 ${k === 'pin' ? 32 : 24}"><use href="#imb-${k}"/></svg><span>${v.nombre}</span></button>`).join('')}
+                                </div>
                                 <div class="act-seg">
                                     <button type="button" data-colorby="tipo" class="${this.state.colorBy === 'tipo' ? 'active' : ''}">Color por tipo</button>
                                     <button type="button" data-colorby="cota" class="${this.state.colorBy === 'cota' ? 'active' : ''}">Color por cota</button>
@@ -655,6 +800,10 @@
                 this.state.calle = e.target.value; this.refresh();
                 if (e.target.value) this.flashLot(e.target.value);
             });
+            mount.querySelectorAll('[data-simbolo]').forEach(b => b.addEventListener('click', () => {
+                mount.querySelectorAll('[data-simbolo]').forEach(x => { x.classList.toggle('active', x === b); x.setAttribute('aria-checked', String(x === b)); });
+                this.state.simbolo = b.dataset.simbolo; this.refresh();
+            }));
             mount.querySelectorAll('[data-colorby]').forEach(b => b.addEventListener('click', () => {
                 mount.querySelectorAll('[data-colorby]').forEach(x => x.classList.toggle('active', x === b));
                 this.state.colorBy = b.dataset.colorby; this.refresh();

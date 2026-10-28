@@ -19,19 +19,17 @@ body.activos-sat-on #mapContainer svg > g:not(#capaSatelite):not(#capaActivos):n
 body.activos-sat-on .activos-atribucion { display: block; }
 
 /* ============================================================ IMBORNALES */
-#capaActivos .activo-punto {
-    stroke: #fff; stroke-width: var(--act-sw, .3); cursor: pointer;
-    transition: opacity .2s ease;
-}
+#capaActivos { filter: drop-shadow(0 1px 1.2px rgba(0, 0, 0, .45)); }
+#capaActivos .activo-punto { cursor: pointer; transition: opacity .2s ease; }
 #capaActivos .activo-punto:hover { opacity: .8; }
-#capaActivos .activo-punto.selected { stroke: #ff1744; stroke-width: calc(var(--act-sw, .3) * 2.4); }
+#capaActivos .activo-punto.selected { filter: drop-shadow(0 0 2px #ff1744) drop-shadow(0 0 2px #ff1744); }
 /* Con charcos encendidos, los imbornales pasan a segundo plano */
 #capaActivos.en-segundo-plano .activo-punto { opacity: .4; }
 #capaActivos.en-segundo-plano .activo-punto:hover { opacity: .9; }
 /* Charco seleccionado: solo destacan sus imbornales cercanos */
-#capaActivos.con-foco .activo-punto { opacity: .12; }
+#capaActivos.con-foco .activo-punto { opacity: .3; }
 #capaActivos.con-foco .activo-punto.cercano,
-#capaActivos.con-foco .activo-punto.selected { opacity: 1; stroke: #fff; stroke-width: calc(var(--act-sw, .3) * 2); }
+#capaActivos.con-foco .activo-punto.selected { opacity: 1; }
 
 /* ============================================================ CHARCOS */
 .charco { cursor: pointer; transition: opacity .2s ease; }
@@ -55,15 +53,22 @@ body.activos-sat-on .activos-atribucion { display: block; }
 .charco-grupo .charco-grupo-halo { fill-opacity: .22; }
 .charco-grupo .charco-grupo-nucleo { stroke: #fff; }
 
-/* Flechas de flujo: lote de origen → charco */
-#capaRelaciones .flujo { fill: none; stroke-linecap: round; opacity: .9; pointer-events: none; }
-#capaRelaciones .flujo.crit-rojo { stroke: #dc2626; }
-#capaRelaciones .flujo.crit-amarillo { stroke: #d97706; }
-#capaRelaciones .flujo.crit-verde { stroke: #16a34a; }
-#capaRelaciones .flujo:not(.principal) { opacity: .65; }
+/* Sentido del agua: por la calle (azul agua) y desde los lotes de origen (color del charco) */
+#capaRelaciones .flujo-borde { fill: none; stroke: rgba(255, 255, 255, .9); stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+#capaRelaciones .flujo, #capaRelaciones .flujo-salida { fill: none; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+#capaRelaciones .flujo { animation: flujo-correr 0.9s linear infinite; }
+@keyframes flujo-correr { to { stroke-dashoffset: var(--dash, -11); } }
+@media (prefers-reduced-motion: reduce) { #capaRelaciones .flujo { animation: none; } }
+#capaRelaciones .flujo.calle { stroke: #38bdf8; opacity: .85; }
+#capaRelaciones .flujo.lote.crit-rojo, #capaRelaciones .flujo-salida.crit-rojo { stroke: #dc2626; }
+#capaRelaciones .flujo.lote.crit-amarillo, #capaRelaciones .flujo-salida.crit-amarillo { stroke: #d97706; }
+#capaRelaciones .flujo.lote.crit-verde, #capaRelaciones .flujo-salida.crit-verde { stroke: #16a34a; }
+#capaRelaciones .flujo.lote:not(.principal) { opacity: .7; }
+#capaRelaciones .flujo-salida { opacity: .95; }
 .act-flecha-rojo { fill: #dc2626; }
 .act-flecha-amarillo { fill: #d97706; }
 .act-flecha-verde { fill: #16a34a; }
+.act-flecha-agua { fill: #38bdf8; }
 #mapContainer svg .lote.act-origen {
     stroke: var(--act-origen-color, #dc2626) !important;
     stroke-width: 2.5px !important;
@@ -181,11 +186,13 @@ body.vbc-solo-mapa .panel-map { border: 0; }
 body.light-mode .multi-select-trigger { color: var(--text-primary, #0f172a); }
 
 /* ============================================================ PANELES PLEGABLES */
-.main-layout { transition: grid-template-columns .28s ease; }
-body.vbc-sin-izq .main-layout { grid-template-columns: 0 1fr var(--panel-width); }
-body.vbc-sin-der .main-layout { grid-template-columns: var(--panel-width) 1fr 0; }
-body.vbc-sin-izq.vbc-sin-der .main-layout { grid-template-columns: 0 1fr 0; }
-body.vbc-sin-izq .panel-filters, body.vbc-sin-der .panel-details { overflow: hidden; border: 0; padding: 0; visibility: hidden; }
+body.vbc-sin-izq .main-layout { grid-template-columns: 0 1fr var(--panel-width) !important; }
+body.vbc-sin-der .main-layout { grid-template-columns: var(--panel-width) 1fr 0 !important; }
+body.vbc-sin-izq.vbc-sin-der .main-layout { grid-template-columns: 0 1fr 0 !important; }
+body.vbc-sin-izq .panel-filters, body.vbc-sin-der .panel-details { display: none !important; }
+body.vbc-sin-izq .panel-map { grid-column: 1 / 3; }
+body.vbc-sin-der .panel-map { grid-column: 2 / 4; }
+body.vbc-sin-izq.vbc-sin-der .panel-map { grid-column: 1 / 4; }
 
 .panel-pestana {
     position: absolute; top: 50%; z-index: 12; transform: translateY(-50%);
@@ -204,3 +211,20 @@ body.vbc-sin-izq .panel-filters, body.vbc-sin-der .panel-details { overflow: hid
 body.vbc-sin-izq .panel-pestana-izq span { transform: translateX(-1px) rotate(-135deg); }
 body.vbc-sin-der .panel-pestana-der span { transform: translateX(1px) rotate(45deg); }
 body.vbc-solo-mapa .panel-pestana { display: none; }
+
+/* ============================================================ SÍMBOLOS (selector) */
+.act-simbolos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 0 10px; }
+.act-simbolos button {
+    display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 2px 3px;
+    background: transparent; border: 1px solid #334155; border-radius: 6px; color: #94a3b8;
+    font-size: .58rem; cursor: pointer;
+}
+.act-simbolos button svg { width: 16px; height: 16px; color: #0ea5e9; }
+.act-simbolos button.active { border-color: #0284c7; background: rgba(2, 132, 199, .15); color: #e2e8f0; }
+
+/* ============================================================ LEYENDA PLEGABLE */
+.color-mode-legend-box .legend-box-header { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 6px; user-select: none; }
+.legend-toggle { font-size: .65rem; color: var(--text-muted); transition: transform .2s; }
+.color-mode-legend-box.colapsada .legend-box-items { display: none; }
+.color-mode-legend-box.colapsada .legend-toggle { transform: rotate(-90deg); }
+.color-mode-legend-box.colapsada .legend-box-header { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
