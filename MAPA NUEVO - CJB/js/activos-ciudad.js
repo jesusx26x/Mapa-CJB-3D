@@ -290,7 +290,7 @@
                     <div class="act-block">
                         <div class="act-block-title">Ubicación</div>
                         <div class="act-chips">
-                            ${UBICACIONES.map(u => `<button type="button" class="act-toggle active" data-ubic="${u}">${u === 'Fuera de lotes del Master Plan' ? 'Fuera del Master Plan' : u} <span class="act-count" data-count-ubic="${u}">0</span></button>`).join('')}
+                            ${UBICACIONES.filter(u => this.data.activos.some(a => a.ubicacion === u)).map(u => `<button type="button" class="act-toggle active" data-ubic="${u}">${u === 'Fuera de lotes del Master Plan' ? 'Fuera del Master Plan' : u} <span class="act-count" data-count-ubic="${u}">0</span></button>`).join('')}
                         </div>
                         <select id="actCalleSelect" class="filter-select act-select">
                             <option value="">Todas las calles</option>
@@ -310,6 +310,7 @@
                     <div class="act-actions">
                         <button type="button" class="act-btn" id="actExport">📥 Descargar inventario (CSV)</button>
                     </div>
+                    ${(this.data.en_validacion || []).length ? `<div class="act-validacion">⏳ ${this.data.en_validacion.length} imbornales en validación con Verasol: no se muestran hasta confirmarse.</div>` : ''}
                     <div class="act-source">Fuente: ${this.esc(this.data.categorias[0].fuente)} · Georreferencia del Master Plan: precisión ${this.esc(this.data.meta.georreferencia_master_plan.precision_estimada_m)}</div>
                 </div>
             </div>`;

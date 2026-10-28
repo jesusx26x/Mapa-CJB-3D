@@ -49,6 +49,13 @@ XLSX_OUT = os.path.join(ROOT, "Activos", "INVENTARIO_ACTIVOS_CJB_IMBORNALES.xlsx
 LEVANTAMIENTO_DEF = os.path.join(ROOT, "fuentes_y_matrices", "LVTOInbornalesCJB20260727.xlsx")
 PLANO_KMZ_DEF = os.path.join(ROOT, "fuentes_y_matrices", "Registro_Pluviales_CJB_Julio_2026.kmz")
 LEYENDA_PLANO = {"Filtrante simple": 373, "Filtrante doble": 101}   # leyenda del PDF de Verasol
+CONFIRMACION = os.path.join(ROOT, "Activos", "CONFIRMACION_VERASOL_IMBORNALES.xlsx")
+RESP_OK = "Correcto como está en el Excel"
+RESP_SIMPLE = "Es filtrante simple"
+RESP_DOBLE = "Es filtrante doble"
+RESP_COORD = "Corregir coordenada"
+RESP_ELIMINAR = "Eliminar (no existe o es duplicado)"
+RESPUESTAS = [RESP_OK, RESP_SIMPLE, RESP_DOBLE, RESP_COORD, RESP_ELIMINAR]
 FECHA_LEVANTAMIENTO = "27/07/2026"
 
 TIPOS = {
@@ -122,6 +129,26 @@ def leer_levantamiento(ruta):
         puntos.append({"fila": fila, "no": no, "E": float(e), "N": float(n), "Z": float(z),
                        "tipo_original": (t or "").strip()})
     return puntos, descartadas
+
+
+def leer_confirmaciones():
+    """Respuestas ya anotadas en Activos/CONFIRMACION_VERASOL_IMBORNALES.xlsx (si existe)."""
+    if not os.path.exists(CONFIRMACION):
+        return {}
+    ws = openpyxl.load_workbook(CONFIRMACION, data_only=True)["Confirmación"]
+    enc = {str(c.value).replace(" *", "").strip(): i for i, c in enumerate(ws[5]) if c.value}
+    out = {}
+    for r in ws.iter_rows(min_row=6, values_only=True):
+        fid = r[enc["ID"]]
+        if not fid:
+            continue
+        num = lambda v: float(str(v).replace(",", "")) if v not in (None, "") else None
+        fecha = r[enc["Fecha de confirmación"]]
+        out[fid] = {"respuesta": r[enc["Respuesta de Verasol"]] if r[enc["Respuesta de Verasol"]] in RESPUESTAS else None,
+                    "E": num(r[enc["Este corregido"]]), "N": num(r[enc["Norte corregido"]]),
+                    "comentario": r[enc["Comentario de Verasol"]],
+                    "fecha": fecha.strftime("%d/%m/%Y") if hasattr(fecha, "strftime") else (str(fecha) if fecha else None)}
+    return out
 
 
 def leer_plano_kmz(ruta):
@@ -270,6 +297,25 @@ def construir(ruta_lev, forzar_calibracion=False, ruta_kmz=PLANO_KMZ_DEF):
     if plano:
         print(f"Plano de Verasol: {len(plano)} símbolos ({dict(Counter(t for *_, t in plano))})")
 
+    respuestas = leer_confirmaciones()
+    if respuestas:
+        print(f"Confirmaciones de Verasol leídas: {sum(1 for r in respuestas.values() if r['respuesta'])}")
+
+    def ubicar(E, N):
+        P = Point(E, N)
+        hits = [claves[i] for i in arbol.query(P) if lotes[claves[i]].covers(P)]
+        hv = [h for h in hits if h in viales]
+        hl = [h for h in hits if h not in viales]
+        if hv:
+            ubic, lote, calle = "Calle", None, hv[0]
+        elif hl:
+            ubic, lote, calle = "Dentro de lote", hl[0], None
+        else:
+            dv = min((lotes[k].distance(P), k) for k in viales)
+            ubic, lote, calle = ("Calle", None, dv[1]) if dv[0] <= 15 else ("Fuera de lotes del Master Plan", None, None)
+        dl = min((lotes[k].distance(P), k) for k in no_viales)
+        return ubic, lote, calle, dl
+
     activos, vistos = [], set()
     for p in puntos:
         t_low = p["tipo_original"].lower()
@@ -278,42 +324,43 @@ def construir(ruta_lev, forzar_calibracion=False, ruta_kmz=PLANO_KMZ_DEF):
         if fid in vistos:
             fid += "B"
         vistos.add(fid)
-        P = Point(p["E"], p["N"])
-        hits = [claves[i] for i in arbol.query(P) if lotes[claves[i]].covers(P)]
-        hv = [h for h in hits if h in viales]
-        hl = [h for h in hits if h not in viales]
-        ubic, lote, calle = None, None, None
-        if hv:
-            ubic, calle = "Calle", hv[0]
-        elif hl:
-            ubic, lote = "Dentro de lote", hl[0]
-        else:
-            dv = min((lotes[k].distance(P), k) for k in viales)
-            ubic, calle = ("Calle", dv[1]) if dv[0] <= 15 else ("Fuera de lotes del Master Plan", None)
-        dl = min((lotes[k].distance(P), k) for k in no_viales)
-        obs = []
+        resp = respuestas.get(fid, {})
+        E_orig, N_orig = p["E"], p["N"]
+        coord_corregida = False
+        if resp.get("respuesta") == RESP_COORD and resp.get("E") and resp.get("N"):
+            p = dict(p, E=resp["E"], N=resp["N"])
+            coord_corregida = True
+        ubic, lote, calle, dl = ubicar(p["E"], p["N"])
+
+        pend, notas = [], []     # pend = requiere confirmación de Verasol; notas = informativas
         if t_low == "filtrant":
-            obs.append("Tipo escrito «filtrant» en el levantamiento; se asumió filtrante simple.")
+            notas.append("Tipo escrito «filtrant» en el levantamiento; se tomó como filtrante simple.")
         if t_low == "filtrantedoble":
-            obs.append("Tipo escrito «filtrantedoble»; se asumió filtrante doble.")
-        # «filtrante a» fue un error de captura (confirmado): es filtrante simple.
+            notas.append("Tipo escrito «filtrantedoble»; se tomó como filtrante doble.")
+        if t_low == "filtrante a":
+            notas.append("Anotado «filtrante a»: error de captura confirmado; es filtrante simple.")
+        if t_low not in TIPOS:
+            pend.append(f"Tipo «{p['tipo_original']}» no reconocido.")
+        if fid.endswith("B"):
+            notas.append(f"Número {p['no']} repetido en el levantamiento; se asignó {fid}.")
         if tipo == "Cisterna (PG)":
-            obs.append("No figura en el plano de Verasol; parece un punto de referencia (cisterna), no un imbornal.")
-        tipo_plano, dist_plano = None, None
+            pend.append("No figura en el plano; parece un punto de referencia (cisterna), no un imbornal. "
+                        "¿Se incluye en el inventario?")
+        tipo_plano = None
         if plano:
-            d_min, t_min = min((math.hypot(p["E"] - e, p["N"] - n), t) for e, n, t in plano)
-            dist_plano = round(d_min, 1)
+            d_min, t_min = min((math.hypot(E_orig - e, N_orig - n), t) for e, n, t in plano)
             if d_min <= 6:
                 tipo_plano = t_min
                 if t_min != tipo and tipo != "Cisterna (PG)":
-                    obs.append(f"En el plano de Verasol aparece como {t_min.lower()} y en el Excel como "
-                               f"{tipo.lower()}: confirmar.")
+                    pend.append(f"Tipo distinto: el Excel dice {tipo.lower()} y el plano {t_min.lower()}. "
+                                "¿Cuál es el correcto?")
             elif tipo != "Cisterna (PG)":
-                obs.append(f"Sin símbolo en el plano de Verasol (el más cercano está a {d_min:.0f} m): confirmar.")
-        if t_low not in TIPOS:
-            obs.append(f"Tipo «{p['tipo_original']}» no reconocido; se asumió filtrante simple.")
-        if fid.endswith("B"):
-            obs.append(f"Número {p['no']} repetido en el levantamiento; se asignó {fid}.")
+                pend.append(f"No aparece en el plano (el símbolo más cercano está a {d_min:.0f} m). "
+                            "¿Existe y la coordenada es correcta?")
+        ubic_orig = ubicar(E_orig, N_orig)[0] if coord_corregida else ubic
+        if ubic_orig == "Fuera de lotes del Master Plan":
+            pend.append("Queda fuera de los lotes del Master Plan. ¿Pertenece a CJB y la coordenada es correcta?")
+
         x, y = geo.a_svg(p["E"], p["N"])
         lon, lat = a_geo.transform(p["E"], p["N"])
         activos.append({
@@ -326,25 +373,60 @@ def construir(ruta_lev, forzar_calibracion=False, ruta_kmz=PLANO_KMZ_DEF):
             "lote_id": lote, "lote_nombre": filas[lote]["nombre"] if lote else None,
             "lote_tipo": filas[lote]["tipo"] if lote else None,
             "lote_frente_id": dl[1], "lote_frente_dist_m": round(dl[0], 1),
-            "tipo_en_plano": tipo_plano, "observaciones": obs,
+            "tipo_en_plano": tipo_plano, "pendientes": pend, "observaciones": notas,
+            "_coord_original": (round(E_orig, 3), round(N_orig, 3)), "_coord_corregida": coord_corregida,
         })
 
     grupos = defaultdict(list)
     for a in activos:
-        grupos[(round(a["utm_e"], 1), round(a["utm_n"], 1))].append(a)
+        grupos[a["_coord_original"][0] // 0.1, a["_coord_original"][1] // 0.1].append(a)
     for g in grupos.values():
         if len(g) > 1:
             for a in g:
                 otros = ", ".join(o["id"] for o in g if o is not a)
-                a["observaciones"].append(f"Misma coordenada que {otros}: posible registro duplicado.")
+                a["pendientes"].append(f"Misma coordenada que {otros}: ¿son dos imbornales o un registro "
+                                       "duplicado? (si es duplicado, marque «Eliminar» en uno de los dos)")
+
+    # Aplicar las respuestas de Verasol
+    confirmados, en_validacion, eliminados = [], [], []
+    for a in activos:
+        a["motivos_validacion"] = list(a["pendientes"])
+        r = respuestas.get(a["id"], {})
+        resp = r.get("respuesta")
+        if resp and a["pendientes"]:
+            nota = f"Confirmado por Verasol{(' el ' + r['fecha']) if r.get('fecha') else ''}: {resp.lower()}"
+            if r.get("comentario"):
+                nota += f" ({r['comentario']})"
+            if resp == RESP_ELIMINAR:
+                a["observaciones"].append(nota)
+                eliminados.append(a)
+                continue
+            if resp in (RESP_SIMPLE, RESP_DOBLE):
+                a["tipo"] = "Filtrante simple" if resp == RESP_SIMPLE else "Filtrante doble"
+                a["subcategoria"] = SUB_ID[a["tipo"]]
+            if resp == RESP_COORD and not a["_coord_corregida"]:
+                a["pendientes"] = ["Se indicó «Corregir coordenada» pero faltan el Este y el Norte corregidos."]
+            else:
+                a["pendientes"] = []
+                a["observaciones"].append(nota)
+        (en_validacion if a["pendientes"] else confirmados).append(a)
+    for a in activos:
+        a.pop("_coord_original", None)
+        a.pop("_coord_corregida", None)
 
     resumen = {}
     for k in claves:
-        dentro = [a["id"] for a in activos if a["lote_id"] == k or a["calle_id"] == k]
-        frente = [] if k in viales else [a["id"] for a in activos if a["ubicacion"] == "Calle"
+        dentro = [a["id"] for a in confirmados if a["lote_id"] == k or a["calle_id"] == k]
+        frente = [] if k in viales else [a["id"] for a in confirmados if a["ubicacion"] == "Calle"
                                          and a["lote_frente_id"] == k and a["lote_frente_dist_m"] <= 20]
         if dentro or frente:
             resumen[k] = {"dentro": dentro, "frente": frente}
+
+    # Solo se ofrecen en el mapa las subcategorías que tienen activos confirmados
+    presentes = {a["subcategoria"] for a in confirmados}
+    categorias = json.loads(json.dumps(CATEGORIAS))
+    for c in categorias:
+        c["subcategorias"] = [s for s in c["subcategorias"] if s["id"] in presentes or c["id"] != "drenaje_pluvial"]
 
     vx, vy, vw, vh = viewbox
     (e1, n1), (e2, n2) = geo.a_utm(vx, vy), geo.a_utm(vx + vw, vy + vh)
@@ -373,15 +455,19 @@ def construir(ruta_lev, forzar_calibracion=False, ruta_kmz=PLANO_KMZ_DEF):
             "satelite": sat},
         "plano_verasol": None if not plano else {
             "simbolos": dict(Counter(t for *_, t in plano)), "leyenda": LEYENDA_PLANO},
-        "categorias": CATEGORIAS, "activos": activos,
+        "categorias": categorias, "activos": confirmados,
+        "en_validacion": [{k: a[k] for k in ("id", "tipo", "calle", "utm_e", "utm_n", "lat", "lon",
+                                             "tipo_en_plano", "pendientes")} for a in en_validacion],
+        "eliminados": [{k: a[k] for k in ("id", "tipo", "utm_e", "utm_n", "observaciones")} for a in eliminados],
         "resumen_por_lote": resumen, "filas_descartadas": descartadas,
     }
     os.makedirs(os.path.dirname(JSON_OUT), exist_ok=True)
     with open(JSON_OUT, "w", encoding="utf-8") as f:
         json.dump(salida, f, ensure_ascii=False, separators=(",", ":"))
-    print(f"Capa: {JSON_OUT}  ({len(activos)} activos)")
-    print("  Tipos:", dict(Counter(a["tipo"] for a in activos)))
-    print("  Ubicación:", dict(Counter(a["ubicacion"] for a in activos)))
+    print(f"Capa: {JSON_OUT}  ({len(confirmados)} en el mapa · {len(en_validacion)} en validación · "
+          f"{len(eliminados)} eliminados)")
+    print("  Tipos en el mapa:", dict(Counter(a["tipo"] for a in confirmados)))
+    salida["_todos"] = activos          # para los Excel (no se guarda en el JSON)
     return salida
 
 
@@ -513,39 +599,21 @@ def excel_inventario(datos):
     rs.cell(row=rt, column=1).fill = fill(CARD)
     rs.freeze_panes = "B6"
 
-    # --- Por revisar ---------------------------------------------------------
-    pr = wb.create_sheet("Por revisar con Verasol")
-    banda(pr, 4, "Datos a confirmar con Verasol",
-          "Diferencias encontradas al procesar el levantamiento; ninguna impide usar el inventario")
-    encabezado(pr, 5, ["ID", "Fila en el Excel original", "Situación", "Coordenada (UTM E / N)"])
-    for col, w in zip("ABCD", (12, 14, 70, 26)):
+    # --- En validación -------------------------------------------------------
+    pr = wb.create_sheet("En validación")
+    banda(pr, 5, "Imbornales en validación con Verasol",
+          "No se muestran en el mapa ni se cuentan en el inventario hasta que Verasol los confirme "
+          "(archivo CONFIRMACION_VERASOL_IMBORNALES.xlsx)")
+    encabezado(pr, 5, ["ID", "Tipo en Excel", "Tipo en plano", "Calle", "Qué hay que confirmar"])
+    for col, w in zip("ABCDE", (12, 18, 18, 30, 80)):
         pr.column_dimensions[col].width = w
-    r = 6
-    for a in activos:
-        for o in a["observaciones"]:
-            for j, v in enumerate([a["id"], a["fila_excel"], o, f"{a['utm_e']:.2f} / {a['utm_n']:.2f}"], start=1):
-                c = pr.cell(row=r, column=j, value=v)
-                c.font = font(9.5)
-                c.border = linea
-                c.alignment = Alignment(wrap_text=True, vertical="center")
-            r += 1
-    for d in datos["filas_descartadas"]:
-        for j, v in enumerate(["—", d["fila_excel"], d["motivo"] + " Valores: " + ", ".join(d["valores"]), "—"], 1):
+    for r, a in enumerate(sorted(datos["en_validacion"], key=lambda x: x["id"]), start=6):
+        vals = [a["id"], a["tipo"], a["tipo_en_plano"] or "Sin símbolo", a["calle"], " ".join(a["pendientes"])]
+        for j, v in enumerate(vals, start=1):
             c = pr.cell(row=r, column=j, value=v)
             c.font = font(9.5)
             c.border = linea
             c.alignment = Alignment(wrap_text=True, vertical="center")
-        r += 1
-    for a in activos:
-        if a["ubicacion"] == "Fuera de lotes del Master Plan":
-            for j, v in enumerate([a["id"], a["fila_excel"], "El punto queda fuera de los lotes del Master Plan; "
-                                   "verificar si pertenece a CJB o si la coordenada es correcta.",
-                                   f"{a['utm_e']:.2f} / {a['utm_n']:.2f}"], start=1):
-                c = pr.cell(row=r, column=j, value=v)
-                c.font = font(9.5)
-                c.border = linea
-                c.alignment = Alignment(wrap_text=True, vertical="center")
-            r += 1
 
     # --- Metodología -----------------------------------------------------------
     me = wb.create_sheet("Metodología")
@@ -554,8 +622,11 @@ def excel_inventario(datos):
     me.column_dimensions["B"].width = 95
     g = datos["meta"]["georreferencia_master_plan"]
     cuenta = Counter(a["tipo"] for a in activos)
-    conteos = (f"Excel normalizado: {cuenta.get('Filtrante simple', 0)} simples, {cuenta.get('Filtrante doble', 0)} "
-               f"dobles y {cuenta.get('Cisterna (PG)', 0)} cisterna.")
+    todos = Counter(a["tipo"] for a in datos["_todos"])
+    conteos = (f"Excel normalizado: {todos.get('Filtrante simple', 0)} simples, {todos.get('Filtrante doble', 0)} "
+               f"dobles y {todos.get('Cisterna (PG)', 0)} cisterna. En el inventario (confirmados): "
+               f"{cuenta.get('Filtrante simple', 0)} simples y {cuenta.get('Filtrante doble', 0)} dobles; "
+               f"{len(datos['en_validacion'])} en validación y {len(datos['eliminados'])} eliminados.")
     pv = datos.get("plano_verasol")
     if pv:
         conteos += (f" Símbolos dibujados en el plano: {pv['simbolos'].get('Filtrante simple', 0)} simples y "
@@ -577,7 +648,8 @@ def excel_inventario(datos):
                                     "cercano»: el lote no vial más próximo y su distancia."),
         ("Cotejo con el plano", "Cada punto del Excel se comparó con el símbolo más cercano del plano de "
                                 "Verasol (KMZ exportado del DWG): azul = registro simple, rojo = registro doble. "
-                                "Las diferencias se listan en la hoja «Por revisar con Verasol»."),
+                                "Los puntos con diferencias quedan «en validación»: no se muestran en el mapa hasta que Verasol "
+                                "responda en CONFIRMACION_VERASOL_IMBORNALES.xlsx y se vuelva a ejecutar el script."),
         ("Conteos", conteos),
         ("Alcance", "El levantamiento cubre los imbornales de calles y áreas públicas; no incluye los filtrantes "
                     "internos de residenciales y plazas comerciales."),
@@ -604,8 +676,119 @@ def excel_inventario(datos):
     print(f"Inventario: {XLSX_OUT}")
 
 
+def excel_confirmacion(datos):
+    """Tabla para confirmar con Verasol. Conserva las respuestas ya anotadas."""
+    from openpyxl.formatting.rule import FormulaRule
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Protection, Side
+    from openpyxl.utils import get_column_letter
+    from openpyxl.workbook.defined_name import DefinedName
+    from openpyxl.worksheet.datavalidation import DataValidation
+
+    previas = leer_confirmaciones()
+    filas = [a for a in datos["_todos"] if a["motivos_validacion"]]
+    filas.sort(key=lambda a: a["id"])
+    F, FS = "Segoe UI", "Segoe UI Semibold"
+    NAVY, RED, SLATE, LINE = "1B3A6B", "E63946", "64748B", "E2E8F0"
+    fill = lambda c: PatternFill("solid", fgColor=c, bgColor=c)
+    font = lambda sz=10, color="0F172A", name=F, italic=False, u=None: Font(name=name, size=sz, color=color,
+                                                                          italic=italic, underline=u)
+    cols = [("ID", 10, False), ("No. en Excel de Verasol", 10, False), ("Fila del Excel", 8, False),
+            ("Calle / ubicación", 26, False), ("Tipo en Excel", 15, False), ("Tipo en plano", 15, False),
+            ("Qué hay que confirmar", 52, False), ("UTM Este", 12, False), ("UTM Norte", 12, False),
+            ("Ver en Google Maps", 11, False), ("Respuesta de Verasol", 26, True), ("Este corregido", 12, True),
+            ("Norte corregido", 12, True), ("Comentario de Verasol", 34, True), ("Fecha de confirmación", 13, True)]
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Confirmación"
+    ult = len(cols)
+    for r in (1, 2):
+        for c in range(1, ult + 1):
+            ws.cell(row=r, column=c).fill = fill(NAVY)
+    for c in range(1, ult + 1):
+        ws.cell(row=3, column=c).fill = fill(RED)
+    ws["A1"] = "Confirmación de imbornales con Verasol · Ciudad Juan Bosch"
+    ws["A1"].font = font(15, "FFFFFF", FS)
+    ws["A2"] = (f"Levantamiento del {FECHA_LEVANTAMIENTO} · Estos puntos no se muestran en el mapa hasta que se "
+                "confirmen · Complete las columnas en amarillo")
+    ws["A2"].font = font(9, "C7D2FE")
+    ws.row_dimensions[1].height, ws.row_dimensions[2].height, ws.row_dimensions[3].height = 28, 20, 3
+    ws["A4"] = ("Respuesta: elija de la lista. Si es «Corregir coordenada», escriba el Este y el Norte corregidos "
+                "(UTM 19N). Para un duplicado, marque «Eliminar» en uno de los dos y «Correcto» en el otro.")
+    ws["A4"].font = font(9, SLATE, italic=True)
+    ws.sheet_view.showGridLines = False
+    for j, (t, w, editable) in enumerate(cols, start=1):
+        c = ws.cell(row=5, column=j, value=t + (" *" if t == "Respuesta de Verasol" else ""))
+        c.font = font(9.5, "FFFFFF", FS)
+        c.fill = fill("B45309" if editable else NAVY)
+        c.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        ws.column_dimensions[get_column_letter(j)].width = w
+    ws.row_dimensions[5].height = 34
+    for i, a in enumerate(filas):
+        r = 6 + i
+        prev = previas.get(a["id"], {})
+        vals = [a["id"], a["no_levantamiento"], a["fila_excel"], a["calle"] or a["ubicacion"], a["tipo_original"],
+                a["tipo_en_plano"] or "Sin símbolo", " ".join(a["motivos_validacion"]), a["utm_e"], a["utm_n"],
+                "Ver ↗", prev.get("respuesta"), prev.get("E"), prev.get("N"), prev.get("comentario"),
+                prev.get("fecha")]
+        for j, v in enumerate(vals, start=1):
+            c = ws.cell(row=r, column=j, value=v)
+            c.font = font(9.5)
+            c.border = Border(bottom=Side(style="thin", color=LINE), right=Side(style="thin", color=LINE))
+            c.alignment = Alignment(vertical="center", wrap_text=j in (4, 7, 14))
+            if cols[j - 1][2]:
+                c.fill = fill("FFF8E1")
+                c.protection = Protection(locked=False)
+        for j in (8, 9, 12, 13):
+            ws.cell(row=r, column=j).number_format = "0.000"
+        link = ws.cell(row=r, column=10)
+        link.hyperlink = f"https://www.google.com/maps?q={a['lat']},{a['lon']}"
+        link.font = font(9.5, "1D4ED8", u="single")
+        ws.row_dimensions[r].height = 42
+    fin = 5 + max(len(filas), 1)
+    lista = wb.create_sheet("Listas")
+    for i, v in enumerate(RESPUESTAS, start=1):
+        lista.cell(row=i, column=1, value=v)
+    lista.sheet_state = "hidden"
+    wb.defined_names["lst_respuesta"] = DefinedName("lst_respuesta", attr_text=f"Listas!$A$1:$A${len(RESPUESTAS)}")
+    dv = DataValidation(type="list", formula1="=lst_respuesta", allow_blank=True, showErrorMessage=True,
+                        errorTitle="Respuesta no válida", error="Elija una respuesta de la lista.")
+    dv.add(f"K6:K{fin}")
+    ws.add_data_validation(dv)
+    for col in "LM":
+        d2 = DataValidation(type="decimal", operator="greaterThan", formula1="0", allow_blank=True,
+                            showErrorMessage=True, error="Escriba la coordenada UTM en metros.")
+        d2.add(f"{col}6:{col}{fin}")
+        ws.add_data_validation(d2)
+    d3 = DataValidation(type="date", operator="greaterThan", formula1="1", allow_blank=True)
+    d3.add(f"O6:O{fin}")
+    ws.add_data_validation(d3)
+    for r in range(6, fin + 1):
+        ws.cell(row=r, column=15).number_format = "dd/mm/yyyy"
+    ws.conditional_formatting.add(f"A6:J{fin}", FormulaRule(formula=['$K6<>""'], fill=fill("DCFCE7")))
+    ws.conditional_formatting.add(f"L6:M{fin}", FormulaRule(
+        formula=[f'AND($K6="{RESP_COORD}",L6="")'], fill=fill("FED7AA")))
+    ws["G4"] = f'=COUNTA(K6:K{fin})&" de "&COUNTA(A6:A{fin})&" respondidos"'
+    ws["G4"].font = font(10, NAVY, FS)
+    ws["G4"].alignment = Alignment(horizontal="right")
+    ws.freeze_panes = "B6"
+    ws.auto_filter.ref = f"A5:{get_column_letter(ult)}{fin}"
+    ws.page_setup.orientation = "landscape"
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    ws.protection.sheet = True
+    ws.protection.autoFilter = False
+    ws.protection.sort = False
+    ws.protection.formatColumns = False
+    ws.protection.formatRows = False
+    os.makedirs(os.path.dirname(CONFIRMACION), exist_ok=True)
+    wb.save(CONFIRMACION)
+    print(f"Confirmación: {CONFIRMACION}  ({len(filas)} puntos, {sum(1 for a in filas if previas.get(a['id'], {}).get('respuesta'))} respondidos)")
+
+
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     ruta = args[0] if args else LEVANTAMIENTO_DEF
     datos = construir(ruta, forzar_calibracion="--recalibrar" in sys.argv)
     excel_inventario(datos)
+    excel_confirmacion(datos)
