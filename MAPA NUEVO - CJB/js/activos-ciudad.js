@@ -464,6 +464,7 @@
                         <dt>UTM 19N</dt><dd>E ${a.utm_e.toFixed(2)} · N ${a.utm_n.toFixed(2)}</dd>
                         <dt>Lat / Lon</dt><dd>${a.lat.toFixed(6)}, ${a.lon.toFixed(6)}</dd>
                         <dt>Levantamiento</dt><dd>No. ${a.no_levantamiento} · tipo anotado «${this.esc(a.tipo_original)}»</dd>
+                        ${'tipo_en_plano' in a ? `<dt>Plano de Verasol</dt><dd>${a.tipo_en_plano ? this.esc(a.tipo_en_plano) : 'Sin símbolo en el plano'}</dd>` : ''}
                     </dl>
                     <a class="act-btn act-btn-link" href="${gmaps}" target="_blank" rel="noopener">Abrir en Google Maps ↗</a>
                 </div>

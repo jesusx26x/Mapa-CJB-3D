@@ -46,7 +46,7 @@ echo ============================================================
 echo.
 
 REM Inicia navegador apuntando de forma segura a 127.0.0.1
-start "" cmd /c "timeout /t 1 /nobreak >nul && start http://127.0.0.1:9000/Presentacion_Mapas_VBC.html"
+start "" cmd /c "timeout /t 1 /nobreak >nul && start http://127.0.0.1:9000/MAPA%%20NUEVO%%20-%%20CJB/index.html"
 
 REM Servidor Python optimizado y multihilo para Evitar ERR_EMPTY_RESPONSE
 python server_vbc.py

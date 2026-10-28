@@ -47,23 +47,24 @@ CSV_PATH = os.path.join(ROOT, "Datos de CJB.csv")
 JSON_OUT = os.path.join(CJB, "data", "activos_cjb.json")
 XLSX_OUT = os.path.join(ROOT, "Activos", "INVENTARIO_ACTIVOS_CJB_IMBORNALES.xlsx")
 LEVANTAMIENTO_DEF = os.path.join(ROOT, "fuentes_y_matrices", "LVTOInbornalesCJB20260727.xlsx")
+PLANO_KMZ_DEF = os.path.join(ROOT, "fuentes_y_matrices", "Registro_Pluviales_CJB_Julio_2026.kmz")
+LEYENDA_PLANO = {"Filtrante simple": 373, "Filtrante doble": 101}   # leyenda del PDF de Verasol
 FECHA_LEVANTAMIENTO = "27/07/2026"
 
 TIPOS = {
     "filtrante": "Filtrante simple", "filtrant": "Filtrante simple",
     "filtrante doble": "Filtrante doble", "filtrantedoble": "Filtrante doble",
-    "filtrante a": "Filtrante tipo «A» (por confirmar)", "pg cisterna": "Cisterna (PG)",
+    "filtrante a": "Filtrante simple", "pg cisterna": "Cisterna (PG)",
 }
 SUBCATS = [
     ("filtrante_simple", "Filtrante simple", "#0ea5e9"),
     ("filtrante_doble", "Filtrante doble", "#6366f1"),
-    ("filtrante_a", "Filtrante tipo «A» (por confirmar)", "#f59e0b"),
     ("cisterna", "Cisterna (PG)", "#14b8a6"),
 ]
 SUB_ID = {n: i for i, n, _ in SUBCATS}
 CATEGORIAS = [
     {"id": "drenaje_pluvial", "nombre": "Drenaje pluvial", "icono": "💧", "estado": "levantado",
-     "fuente": f"Levantamiento de imbornales de Verasol ({FECHA_LEVANTAMIENTO})",
+     "fuente": f"Levantamiento de imbornales de Verasol ({FECHA_LEVANTAMIENTO}): Excel, plano DWG/PDF y KMZ",
      "subcategorias": [{"id": i, "nombre": n, "color": c} for i, n, c in SUBCATS]},
     {"id": "charcos", "nombre": "Charcos / puntos de acumulación", "icono": "🌊", "estado": "pendiente",
      "fuente": "Análisis técnico de la Dirección Técnica (en preparación)", "subcategorias": []},
@@ -121,6 +122,41 @@ def leer_levantamiento(ruta):
         puntos.append({"fila": fila, "no": no, "E": float(e), "N": float(n), "Z": float(z),
                        "tipo_original": (t or "").strip()})
     return puntos, descartadas
+
+
+def leer_plano_kmz(ruta):
+    """Símbolos del plano de Verasol (KMZ exportado del DWG): círculos azules = registro simple,
+    rojos = registro doble. Devuelve [(E, N, tipo)] en UTM 19N, sin duplicar relleno y contorno."""
+    import zipfile
+    import xml.etree.ElementTree as ET
+    if not ruta or not os.path.exists(ruta):
+        return None
+    colores = {"fffe0000": "Filtrante simple", "ff130ff3": "Filtrante doble"}
+    a_utm = Transformer.from_crs("EPSG:4326", "EPSG:32619", always_xy=True)
+    K = "{http://earth.google.com/kml/2.0}"
+    simbolos = []
+    with zipfile.ZipFile(ruta) as z:
+        kml = next(n for n in z.namelist() if n.lower().endswith(".kml"))
+        with z.open(kml) as f:
+            for _, el in ET.iterparse(f, events=("end",)):
+                if el.tag != K + "Placemark":
+                    continue
+                nombre = el.findtext(K + "name") or ""
+                if nombre.startswith(("Hatch", "Circle")):
+                    cols = {c.text for c in el.iter(K + "color")}
+                    if len(cols) == 1 and next(iter(cols)) in colores:
+                        pts = [tuple(map(float, t.split(",")[:2]))
+                               for c in el.iter(K + "coordinates") for t in c.text.split()]
+                        if pts:
+                            xs, ys = zip(*pts)
+                            E, N = a_utm.transform(sum(xs) / len(xs), sum(ys) / len(ys))
+                            simbolos.append((E, N, colores[next(iter(cols))]))
+                el.clear()
+    unicos = []
+    for E, N, t in simbolos:
+        if not any(t == u[2] and math.hypot(E - u[0], N - u[1]) < 2.5 for u in unicos):
+            unicos.append((E, N, t))
+    return unicos
 
 
 # --------------------------------------------------------------------------
@@ -210,7 +246,7 @@ def recalibrar(lotes_svg, viales, puntos):
 # --------------------------------------------------------------------------
 # Construcción de la capa
 # --------------------------------------------------------------------------
-def construir(ruta_lev, forzar_calibracion=False):
+def construir(ruta_lev, forzar_calibracion=False, ruta_kmz=PLANO_KMZ_DEF):
     filas = leer_csv()
     lotes_svg, viewbox = leer_lotes_svg()
     viales = {k for k, r in filas.items()
@@ -230,6 +266,9 @@ def construir(ruta_lev, forzar_calibracion=False):
     arbol = STRtree([lotes[k] for k in claves])
     no_viales = [k for k in claves if k not in viales]
     a_geo = Transformer.from_crs("EPSG:32619", "EPSG:4326", always_xy=True)
+    plano = leer_plano_kmz(ruta_kmz)
+    if plano:
+        print(f"Plano de Verasol: {len(plano)} símbolos ({dict(Counter(t for *_, t in plano))})")
 
     activos, vistos = [], set()
     for p in puntos:
@@ -257,8 +296,20 @@ def construir(ruta_lev, forzar_calibracion=False):
             obs.append("Tipo escrito «filtrant» en el levantamiento; se asumió filtrante simple.")
         if t_low == "filtrantedoble":
             obs.append("Tipo escrito «filtrantedoble»; se asumió filtrante doble.")
-        if t_low == "filtrante a":
-            obs.append("Tipo «filtrante a» sin definición: confirmar con Verasol.")
+        # «filtrante a» fue un error de captura (confirmado): es filtrante simple.
+        if tipo == "Cisterna (PG)":
+            obs.append("No figura en el plano de Verasol; parece un punto de referencia (cisterna), no un imbornal.")
+        tipo_plano, dist_plano = None, None
+        if plano:
+            d_min, t_min = min((math.hypot(p["E"] - e, p["N"] - n), t) for e, n, t in plano)
+            dist_plano = round(d_min, 1)
+            if d_min <= 6:
+                tipo_plano = t_min
+                if t_min != tipo and tipo != "Cisterna (PG)":
+                    obs.append(f"En el plano de Verasol aparece como {t_min.lower()} y en el Excel como "
+                               f"{tipo.lower()}: confirmar.")
+            elif tipo != "Cisterna (PG)":
+                obs.append(f"Sin símbolo en el plano de Verasol (el más cercano está a {d_min:.0f} m): confirmar.")
         if t_low not in TIPOS:
             obs.append(f"Tipo «{p['tipo_original']}» no reconocido; se asumió filtrante simple.")
         if fid.endswith("B"):
@@ -274,7 +325,8 @@ def construir(ruta_lev, forzar_calibracion=False):
             "ubicacion": ubic, "calle_id": calle, "calle": filas[calle]["nombre"] if calle else None,
             "lote_id": lote, "lote_nombre": filas[lote]["nombre"] if lote else None,
             "lote_tipo": filas[lote]["tipo"] if lote else None,
-            "lote_frente_id": dl[1], "lote_frente_dist_m": round(dl[0], 1), "observaciones": obs,
+            "lote_frente_id": dl[1], "lote_frente_dist_m": round(dl[0], 1),
+            "tipo_en_plano": tipo_plano, "observaciones": obs,
         })
 
     grupos = defaultdict(list)
@@ -319,6 +371,8 @@ def construir(ruta_lev, forzar_calibracion=False):
                 "formula": "E = E0 + s·x ; N = N0 − s·y  (x, y en unidades del SVG)",
                 "precision_estimada_m": "1–2 m en zonas urbanizadas"},
             "satelite": sat},
+        "plano_verasol": None if not plano else {
+            "simbolos": dict(Counter(t for *_, t in plano)), "leyenda": LEYENDA_PLANO},
         "categorias": CATEGORIAS, "activos": activos,
         "resumen_por_lote": resumen, "filas_descartadas": descartadas,
     }
@@ -381,7 +435,8 @@ def excel_inventario(datos):
     cols = [("ID", 11), ("Tipo", 22), ("Ubicación", 15), ("Calle", 30), ("Lote donde está", 13),
             ("Nombre del lote", 30), ("Lote más cercano", 13), ("Distancia al lote (m)", 11),
             ("Cota (m)", 10), ("UTM Este", 13), ("UTM Norte", 13), ("Latitud", 12), ("Longitud", 12),
-            ("No. en levantamiento", 12), ("Tipo anotado", 14), ("Observaciones", 48), ("Mapa", 12)]
+            ("No. en levantamiento", 12), ("Tipo anotado", 14), ("Tipo en plano de Verasol", 16),
+            ("Observaciones", 48), ("Mapa", 12)]
     banda(ws, len(cols), "Inventario de activos de ciudad · Imbornales de Ciudad Juan Bosch",
           f"Fuente: levantamiento de Verasol ({FECHA_LEVANTAMIENTO}) · Coordenadas UTM 19N (WGS 84) · {ENTIDAD}")
     encabezado(ws, 5, [c for c, _ in cols])
@@ -391,13 +446,13 @@ def excel_inventario(datos):
         r = 6 + i
         vals = [a["id"], a["tipo"], a["ubicacion"], a["calle"], a["lote_id"], a["lote_nombre"],
                 a["lote_frente_id"], a["lote_frente_dist_m"], a["cota"], a["utm_e"], a["utm_n"],
-                a["lat"], a["lon"], a["no_levantamiento"], a["tipo_original"],
+                a["lat"], a["lon"], a["no_levantamiento"], a["tipo_original"], a.get("tipo_en_plano") or "—",
                 " ".join(a["observaciones"]) or None, "Ver ↗"]
         for j, v in enumerate(vals, start=1):
             c = ws.cell(row=r, column=j, value=v)
             c.font = font(9.5)
             c.border = linea
-            c.alignment = Alignment(vertical="center", wrap_text=j in (4, 6, 16))
+            c.alignment = Alignment(vertical="center", wrap_text=j in (4, 6, 17))
             if i % 2:
                 c.fill = fill("FAFBFD")
         ws.cell(row=r, column=8).number_format = "0.0"
@@ -406,18 +461,18 @@ def excel_inventario(datos):
             ws.cell(row=r, column=j).number_format = "0.000"
         for j in (12, 13):
             ws.cell(row=r, column=j).number_format = "0.000000"
-        link = ws.cell(row=r, column=17)
+        link = ws.cell(row=r, column=18)
         link.hyperlink = f"https://www.google.com/maps?q={a['lat']},{a['lon']}"
         link.font = font(9.5, "1D4ED8", u="single")
     ult = 5 + len(activos)
     ws.freeze_panes = "B6"
     ws.auto_filter.ref = f"A5:{get_column_letter(len(cols))}{ult}"
     tonos = {"Filtrante simple": ("E0F2FE", "075985"), "Filtrante doble": ("E0E7FF", "3730A3"),
-             "Filtrante tipo «A» (por confirmar)": ("FEF3C7", "92400E"), "Cisterna (PG)": ("CCFBF1", "115E59")}
+             "Cisterna (PG)": ("CCFBF1", "115E59")}
     for t, (bg, fg) in tonos.items():
         ws.conditional_formatting.add(f"B6:B{ult}", FormulaRule(formula=[f'$B6="{t}"'], fill=fill(bg),
                                                                 font=Font(color=fg, bold=True)))
-    ws.conditional_formatting.add(f"P6:P{ult}", FormulaRule(formula=['LEN($P6)>0'], fill=fill("FFF7ED")))
+    ws.conditional_formatting.add(f"Q6:Q{ult}", FormulaRule(formula=['LEN($Q6)>0'], fill=fill("FFF7ED")))
     ws["A4"] = (f"{len(activos)} imbornales · un clic en «Ver ↗» abre el punto en Google Maps · "
                 "las observaciones señalan datos a confirmar con Verasol")
     ws["A4"].font = font(8.5, SLATE, italic=True)
@@ -498,6 +553,14 @@ def excel_inventario(datos):
     me.column_dimensions["A"].width = 30
     me.column_dimensions["B"].width = 95
     g = datos["meta"]["georreferencia_master_plan"]
+    cuenta = Counter(a["tipo"] for a in activos)
+    conteos = (f"Excel normalizado: {cuenta.get('Filtrante simple', 0)} simples, {cuenta.get('Filtrante doble', 0)} "
+               f"dobles y {cuenta.get('Cisterna (PG)', 0)} cisterna.")
+    pv = datos.get("plano_verasol")
+    if pv:
+        conteos += (f" Símbolos dibujados en el plano: {pv['simbolos'].get('Filtrante simple', 0)} simples y "
+                    f"{pv['simbolos'].get('Filtrante doble', 0)} dobles. Leyenda del PDF: "
+                    f"{pv['leyenda']['Filtrante simple']} simples y {pv['leyenda']['Filtrante doble']} dobles.")
     textos = [
         ("Fuente de los puntos", f"Levantamiento de imbornales de Verasol del {FECHA_LEVANTAMIENTO} "
                                  "(coordenadas Norte, Este y cota)."),
@@ -512,6 +575,10 @@ def excel_inventario(datos):
         ("Ubicación de cada punto", "«Calle»: el punto cae en un lote vial del Master Plan (15-01-xx), cuyo nombre "
                                     "es la calle. «Dentro de lote»: cae dentro de un lote no vial. «Lote más "
                                     "cercano»: el lote no vial más próximo y su distancia."),
+        ("Cotejo con el plano", "Cada punto del Excel se comparó con el símbolo más cercano del plano de "
+                                "Verasol (KMZ exportado del DWG): azul = registro simple, rojo = registro doble. "
+                                "Las diferencias se listan en la hoja «Por revisar con Verasol»."),
+        ("Conteos", conteos),
         ("Alcance", "El levantamiento cubre los imbornales de calles y áreas públicas; no incluye los filtrantes "
                     "internos de residenciales y plazas comerciales."),
         ("Actualización", "Ejecutar tools/generar_activos_cjb.py con el nuevo levantamiento: regenera esta hoja y "

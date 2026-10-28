@@ -4,7 +4,7 @@
 ---
 
 ## 📌 Cómo Iniciar
-**Doble clic** en `SISTEMA_VBC.bat` → abre todo automáticamente
+**Doble clic** en `SISTEMA_VBC.bat` → inicia el servidor y abre directo el mapa de CJB
 
 ---
 
