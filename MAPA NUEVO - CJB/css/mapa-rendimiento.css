@@ -1,0 +1,40 @@
+/* ==========================================================================
+   MAPA CJB — RENDIMIENTO
+   Se carga al final para corregir reglas visuales que obligaban al navegador
+   a recalcular efectos costosos sobre todo el mapa en cada zoom o arrastre.
+   ========================================================================== */
+
+/* 1. Sombra difusa de 40 px aplicada a TODO el SVG (casi invisible: 5 % de
+      opacidad) — era la causa principal del congelamiento al desplazarse. */
+.map-container svg,
+#mapContainer svg { filter: none !important; }
+
+/* 2. Al pasar el mouse: solo trazo, sin filtro de brillo sobre el polígono. */
+.map-container svg path:hover,
+.map-container svg polygon:hover,
+#mapContainer svg .lote:hover { filter: none !important; }
+
+/* 3. Transiciones solo de color y opacidad (antes "all": al filtrar se animaban
+      a la vez todas las propiedades de cientos de lotes). */
+#mapContainer svg .lote {
+    transition: fill .2s ease, opacity .2s ease, stroke .2s ease, stroke-width .2s ease !important;
+}
+
+/* 4. Modo oportunidad: el gris ya lo da el relleno; el filtro grayscale por
+      lote era redundante y muy costoso. */
+body.opportunity-mode #mapContainer svg .lote:not(.gold-pulse) { filter: none !important; }
+
+/* 5. Mientras el mapa se mueve (arrastre o zoom):
+      · se pausan las animaciones del mapa (pulso del lote, flujos, charcos);
+      · el mapa no reacciona al paso del mouse (sin tooltips ni resaltados);
+      · los halos difuminados de los lotes (selección, modo BI) se apagan un
+        instante; el borde de color del lote seleccionado se mantiene. */
+.panel-map.mapa-moviendo #mapContainer svg *,
+.panel-map.mapa-moviendo #mapContainer svg *::before {
+    animation-play-state: paused !important;
+    pointer-events: none !important;
+}
+.panel-map.mapa-moviendo .map-tooltip { opacity: 0 !important; visibility: hidden !important; }
+.panel-map.mapa-moviendo #mapContainer svg .lote,
+.panel-map.mapa-moviendo #mapContainer svg .gold-pulse { filter: none !important; }
+.panel-map.mapa-moviendo #mapContainer { cursor: grabbing; }

@@ -27,7 +27,7 @@ body.activos-sat-on .activos-atribucion { display: flex; flex-direction: column;
 .act-sat-fecha:empty { display: none; }
 
 /* ============================================================ IMBORNALES */
-#capaActivos { filter: drop-shadow(0 1px 1.2px rgba(0, 0, 0, .45)); }
+/* Sin filtro de sombra en el grupo: los símbolos ya llevan borde blanco (más rápido al mover el mapa) */
 #capaActivos .activo-punto { cursor: pointer; transition: opacity .2s ease; }
 #capaActivos .activo-punto:hover { opacity: .8; }
 #capaActivos .activo-punto.selected { filter: drop-shadow(0 0 2px #ff1744) drop-shadow(0 0 2px #ff1744); }

@@ -22,6 +22,7 @@
             const area = document.querySelector('.panel-map');
             if (!area || !window.App || !App.Map) { setTimeout(() => this.init(), 300); return; }
             this.area = area;
+            this.rendimiento();
             this.pestanasPaneles();
             this.leyendaPlegable();
             this.botonSoloMapa();
@@ -67,12 +68,23 @@
                 if (this.usoZoomDerecho) { e.preventDefault(); this.usoZoomDerecho = false; }
             });
 
-            // Rueda: zoom hacia el cursor (reemplaza el zoom al centro)
+            // Rueda: zoom hacia el cursor (reemplaza el zoom al centro).
+            // Los eventos se acumulan y se aplican una vez por cuadro: un touchpad
+            // envía decenas por segundo y antes cada uno redibujaba el mapa completo.
+            let acum = 0, punto = null, rafRueda = 0;
             area.addEventListener('wheel', e => {
                 if (!e.target.closest('#mapContainer')) return;
                 e.preventDefault();
                 e.stopPropagation();
-                this.zoomAt(e.deltaY > 0 ? 0.9 : 1.1, e.clientX, e.clientY);
+                acum += e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1);
+                punto = [e.clientX, e.clientY];
+                if (rafRueda) return;
+                rafRueda = requestAnimationFrame(() => {
+                    rafRueda = 0;
+                    const d = Math.max(-500, Math.min(500, acum));
+                    acum = 0;
+                    if (d) this.zoomAt(Math.exp(-d * 0.0014), punto[0], punto[1]);   // 1 paso de rueda ≈ ±15 %
+                });
             }, { capture: true, passive: false });
 
             document.addEventListener('keydown', e => {
@@ -101,6 +113,37 @@
                     this.toggleSoloMapa(false);
                 }
             });
+        },
+
+        /* ------------------------------------------------ rendimiento */
+        /** Arrastre fluido: una actualización por cuadro, sin animación de retraso,
+         *  y el mapa en «modo movimiento» (sin hover ni animaciones) mientras se mueve. */
+        rendimiento() {
+            const area = this.area;
+            const cont = document.getElementById('mapContainer');
+            if (!cont || App.Map._uxRendimiento) return;
+            App.Map._uxRendimiento = true;
+            let arrastre = false, rafArr = 0, tFin = null;
+            cont.addEventListener('mousedown', e => { if (e.button === 0 || e.button === 2) arrastre = true; }, true);
+            window.addEventListener('mouseup', () => { arrastre = false; }, true);
+            window.addEventListener('blur', () => { arrastre = false; });
+            const moviendo = () => {
+                if (!area.classList.contains('mapa-moviendo')) area.classList.add('mapa-moviendo');
+                clearTimeout(tFin);
+                tFin = setTimeout(() => area.classList.remove('mapa-moviendo'), 200);
+            };
+            const orig = App.Map.updateMapTransform.bind(App.Map);
+            App.Map.updateMapTransform = function () {
+                moviendo();
+                if (!arrastre) { orig(); return; }
+                // Arrastrando: el mouse puede enviar varios eventos por cuadro → aplicar solo el último
+                if (rafArr) return;
+                rafArr = requestAnimationFrame(() => {
+                    rafArr = 0;
+                    orig();
+                    cont.style.transition = 'none';   // seguir al mouse sin retraso
+                });
+            };
         },
 
         /* ------------------------------------------------ leyenda plegable */

@@ -272,7 +272,7 @@
             img.decoding = 'async';
             const fin = ok => {
                 t.cargando = false; s.enVuelo--;
-                if (ok) { t.img = img; t.ok = true; s.okAlguna = true; this.satPintarPronto(); }
+                if (ok) { t.img = img; t.ok = true; s.okAlguna = true; s.version = (s.version || 0) + 1; this.satPintarPronto(); }
                 else { t.err = Date.now(); s.errores = (s.errores || 0) + 1; }
                 this.satBombear();
                 this.satStatus();
@@ -355,11 +355,18 @@
             if (!T) return;
             const cv = s.canvas, ctx = s.ctx;
             const W = Math.max(1, Math.round(T.r.width * T.dpr)), H = Math.max(1, Math.round(T.r.height * T.dpr));
+            // Mientras el mapa se mueve se pinta en calidad rápida; al detenerse, una pasada nítida
+            const rapido = !!cv.parentNode.classList?.contains('mapa-moviendo');
+            // Nada cambió desde el último cuadro (misma vista, mismos mosaicos): no repintar
+            const firma = `${W}|${H}|${T.a.toFixed(6)}|${T.b.toFixed(6)}|${T.c.toFixed(6)}|${T.d.toFixed(6)}|${T.e.toFixed(2)}|${T.f.toFixed(2)}|${s.version || 0}|${rapido}`;
+            if (firma === s.firma) return;
+            s.firma = firma;
+            if (rapido) { clearTimeout(s.tHQ); s.tHQ = setTimeout(() => this.satPintarPronto(), 260); }
             if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.clearRect(0, 0, W, H);
             ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
+            ctx.imageSmoothingQuality = rapido ? 'low' : 'high';
 
             // Zona visible en coordenadas del SVG
             const det = T.a * T.d - T.b * T.c;
@@ -628,6 +635,12 @@
             const ctm = this.gImb.getScreenCTM();
             this.px = (ctm && Math.hypot(ctm.a, ctm.b)) || 1;
             const px = this.px;
+            // Solo se desplazó (misma escala): no hace falta redimensionar símbolos
+            if (!inmediato && this._pxUlt && Math.abs(px - this._pxUlt) / px < 1e-4) {
+                if (this.state.capas.satelite) this.satPintarPronto();
+                return;
+            }
+            this._pxUlt = px;
             // Tamaño en pantalla: crece suave con el zoom (7 px en la vista general → 18 px de cerca)
             const tamPx = Math.min(Math.max(7 * Math.pow(px / 0.65, 0.5), 7), 18);
             const enFondo = this.gImb.classList.contains('en-segundo-plano');
