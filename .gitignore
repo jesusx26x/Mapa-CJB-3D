@@ -43,3 +43,8 @@ SOLICITUD_*
 MATRIZ_GENERAL_*
 
 
+
+# Charcos: análisis de la Dirección Técnica (señala residenciales y plazas; no publicar)
+Activos/ANALISIS_CHARCOS_CJB*.xlsx
+MAPA NUEVO - CJB/data/charcos_cjb.json
+tools/__pycache__/

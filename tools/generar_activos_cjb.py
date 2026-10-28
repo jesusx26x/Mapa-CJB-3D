@@ -56,6 +56,15 @@ RESP_DOBLE = "Es filtrante doble"
 RESP_COORD = "Corregir coordenada"
 RESP_ELIMINAR = "Eliminar (no existe o es duplicado)"
 RESPUESTAS = [RESP_OK, RESP_SIMPLE, RESP_DOBLE, RESP_COORD, RESP_ELIMINAR]
+# Charcos: la Dirección Técnica llena la plantilla y la guarda con este nombre.
+# Tanto el Excel lleno como la capa resultante quedan FUERA del repositorio público (.gitignore).
+CHARCOS_XLSX = os.path.join(ROOT, "Activos", "ANALISIS_CHARCOS_CJB.xlsx")
+CHARCOS_JSON = os.path.join(CJB, "data", "charcos_cjb.json")
+CHARCOS_CAT = {"id": "charcos", "nombre": "Charcos / puntos de acumulación", "icono": "🌊", "estado": "levantado",
+               "fuente": "Análisis técnico de la Dirección Técnica",
+               "subcategorias": [{"id": "rojo", "nombre": "Muy crítico", "color": "#dc2626"},
+                                 {"id": "amarillo", "nombre": "Intermedio", "color": "#f59e0b"},
+                                 {"id": "verde", "nombre": "Menor", "color": "#16a34a"}]}
 FECHA_LEVANTAMIENTO = "27/07/2026"
 
 TIPOS = {
@@ -431,14 +440,28 @@ def construir(ruta_lev, forzar_calibracion=False, ruta_kmz=PLANO_KMZ_DEF):
     vx, vy, vw, vh = viewbox
     (e1, n1), (e2, n2) = geo.a_utm(vx, vy), geo.a_utm(vx + vw, vy + vh)
     xmin, xmax, ymin, ymax = min(e1, e2), max(e1, e2), min(n1, n2), max(n1, n2)
-    alto = 4096
-    ancho = round(alto * (xmax - xmin) / (ymax - ymin))
+    # Transformación afín lon/lat → SVG (en 4–5 km el error frente a la proyección exacta es < 0.1 m).
+    # La usa el visor para colocar los mosaicos (tiles) en caché de Esri, que están en Web Mercator.
+    a_lonlat = Transformer.from_crs("EPSG:32619", "EPSG:4326", always_xy=True)
+    muestras = []
+    for fx in np.linspace(0, 1, 7):
+        for fy in np.linspace(0, 1, 7):
+            x, y = vx + fx * vw, vy + fy * vh
+            lon, lat = a_lonlat.transform(*geo.a_utm(x, y))
+            muestras.append((lon, lat, x, y))
+    M = np.array([[lo, la, 1] for lo, la, _, _ in muestras])
+    cx, *_ = np.linalg.lstsq(M, np.array([m[2] for m in muestras]), rcond=None)
+    cy, *_ = np.linalg.lstsq(M, np.array([m[3] for m in muestras]), rcond=None)
+    resid = max(abs(M @ cx - np.array([m[2] for m in muestras])).max(),
+                abs(M @ cy - np.array([m[3] for m in muestras])).max()) * geo.s
+    print(f"  Afín lon/lat→SVG: error máximo {resid:.3f} m")
     sat = {
         "bbox_utm": [round(xmin, 2), round(ymin, 2), round(xmax, 2), round(ymax, 2)],
         "svg_rect": [vx, vy, vw, vh],
-        "url": ("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export"
-                f"?bbox={xmin:.2f},{ymin:.2f},{xmax:.2f},{ymax:.2f}&bboxSR=32619&imageSR=32619"
-                f"&size={ancho},{alto}&format=jpg&f=image"),
+        "tiles_url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        "zooms": [15, 16, 17, 18, 19],
+        "lonlat_a_svg": [float(v) for v in (*cx, *cy)],
+        "m_por_unidad_svg": round(geo.s, 5),
         "atribucion": SAT_ATRIB,
     }
     salida = {
@@ -461,6 +484,7 @@ def construir(ruta_lev, forzar_calibracion=False, ruta_kmz=PLANO_KMZ_DEF):
         "eliminados": [{k: a[k] for k in ("id", "tipo", "utm_e", "utm_n", "observaciones")} for a in eliminados],
         "resumen_por_lote": resumen, "filas_descartadas": descartadas,
     }
+    construir_charcos(geo, ubicar, filas, confirmados)
     os.makedirs(os.path.dirname(JSON_OUT), exist_ok=True)
     with open(JSON_OUT, "w", encoding="utf-8") as f:
         json.dump(salida, f, ensure_ascii=False, separators=(",", ":"))
@@ -469,6 +493,87 @@ def construir(ruta_lev, forzar_calibracion=False, ruta_kmz=PLANO_KMZ_DEF):
     print("  Tipos en el mapa:", dict(Counter(a["tipo"] for a in confirmados)))
     salida["_todos"] = activos          # para los Excel (no se guarda en el JSON)
     return salida
+
+
+# --------------------------------------------------------------------------
+# Charcos (análisis de la Dirección Técnica)
+# --------------------------------------------------------------------------
+def _coordenadas(texto):
+    """Acepta «18.494633, -69.746710» (Google Maps), «-69.74, 18.49» o UTM «421172.8, 2045074.2»."""
+    nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", str(texto or "").replace(",", " , ").replace(" , ", " "))]
+    if len(nums) < 2:
+        return None
+    a, b = nums[0], nums[1]
+    if abs(a) > 1000 and abs(b) > 1000:
+        e, n = (a, b) if a < b else (b, a)
+        return "utm", e, n
+    lat, lon = (a, b) if abs(a) < abs(b) else (b, a)
+    if not (17 < lat < 20 and -72 < lon < -68):
+        return None
+    return "geo", lon, lat
+
+
+def construir_charcos(geo, ubicar, filas, imbornales):
+    if not os.path.exists(CHARCOS_XLSX):
+        if os.path.exists(CHARCOS_JSON):      # sin análisis de charcos: no dejar una capa vieja
+            os.remove(CHARCOS_JSON)
+        return
+    ws = openpyxl.load_workbook(CHARCOS_XLSX, data_only=True)["Charcos"]
+    enc = {str(c.value).replace(" *", "").strip(): i for i, c in enumerate(ws[5]) if c.value}
+    val = lambda r, k: r[enc[k]] if k in enc else None
+    a_utm = Transformer.from_crs("EPSG:4326", "EPSG:32619", always_xy=True)
+    a_geo = Transformer.from_crs("EPSG:32619", "EPSG:4326", always_xy=True)
+    sub = {"rojo": "rojo", "amarillo": "amarillo", "verde": "verde"}
+    charcos, problemas = [], []
+    for r in ws.iter_rows(min_row=6, values_only=True):
+        cid, coords = val(r, "ID del charco"), val(r, "Coordenadas")
+        if not cid or not coords:
+            continue
+        c = _coordenadas(coords)
+        if not c:
+            problemas.append(f"{cid}: coordenadas no válidas «{coords}»")
+            continue
+        if c[0] == "geo":
+            E, N = a_utm.transform(c[1], c[2])
+        else:
+            E, N = c[1], c[2]
+        crit_txt = str(val(r, "Criticidad") or "").lower()
+        crit = next((v for k, v in sub.items() if crit_txt.startswith(k)), None)
+        if not crit:
+            problemas.append(f"{cid}: sin criticidad")
+            continue
+        principal = str(val(r, "Lote de origen principal") or "").strip()
+        otros = re.findall(r"\d{2}-\d{2}-\d{2}", str(val(r, "Otros lotes de origen") or ""))
+        origen = [l for l in [principal] + otros if l]
+        desconocidos = [l for l in origen if l not in filas]
+        if desconocidos:
+            problemas.append(f"{cid}: lotes no encontrados {', '.join(desconocidos)}")
+        origen = [l for l in dict.fromkeys(origen) if l in filas]
+        ubic, lote, calle, _ = ubicar(E, N)
+        x, y = geo.a_svg(E, N)
+        lon, lat = a_geo.transform(E, N)
+        cercanos = re.findall(r"IMB-\d{3}B?", str(val(r, "Imbornales cercanos") or "").upper())
+        if not cercanos:
+            cercanos = [a["id"] for a in sorted(imbornales, key=lambda a: math.hypot(a["utm_e"] - E, a["utm_n"] - N))
+                        if math.hypot(a["utm_e"] - E, a["utm_n"] - N) <= 40][:6]
+        num = lambda k: (float(val(r, k)) if isinstance(val(r, k), (int, float)) else None)
+        charcos.append({
+            "id": str(cid), "categoria": "charcos", "subcategoria": crit,
+            "tipo": next(s_["nombre"] for s_ in CHARCOS_CAT["subcategorias"] if s_["id"] == crit),
+            "referencia": val(r, "Ubicación de referencia"), "utm_e": round(E, 3), "utm_n": round(N, 3),
+            "lat": round(lat, 7), "lon": round(lon, 7), "svg_x": round(x, 3), "svg_y": round(y, 3),
+            "ubicacion": ubic, "calle_id": calle, "calle": filas[calle]["nombre"] if calle else None, "lote_id": lote,
+            "lotes_origen": origen, "causa": val(r, "Causa probable"), "area_m2": num("Área aproximada (m²)"),
+            "profundidad_cm": num("Profundidad aproximada (cm)"), "drenaje_horas": num("Tiempo en drenar (horas)"),
+            "imbornales_cercanos": cercanos, "evidencia": val(r, "Evidencia (enlace a foto o video)"),
+            "observaciones": val(r, "Observaciones"),
+        })
+    with open(CHARCOS_JSON, "w", encoding="utf-8") as f:
+        json.dump({"generado": __import__("datetime").date.today().isoformat(), "categoria": CHARCOS_CAT,
+                   "charcos": charcos, "problemas": problemas}, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"Charcos: {CHARCOS_JSON}  ({len(charcos)} charcos · {Counter(c['subcategoria'] for c in charcos)})")
+    for pr in problemas:
+        print("  Revisar:", pr)
 
 
 # --------------------------------------------------------------------------
