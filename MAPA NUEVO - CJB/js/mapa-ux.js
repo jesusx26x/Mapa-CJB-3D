@@ -165,12 +165,17 @@
             if (!this._textos) {
                 this._textos = [...svg.querySelectorAll('text, tspan')]
                     .filter(t => !t.closest('#capaActivos, #capaCharcos, #capaRelaciones, defs'));
-                this._textos.forEach(t => { t.dataset.fs0 = parseFloat(getComputedStyle(t).fontSize) || ''; });
+                // Se guarda el tamaño original tal como viene en el SVG (va en el atributo style del
+                // texto); al volver a ≤ 1000 % se restaura ese mismo valor, no se borra.
+                this._textos.forEach(t => {
+                    t.dataset.fs0 = parseFloat(getComputedStyle(t).fontSize) || '';
+                    t.dataset.fs0css = t.style.fontSize || '';
+                });
             }
             this._textos.forEach(t => {
                 const f = parseFloat(t.dataset.fs0);
                 if (!f) return;
-                t.style.fontSize = k < 1 ? (f * k).toFixed(4) + 'px' : '';
+                t.style.fontSize = k < 1 ? (f * k).toFixed(4) + 'px' : t.dataset.fs0css;
             });
         },
 
