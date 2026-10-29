@@ -147,25 +147,183 @@
             });
         },
 
-        /** Camino que sigue el agua desde un imbornal hasta el charco: cuesta abajo y acercándose. */
+        /** Red de calles para el recorrido del agua: imbornales unidos con sus vecinos de la misma
+         *  calle y, en los cruces, con los de la otra calle (simétrica). */
+        redCalles() {
+            if (this._red) return this._red;
+            const R = 110 / M_POR_UNIDAD, CRUCE = 45 / M_POR_UNIDAD;
+            const pts = this.data.activos;
+            const red = new Map(pts.map(a => [a.id, new Map()]));
+            pts.forEach(a => {
+                const cand = [];
+                pts.forEach(b => {
+                    if (a === b) return;
+                    const d = Math.hypot(a.svg_x - b.svg_x, a.svg_y - b.svg_y);
+                    if (d > R) return;
+                    if (a.calle_id && b.calle_id && a.calle_id !== b.calle_id && d > CRUCE) return;
+                    cand.push({ b, d });
+                });
+                cand.sort((p, q) => p.d - q.d).slice(0, 8).forEach(({ b, d }) => {
+                    red.get(a.id).set(b.id, d);
+                    red.get(b.id).set(a.id, d);
+                });
+            });
+            return (this._red = red);
+        },
+
+        /** Camino que sigue el agua desde un imbornal hasta el charco, siempre por la red de calles
+         *  (nunca atravesando lotes): el más corto, castigando los tramos cuesta arriba. */
         caminoHasta(inicio, ch) {
+            const red = this.redCalles();
             const dist = a => Math.hypot(a.svg_x - ch.svg_x, a.svg_y - ch.svg_y);
-            const cerca = 35 / M_POR_UNIDAD;
-            const camino = [inicio];
-            const vistos = new Set([inicio.id]);
-            let act = inicio;
-            for (let i = 0; i < 40 && dist(act) > cerca; i++) {
-                const opciones = (this.vecinos.get(act.id) || [])
-                    .map(v => v.b)
-                    .filter(b => !vistos.has(b.id) && dist(b) < dist(act) - 3 / M_POR_UNIDAD && b.cota <= act.cota + 0.15);
-                if (!opciones.length) break;
-                // Preferir el que más baja; a igualdad, el que más se acerca
-                opciones.sort((p, q) => (p.cota - q.cota) || (dist(p) - dist(q)));
-                act = opciones[0];
-                vistos.add(act.id);
-                camino.push(act);
+            const meta = new Set(this.data.activos.filter(a => dist(a) <= 35 / M_POR_UNIDAD).map(a => a.id));
+            if (!meta.size) {                       // charco lejos de imbornales: el más cercano
+                const c = this.data.activos.reduce((m, a) => (!m || dist(a) < dist(m) ? a : m), null);
+                if (c) meta.add(c.id);
             }
+            if (meta.has(inicio.id)) return [inicio];
+            const costo = new Map([[inicio.id, 0]]), previo = new Map(), hechos = new Set();
+            const abiertos = [inicio.id];
+            let fin = null;
+            while (abiertos.length) {
+                abiertos.sort((p, q) => costo.get(p) - costo.get(q));
+                const id = abiertos.shift();
+                if (hechos.has(id)) continue;
+                hechos.add(id);
+                if (meta.has(id)) { fin = id; break; }
+                const a = this.byId.get(id);
+                red.get(id)?.forEach((d, bid) => {
+                    if (hechos.has(bid)) return;
+                    const b = this.byId.get(bid);
+                    const sube = (typeof a.cota === 'number' && typeof b.cota === 'number') ? Math.max(0, b.cota - a.cota) : 0;
+                    const c = costo.get(id) + d * (1 + 6 * sube);
+                    if (c < (costo.get(bid) ?? Infinity)) { costo.set(bid, c); previo.set(bid, id); abiertos.push(bid); }
+                });
+            }
+            if (!fin) return [inicio];
+            const camino = [];
+            for (let id = fin; id; id = previo.get(id)) camino.unshift(this.byId.get(id));
             return camino;
+        },
+
+        /** Máscara de las vías del Master Plan (calles 15-01-xx) en una cuadrícula de ~2,5 m,
+         *  para trazar el recorrido del agua siempre por la calle. Se calcula una sola vez. */
+        mascaraCalles() {
+            if (this._mascara !== undefined) return this._mascara;
+            this._mascara = null;
+            try {
+                const vb = this.svg.viewBox.baseVal;
+                const celda = 2.5 / M_POR_UNIDAD;
+                const W = Math.ceil(vb.width / celda), H = Math.ceil(vb.height / celda);
+                const cv = document.createElement('canvas');
+                cv.width = W; cv.height = H;
+                const ctx = cv.getContext('2d', { willReadFrequently: true });
+                const raiz = this.svg.getCTM().inverse();
+                this.svg.querySelectorAll('path[id^="15-01-"]').forEach(el => {
+                    const d = el.getAttribute('d');
+                    if (!d) return;
+                    const m = raiz.multiply(el.getCTM());          // elemento → raíz del SVG
+                    ctx.setTransform(m.a / celda, m.b / celda, m.c / celda, m.d / celda,
+                                     (m.e - vb.x) / celda, (m.f - vb.y) / celda);
+                    const p2 = new Path2D(d);
+                    ctx.fillStyle = '#000';
+                    ctx.fill(p2);
+                    ctx.lineWidth = 2.2 * celda / Math.hypot(m.a, m.b);   // cierra uniones entre tramos
+                    ctx.stroke(p2);
+                });
+                const px = ctx.getImageData(0, 0, W, H).data;
+                const mask = new Uint8Array(W * H);
+                for (let i = 0; i < mask.length; i++) mask[i] = px[i * 4 + 3] > 40 ? 1 : 0;
+                this._mascara = { mask, W, H, celda, x0: vb.x, y0: vb.y };
+            } catch (e) { console.warn('[Activos] Sin máscara de calles:', e); }
+            return this._mascara;
+        },
+
+        /** Recorrido por la calle entre dos puntos del SVG (A* sobre la máscara de vías). */
+        rutaCalles(a, b) {
+            const M = this.mascaraCalles();
+            if (!M) return null;
+            const { mask, W, H, celda, x0, y0 } = M;
+            const ci = p => [Math.round((p[0] - x0) / celda), Math.round((p[1] - y0) / celda)];
+            const dentro = (x, y) => x >= 0 && y >= 0 && x < W && y < H;
+            const cercana = ([x, y]) => {                    // celda de calle más próxima (≤ 12 celdas)
+                if (dentro(x, y) && mask[y * W + x]) return [x, y];
+                for (let r = 1; r <= 12; r++) {
+                    let mejor = null, dm = Infinity;
+                    for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) {
+                        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+                        const X = x + dx, Y = y + dy;
+                        if (dentro(X, Y) && mask[Y * W + X]) { const d = dx * dx + dy * dy; if (d < dm) { dm = d; mejor = [X, Y]; } }
+                    }
+                    if (mejor) return mejor;
+                }
+                return null;
+            };
+            const s = cercana(ci(a)), t = cercana(ci(b));
+            if (!s || !t) return null;
+            // Ventana de búsqueda alrededor de ambos puntos
+            const pad = Math.round(150 / (celda * M_POR_UNIDAD));
+            const bx0 = Math.max(0, Math.min(s[0], t[0]) - pad), by0 = Math.max(0, Math.min(s[1], t[1]) - pad);
+            const bx1 = Math.min(W - 1, Math.max(s[0], t[0]) + pad), by1 = Math.min(H - 1, Math.max(s[1], t[1]) + pad);
+            const bw = bx1 - bx0 + 1, bh = by1 - by0 + 1, N = bw * bh;
+            const g = new Float32Array(N).fill(Infinity), prev = new Int32Array(N).fill(-1), cerrado = new Uint8Array(N);
+            const idx = (x, y) => (y - by0) * bw + (x - bx0);
+            const h = (x, y) => Math.hypot(x - t[0], y - t[1]);
+            const heap = [];                                // montículo binario [f, i]
+            const push = (f, i) => { heap.push([f, i]); let k = heap.length - 1; while (k) { const p = (k - 1) >> 1; if (heap[p][0] <= heap[k][0]) break; [heap[p], heap[k]] = [heap[k], heap[p]]; k = p; } };
+            const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let k = 0; for (;;) { const l = 2 * k + 1, r = l + 1; let m = k; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (r < heap.length && heap[r][0] < heap[m][0]) m = r; if (m === k) break; [heap[m], heap[k]] = [heap[k], heap[m]]; k = m; } } return top; };
+            const si = idx(...s), ti = idx(...t);
+            g[si] = 0; push(h(...s), si);
+            const pasos = [[1, 0, 1], [-1, 0, 1], [0, 1, 1], [0, -1, 1], [1, 1, Math.SQRT2], [1, -1, Math.SQRT2], [-1, 1, Math.SQRT2], [-1, -1, Math.SQRT2]];
+            let n = 0;
+            while (heap.length && n++ < 400000) {
+                const [, i] = pop();
+                if (cerrado[i]) continue;
+                cerrado[i] = 1;
+                if (i === ti) break;
+                const x = bx0 + i % bw, y = by0 + ((i / bw) | 0);
+                for (const [dx, dy, c] of pasos) {
+                    const X = x + dx, Y = y + dy;
+                    if (X < bx0 || Y < by0 || X > bx1 || Y > by1 || !mask[Y * W + X]) continue;
+                    const j = idx(X, Y);
+                    if (cerrado[j]) continue;
+                    const ng = g[i] + c;
+                    if (ng < g[j]) { g[j] = ng; prev[j] = i; push(ng + h(X, Y), j); }
+                }
+            }
+            if (prev[ti] === -1 && ti !== si) return null;
+            const celdas = [];
+            for (let i = ti; i !== -1; i = prev[i]) celdas.unshift([x0 + (bx0 + i % bw) * celda, y0 + (by0 + ((i / bw) | 0)) * celda]);
+            // Simplificar (Douglas–Peucker) para una línea limpia
+            const simp = (pts, eps) => {
+                if (pts.length < 3) return pts;
+                const [A, B] = [pts[0], pts[pts.length - 1]];
+                const L = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1;
+                let dm = 0, im = 0;
+                for (let i = 1; i < pts.length - 1; i++) {
+                    const d = Math.abs((B[0] - A[0]) * (A[1] - pts[i][1]) - (A[0] - pts[i][0]) * (B[1] - A[1])) / L;
+                    if (d > dm) { dm = d; im = i; }
+                }
+                return dm > eps ? [...simp(pts.slice(0, im + 1), eps).slice(0, -1), ...simp(pts.slice(im), eps)] : [A, B];
+            };
+            return [a, ...simp(celdas, 2.2 * celda).slice(1, -1), ...(celdas.length ? [celdas[celdas.length - 1]] : [])];
+        },
+
+        /** Tramo entre dos imbornales: recto si va por la calle; si la línea recta cruzaría un lote,
+         *  se traza siguiendo la vía. */
+        tramoCalle(p, q) {
+            const M = this.mascaraCalles();
+            if (!M) return [p, q];
+            const n = Math.max(2, Math.ceil(Math.hypot(q[0] - p[0], q[1] - p[1]) / M.celda));
+            let fuera = 0;
+            for (let i = 1; i < n; i++) {
+                const x = Math.round((p[0] + (q[0] - p[0]) * i / n - M.x0) / M.celda);
+                const y = Math.round((p[1] + (q[1] - p[1]) * i / n - M.y0) / M.celda);
+                if (!(x >= 0 && y >= 0 && x < M.W && y < M.H && M.mask[y * M.W + x])) fuera++;
+            }
+            if (fuera <= 2) return [p, q];
+            const r = this.rutaCalles(p, q);
+            return r ? [...r.slice(0, -1), q] : [p, q];
         },
 
         /** Escorrentía de la calle que llega al charco: imbornales aguas arriba (más altos) conectados. */
@@ -824,7 +982,7 @@
                 const crit = ch.subcategoria;
                 // 1) Escorrentía por la calle hacia el charco
                 const { semillas, aristas } = this.aguasArriba(ch);
-                aristas.forEach(([b, a]) => linea([[b.svg_x, b.svg_y], [a.svg_x, a.svg_y]], `flujo calle crit-${crit}`, 2.4, 'agua'));
+                aristas.forEach(([b, a]) => linea(this.tramoCalle([b.svg_x, b.svg_y], [a.svg_x, a.svg_y]), `flujo calle crit-${crit}`, 2.4, 'agua'));
                 semillas.forEach(a => linea(hastaCharco([[a.svg_x, a.svg_y]], ch), `flujo calle crit-${crit}`, 2.4, 'agua'));
                 // 2) Agua que sale de cada lote de origen y corre por la vía hasta el charco
                 lotes.forEach((lid, i) => {
@@ -853,7 +1011,8 @@
                     salida.setAttribute('marker-end', `url(#actFlecha-${crit})`);
                     salida.style.strokeWidth = ((ancho + 1.4) / px).toFixed(3);
                     this.gRel.appendChild(salida);
-                    const camino = this.caminoHasta(ini, ch).map(a => [a.svg_x, a.svg_y]);
+                    const camino = this.rutaCalles([ini.svg_x, ini.svg_y], [ch.svg_x, ch.svg_y])
+                        || this.caminoHasta(ini, ch).map(a => [a.svg_x, a.svg_y]);
                     linea(hastaCharco(camino, ch), `flujo lote${i === 0 ? ' principal' : ''} crit-${crit}`, ancho, crit);
                 });
             });
