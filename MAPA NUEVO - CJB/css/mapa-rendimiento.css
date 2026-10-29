@@ -44,3 +44,6 @@ body.opportunity-mode #mapContainer svg .lote:not(.gold-pulse) { filter: none !i
 #mapContainer svg.zoom-profundo > g:not(#capaActivos):not(#capaCharcos):not(#capaRelaciones) path:not(.lote) {
     stroke-width: calc(1px * var(--k-profundo, 1)) !important;
 }
+
+/* 7. Títulos de lotes cuya categoría está apagada (ver MapaUX.etiquetasPorCategoria) */
+#mapContainer svg text.lbl-cat-oculta { display: none; }

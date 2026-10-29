@@ -25,6 +25,7 @@
             this.rendimiento();
             this.pestanasPaneles();
             this.leyendaPlegable();
+            this.etiquetasPorCategoria();
             this.botonSoloMapa();
             this.eventos();
         },
@@ -177,6 +178,63 @@
                 if (!f) return;
                 t.style.fontSize = k < 1 ? (f * k).toFixed(4) + 'px' : t.dataset.fs0css;
             });
+        },
+
+        /* ------------------------------------------------ títulos de lotes por categoría */
+        /** Los títulos del plano («02-06-06», «INSTITUCIONAL», nombres de calles…) son textos sueltos
+         *  del SVG, no están dentro de cada lote. Aquí se asocia cada texto a su lote (por su ID escrito
+         *  o porque cae dentro del polígono) y se oculta cuando la categoría de ese lote está apagada.
+         *  No se modifica el SVG: solo se agrega o quita una clase en los textos. */
+        etiquetasPorCategoria() {
+            const listo = () => App.State?.lotesMap?.size && App.State?.svgElementsMap?.size && document.querySelector('#mapContainer svg text');
+            if (!listo()) { setTimeout(() => this.etiquetasPorCategoria(), 500); return; }
+            const svg = document.querySelector('#mapContainer svg');
+            const raiz = svg.getCTM().inverse();
+            const lotes = [...App.State.svgElementsMap.entries()];
+            const centro = t => {
+                const b = t.getBBox(), p = svg.createSVGPoint();
+                p.x = b.x + b.width / 2; p.y = b.y + b.height / 2;
+                return p.matrixTransform(raiz.multiply(t.getCTM()));
+            };
+            const dentro = (el, pt) => { try { return el.isPointInFill(pt.matrixTransform(raiz.multiply(el.getCTM()).inverse())); } catch (e) { return false; } };
+            const RX_ID = /^\s*(\d{2}-\d{2}-\d{2}|[Cc]-\d{1,2})\s*$/;
+            const textos = [...svg.querySelectorAll('text')].filter(t => !t.closest('#capaActivos, #capaCharcos, #capaRelaciones, defs'));
+            const ids = textos.filter(t => RX_ID.test(t.textContent)).map(t => ({ t, id: t.textContent.trim().toUpperCase(), c: centro(t), w: t.getBBox().width }));
+            this._etiquetas = [];
+            textos.forEach(t => {
+                const tx = t.textContent.trim();
+                if (!tx || /^\d{1,4}$/.test(tx)) return;                  // números de manzana: siempre visibles
+                let lote = RX_ID.test(tx) ? tx.toUpperCase() : null;
+                if (!lote) {
+                    const c = centro(t);
+                    const fs = parseFloat(t.dataset.fs0 || getComputedStyle(t).fontSize) || 2;
+                    let cerca = null, dc = Infinity;
+                    ids.forEach(o => { const d = Math.hypot(o.c.x - c.x, o.c.y - c.y); if (d < dc) { dc = d; cerca = o; } });
+                    const contiene = lotes.filter(([, el]) => dentro(el, c)).map(([id]) => id);
+                    // Subtítulo («COMERCIAL», «HABITACIONAL»…) justo debajo de un ID: es de ese lote,
+                    // aunque el texto se salga del polígono (lotes pequeños)
+                    const w = t.getBBox().width;
+                    const arriba = ids.filter(o => c.y - o.c.y > 0 && c.y - o.c.y < 3 * fs && Math.abs(c.x - o.c.x) < Math.max(w, o.w) / 2 + fs)
+                        .sort((p, q) => (c.y - p.c.y) - (c.y - q.c.y))[0];
+                    if (arriba) lote = arriba.id;
+                    else if (cerca && dc < 1.5 * fs && !contiene.includes(cerca.id)) lote = cerca.id;   // título que se sale un poco de su lote
+                    else if (contiene.length) lote = contiene[0];
+                    else if (cerca && dc < 3 * fs) lote = cerca.id;
+                }
+                if (lote) this._etiquetas.push({ t, lote });
+            });
+            const actualizar = () => {
+                const activos = new Set([...document.querySelectorAll('.filter-btn.active[data-tipo]')].map(b => b.dataset.tipo));
+                const todos = document.querySelectorAll('.filter-btn[data-tipo]').length;
+                this._etiquetas.forEach(({ t, lote }) => {
+                    const tipo = App.State.lotesMap.get(lote)?.tipo;
+                    t.classList.toggle('lbl-cat-oculta', !!tipo && todos > 0 && !activos.has(tipo));
+                });
+            };
+            document.querySelectorAll('.filter-btn[data-tipo]').forEach(b =>
+                new MutationObserver(actualizar).observe(b, { attributes: true, attributeFilter: ['class'] }));
+            actualizar();
+            console.log(`🏷️ Títulos del plano vinculados a su lote: ${this._etiquetas.length}`);
         },
 
         /* ------------------------------------------------ leyenda plegable */

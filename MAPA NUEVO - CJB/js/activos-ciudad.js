@@ -86,6 +86,7 @@
             this.buildGrafo();
             this.buildSatellite();
             this.buildLayers();
+            this.buildOverlay();
             this.buildPanel();
             this.buildDetailsCard();
             this.hookApp();
@@ -684,15 +685,19 @@
 
             // Símbolos (se colorean con currentColor; detalles en blanco)
             const defsSim = document.createElementNS(NS, 'defs');
+            // Doble contorno (oscuro por fuera, blanco por dentro): se distingue sobre asfalto,
+            // techos claros, arena o vegetación, y también en pantalla grande o proyector.
+            const O = 'stroke="#0b1220" stroke-opacity=".9" fill="none"';
+            const det = 'style="stroke:var(--imb-detalle,#fff)"';
             defsSim.innerHTML = `
-                <symbol id="imb-pin" viewBox="0 0 24 32"><path d="M12 31C12 31 3 19.6 3 11.5a9 9 0 0 1 18 0C21 19.6 12 31 12 31z" fill="currentColor" stroke="#fff" stroke-width="1.6"/><circle cx="12" cy="11.5" r="3.6" fill="#fff"/></symbol>
-                <symbol id="imb-pin-doble" viewBox="0 0 24 32"><path d="M12 31C12 31 3 19.6 3 11.5a9 9 0 0 1 18 0C21 19.6 12 31 12 31z" fill="currentColor" stroke="#fff" stroke-width="1.6"/><rect x="7" y="8.2" width="4" height="6.6" rx=".8" fill="#fff"/><rect x="13" y="8.2" width="4" height="6.6" rx=".8" fill="#fff"/></symbol>
-                <symbol id="imb-rejilla" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="currentColor" stroke="#fff" stroke-width="1.8"/><path d="M8 7v10M12 7v10M16 7v10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></symbol>
-                <symbol id="imb-rejilla-doble" viewBox="0 0 24 24"><rect x="1.5" y="4.5" width="21" height="15" rx="3.5" fill="currentColor" stroke="#fff" stroke-width="1.8"/><path d="M12 6v12" stroke="#fff" stroke-width="1.6"/><path d="M5.5 8.5v7M8.5 8.5v7M15.5 8.5v7M18.5 8.5v7" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></symbol>
-                <symbol id="imb-embudo" viewBox="0 0 24 24"><path d="M3 4.5h18L12 21z" fill="currentColor" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></symbol>
-                <symbol id="imb-embudo-doble" viewBox="0 0 24 24"><path d="M3 4.5h18L12 21z" fill="currentColor" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 8.5h8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></symbol>
-                <symbol id="imb-punto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="currentColor" stroke="#fff" stroke-width="2.4"/></symbol>
-                <symbol id="imb-punto-doble" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="currentColor" stroke="#fff" stroke-width="2.4"/><circle cx="12" cy="12" r="3.2" fill="#fff"/></symbol>`;
+                <symbol id="imb-pin" viewBox="0 0 24 32"><path d="M12 31C12 31 3 19.6 3 11.5a9 9 0 0 1 18 0C21 19.6 12 31 12 31z" ${O} stroke-width="3.6"/><path d="M12 31C12 31 3 19.6 3 11.5a9 9 0 0 1 18 0C21 19.6 12 31 12 31z" fill="currentColor" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="11.5" r="3.6" style="fill:var(--imb-detalle,#fff)"/></symbol>
+                <symbol id="imb-pin-doble" viewBox="0 0 24 32"><path d="M12 31C12 31 3 19.6 3 11.5a9 9 0 0 1 18 0C21 19.6 12 31 12 31z" ${O} stroke-width="3.6"/><path d="M12 31C12 31 3 19.6 3 11.5a9 9 0 0 1 18 0C21 19.6 12 31 12 31z" fill="currentColor" stroke="#fff" stroke-width="1.5"/><rect x="7" y="8.2" width="4" height="6.6" rx=".8" style="fill:var(--imb-detalle,#fff)"/><rect x="13" y="8.2" width="4" height="6.6" rx=".8" style="fill:var(--imb-detalle,#fff)"/></symbol>
+                <symbol id="imb-rejilla" viewBox="0 0 24 24"><rect x="2.6" y="2.6" width="18.8" height="18.8" rx="4" ${O} stroke-width="4"/><rect x="2.6" y="2.6" width="18.8" height="18.8" rx="4" fill="currentColor" stroke="#fff" stroke-width="1.7"/><path d="M8 7v10M12 7v10M16 7v10" ${det} stroke-width="2.1" stroke-linecap="round"/></symbol>
+                <symbol id="imb-rejilla-doble" viewBox="0 0 24 24"><rect x="1.8" y="4.6" width="20.4" height="14.8" rx="3.5" ${O} stroke-width="3.8"/><rect x="1.8" y="4.6" width="20.4" height="14.8" rx="3.5" fill="currentColor" stroke="#fff" stroke-width="1.7"/><path d="M12 6.2v11.6" ${det} stroke-width="1.6"/><path d="M5.5 8.5v7M8.5 8.5v7M15.5 8.5v7M18.5 8.5v7" ${det} stroke-width="1.7" stroke-linecap="round"/></symbol>
+                <symbol id="imb-embudo" viewBox="0 0 24 24"><path d="M3 4.5h18L12 21z" ${O} stroke-width="4" stroke-linejoin="round"/><path d="M3 4.5h18L12 21z" fill="currentColor" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/></symbol>
+                <symbol id="imb-embudo-doble" viewBox="0 0 24 24"><path d="M3 4.5h18L12 21z" ${O} stroke-width="4" stroke-linejoin="round"/><path d="M3 4.5h18L12 21z" fill="currentColor" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 8.5h8" ${det} stroke-width="1.8" stroke-linecap="round"/></symbol>
+                <symbol id="imb-punto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.4" ${O} stroke-width="4"/><circle cx="12" cy="12" r="9.4" fill="currentColor" stroke="#fff" stroke-width="2"/></symbol>
+                <symbol id="imb-punto-doble" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.4" ${O} stroke-width="4"/><circle cx="12" cy="12" r="9.4" fill="currentColor" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="3.2" style="fill:var(--imb-detalle,#fff)"/></symbol>`;
             this.gImb.appendChild(defsSim);
 
             [...this.data.activos].sort((p, q) => p.svg_y - q.svg_y).forEach(a => {
@@ -710,7 +715,7 @@
             this.charcos.forEach(ch => {
                 const g = document.createElementNS(NS, 'g');
                 g.setAttribute('class', `charco crit-${ch.subcategoria}`);
-                g.innerHTML = `<circle class="charco-halo"/><circle class="charco-nucleo"/><text class="charco-label"></text>`;
+                g.innerHTML = `<circle class="charco-halo"/><circle class="charco-borde"/><circle class="charco-nucleo"/><text class="charco-label"></text>`;
                 g.querySelectorAll('circle').forEach(c => { c.setAttribute('cx', ch.svg_x); c.setAttribute('cy', ch.svg_y); });
                 const t = g.querySelector('text');
                 t.setAttribute('x', ch.svg_x); t.setAttribute('y', ch.svg_y); t.textContent = ch.id.replace(/^CH-0*/, '');
@@ -768,7 +773,7 @@
                 return this.ramp(Math.min(Math.max((a.cota - lo) / ((hi - lo) || 1), 0), 1));
             }
             const cat = this.cats.find(c => c.id === a.categoria);
-            return cat?.subcategorias.find(s => s.id === a.subcategoria)?.color || '#0ea5e9';
+            return cat?.subcategorias.find(s => s.id === a.subcategoria)?.color || '#00d8ff';
         },
         // Cota baja (azul: donde se acumula el agua) → alta (ámbar)
         ramp(t) {
@@ -797,6 +802,7 @@
                 const v = this.visibleImb(a);
                 c.style.display = v ? '' : 'none';
                 c.style.color = this.colorImb(a);
+                c.style.setProperty('--imb-detalle', a.subcategoria === 'filtrante_simple' && this.state.colorBy !== 'cota' ? '#0b1f3a' : '#fff');
                 if (v) nImb++;
             });
             let nCh = 0;
@@ -825,7 +831,7 @@
             }
             this._pxUlt = px;
             // Tamaño en pantalla: crece suave con el zoom (7 px en la vista general → 18 px de cerca)
-            const tamPx = Math.min(Math.max(7 * Math.pow(px / 0.65, 0.5), 7), 18);
+            const tamPx = Math.min(Math.max(10 * Math.pow(px / 0.65, 0.5), 10), 22);
             const enFondo = this.gImb.classList.contains('en-segundo-plano');
             const base = (enFondo ? tamPx * 0.8 : tamPx) / px;
             const sim = SIMBOLOS[this.state.simbolo] || SIMBOLOS.rejilla;
@@ -840,13 +846,15 @@
                 c.setAttribute('y', sim.ancla === 'abajo' ? a.svg_y - h : a.svg_y - h / 2);
             });
             this.layoutCharcos();
+            this.renderOverlay();
             if (this.state.capas.satelite) this.satPintarPronto();
         },
 
         layoutCharcos() {
+            this._chSueltos = [];
             if (!this.charcos.length) return;
             const px = this.px;
-            const tam = { rojo: 12, amarillo: 10, verde: 8 };
+            const tam = { rojo: 14, amarillo: 12.5, verde: 11 };
             const visibles = this.charcos.filter(c => this.visibleCharco(c));
             const agrupar = px < 1.5 && !this.state.sel;      // vista general: agrupar puntos cercanos
             const celda = 40 / px;                             // 40 px de pantalla
@@ -889,16 +897,114 @@
                 const v = this.visibleCharco(c) && !enGrupo.has(c.id);
                 g.style.display = v ? '' : 'none';
                 if (!v) return;
+                this._chSueltos.push(c);
                 const k = c.id === sel ? 1.35 : 1;
                 g.querySelector('.charco-halo').setAttribute('r', tam[c.subcategoria] * 1.7 * k / px);
                 g.querySelector('.charco-nucleo').setAttribute('r', tam[c.subcategoria] * 0.62 * k / px);
                 g.querySelector('.charco-nucleo').style.strokeWidth = (2 / px).toFixed(3);
+                g.querySelector('.charco-borde').setAttribute('r', tam[c.subcategoria] * 0.62 * k / px);
+                g.querySelector('.charco-borde').style.strokeWidth = (5.2 / px).toFixed(3);
                 const t = g.querySelector('.charco-label');
                 t.style.fontSize = `${9 / px}px`;
                 t.style.display = px > 2.2 ? '' : 'none';
                 g.classList.toggle('atenuado', !!sel && c.id !== sel);
             });
             this.renderFlujos();
+        },
+
+        /* ===================================================== CAPA ANIMADA (HTML)
+           Halos de los charcos y pulso de selección. Van en una capa HTML dentro del contenedor del
+           mapa (se mueve y escala con él), animados solo con transform/opacity: la tarjeta gráfica
+           los anima sin volver a dibujar el plano, así el mapa sigue fluido. */
+        buildOverlay() {
+            const cont = document.getElementById('mapContainer');
+            if (!cont) return;
+            this.ov = document.createElement('div');
+            this.ov.className = 'act-overlay';
+            this.ov.setAttribute('aria-hidden', 'true');
+            cont.appendChild(this.ov);
+        },
+
+        /** Dimensiones del charco en metros: largo × ancho (o círculo equivalente al área). */
+        medidasCharco(c) {
+            if (c.largo_m && c.ancho_m) return [Math.max(c.largo_m, c.ancho_m), Math.min(c.largo_m, c.ancho_m), false];
+            if (c.largo_m || c.ancho_m) { const v = c.largo_m || c.ancho_m; return [v, Math.max(v * 0.5, 1.5), false]; }
+            if (c.area_m2) { const d = 2 * Math.sqrt(c.area_m2 / Math.PI); return [d, d, false]; }
+            return ({ rojo: [10, 5], amarillo: [7, 4], verde: [4, 3] }[c.subcategoria] || [6, 4]).concat(true);
+        },
+
+        /** Orientación de la calle donde está el charco (eje principal de la vía en ~12 m a la redonda). */
+        anguloCalle(c) {
+            if (c._ang !== undefined) return c._ang;
+            c._ang = 0;
+            const M = this.mascaraCalles();
+            if (!M) return 0;
+            const cx = Math.round((c.svg_x - M.x0) / M.celda), cy = Math.round((c.svg_y - M.y0) / M.celda);
+            const R = Math.round(12 / (M.celda * M_POR_UNIDAD));
+            let n = 0, sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0;
+            for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
+                if (dx * dx + dy * dy > R * R) continue;
+                const x = cx + dx, y = cy + dy;
+                if (x < 0 || y < 0 || x >= M.W || y >= M.H || !M.mask[y * M.W + x]) continue;
+                n++; sx += dx; sy += dy; sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
+            }
+            if (n < 6) return 0;
+            const mx = sx / n, my = sy / n, a = sxx / n - mx * mx, b = syy / n - my * my, d = sxy / n - mx * my;
+            const l1 = (a + b) / 2 + Math.sqrt(((a - b) / 2) ** 2 + d * d), l2 = (a + b) / 2 - Math.sqrt(((a - b) / 2) ** 2 + d * d);
+            if (l1 < 1.4 * Math.max(l2, 1e-6)) return 0;          // cruce o plaza: sin dirección clara
+            c._ang = Math.atan2(l1 - a, d || 1e-9) * 180 / Math.PI;
+            if (!isFinite(c._ang)) c._ang = 0;
+            return c._ang;
+        },
+
+        renderOverlay() {
+            const ov = this.ov;
+            if (!ov) return;
+            const cont = ov.parentNode;
+            const r = cont.getBoundingClientRect();
+            const s = cont.offsetWidth ? r.width / cont.offsetWidth : 1;      // escala actual del contenedor
+            const M = this.svg.getScreenCTM();
+            if (!M || !s) return;
+            const loc = (x, y) => [(M.a * x + M.c * y + M.e - r.left) / s, (M.b * x + M.d * y + M.f - r.top) / s];
+            const kLoc = Math.hypot(M.a, M.b) / s;                            // px locales por unidad SVG
+            const sel = this.state.sel;
+            const html = [], nucleos = [];
+            // Todo se dibuja a tamaño de pantalla y se compensa con scale(1/s): así los bordes y textos
+            // no quedan por debajo de 1 px dentro del contenedor escalado (el navegador los redondea).
+            const inv = `scale(${(1 / s).toFixed(5)})`;
+            (this._chSueltos || []).forEach(c => {
+                const [L, W, estimado] = this.medidasCharco(c);
+                let w = L / M_POR_UNIDAD * kLoc * s, h = W / M_POR_UNIDAD * kLoc * s;    // px de pantalla
+                // Al alejar, la mancha se agranda (manteniendo su proporción) para que siempre se vea
+                // alrededor del número; de cerca muestra su tamaño real
+                if (w < 58) { h *= 58 / w; w = 58; }
+                if (h < 24) h = 24;
+                const [x, y] = loc(c.svg_x, c.svg_y);
+                const ang = this.anguloCalle(c);
+                const at = sel?.tipo === 'charco' && sel.id !== c.id ? ' atenuado' : '';
+                const es = sel?.tipo === 'charco' && sel.id === c.id ? ' activo' : '';
+                html.push(`<div class="act-halo crit-${c.subcategoria}${at}${es}${estimado ? ' estimado' : ''}" style="left:${x.toFixed(2)}px;top:${y.toFixed(2)}px;width:${w.toFixed(1)}px;height:${h.toFixed(1)}px;transform:translate(-50%,-50%) rotate(${ang.toFixed(1)}deg) ${inv}"><i></i><b></b></div>`);
+                nucleos.push(c);
+            });
+            // Núcleos con su número, por encima de todas las manchas
+            const tam = { rojo: 14, amarillo: 12.5, verde: 11 };
+            nucleos.forEach(c => {
+                const [x, y] = loc(c.svg_x, c.svg_y);
+                const k = sel?.tipo === 'charco' && sel.id === c.id ? 1.35 : 1;
+                const d = tam[c.subcategoria] * 1.3 * k;
+                const at = sel?.tipo === 'charco' && sel.id !== c.id ? ' atenuado' : '';
+                const num = this.px > 1.6 ? this.esc(c.id.replace(/^CH-0*/, '')) : '';
+                html.push(`<div class="act-nucleo crit-${c.subcategoria}${at}" style="left:${x.toFixed(2)}px;top:${y.toFixed(2)}px;width:${d.toFixed(1)}px;height:${d.toFixed(1)}px;font-size:${(10.5 * k).toFixed(1)}px;transform:translate(-50%,-50%) ${inv}">${num}</div>`);
+            });
+            if (sel) {
+                const o = sel.tipo === 'imb' ? this.byId.get(sel.id) : this.chById.get(sel.id);
+                if (o) {
+                    const [x, y] = loc(o.svg_x, o.svg_y);
+                    const d = sel.tipo === 'imb' ? 40 : 46;
+                    html.push(`<div class="act-pulso ${sel.tipo === 'imb' ? 'imb' : 'crit-' + o.subcategoria}" style="left:${x.toFixed(2)}px;top:${y.toFixed(2)}px;width:${d}px;height:${d}px;transform:translate(-50%,-50%) ${inv}"><i></i><i></i></div>`);
+                }
+            }
+            ov.innerHTML = html.join('');
         },
 
         /* ===================================================== SELECCIÓN */
@@ -948,14 +1054,19 @@
 
         /** Sentido del agua: por la calle (según la cota de los imbornales) y desde los lotes de origen. */
         renderFlujos() {
-            [...this.gRel.querySelectorAll('.flujo, .flujo-salida, .flujo-borde')].forEach(e => e.remove());
+            [...this.gRel.querySelectorAll('.flujo, .flujo-salida, .flujo-borde, .flujo-contorno')].forEach(e => e.remove());
             document.querySelectorAll('#mapContainer svg .lote.act-origen').forEach(e => e.classList.remove('act-origen'));
             const px = this.px;
             const colores = Object.fromEntries((this.cats.find(c => c.id === 'charcos')?.subcategorias || []).map(s => [s.id, s.color]));
             const linea = (pts, clase, ancho, crit) => {
                 if (pts.length < 2) return;
                 const d = 'M' + pts.map(q => `${q[0]},${q[1]}`).join(' L');
-                const borde = document.createElementNS(NS, 'path');      // contorno blanco para que se lea sobre cualquier fondo
+                const cont = document.createElementNS(NS, 'path');       // contorno oscuro + blanco: legible sobre cualquier fondo
+                cont.setAttribute('d', d);
+                cont.setAttribute('class', 'flujo-contorno');
+                cont.style.strokeWidth = ((ancho + 5) / px).toFixed(3);
+                this.gRel.appendChild(cont);
+                const borde = document.createElementNS(NS, 'path');
                 borde.setAttribute('d', d);
                 borde.setAttribute('class', 'flujo-borde');
                 borde.style.strokeWidth = ((ancho + 2.2) / px).toFixed(3);
@@ -989,7 +1100,7 @@
                     const el = App.State.svgElementsMap.get(lid);
                     if (!el) return;
                     el.classList.add('act-origen');
-                    el.style.setProperty('--act-origen-color', colores[crit] || '#dc2626');
+                    el.style.setProperty('--act-origen-color', colores[crit] || '#ff1744');
                     const bb = el.getBBox();
                     const dBox = a => Math.hypot(Math.max(bb.x - a.svg_x, 0, a.svg_x - bb.x - bb.width), Math.max(bb.y - a.svg_y, 0, a.svg_y - bb.y - bb.height));
                     // Imbornal de su frente: el más cercano al lote, prefiriendo los que llevan al charco
@@ -1272,7 +1383,7 @@
             const card = document.getElementById('activoDetails');
             if (!card || !a) return;
             const cat = this.cats.find(c => c.id === a.categoria);
-            const color = cat?.subcategorias.find(s => s.id === a.subcategoria)?.color || '#0ea5e9';
+            const color = cat?.subcategorias.find(s => s.id === a.subcategoria)?.color || '#00d8ff';
             const lugar = a.ubicacion === 'Calle'
                 ? `<dd>${this.esc(a.calle)} <button class="act-link" data-lot="${a.calle_id}">${a.calle_id}</button></dd>`
                 : a.ubicacion === 'Dentro de lote'
@@ -1303,11 +1414,26 @@
             card.querySelectorAll('[data-lot]').forEach(b => b.addEventListener('click', () => this.openLot(b.dataset.lot)));
         },
 
+        /** Leyenda de lo que se dibuja al elegir un charco (o un lote que le aporta agua). */
+        leyendaFlujos(crit, { lotes = true, halo = true, estimado = false } = {}) {
+            const col = (this.cats.find(x => x.id === 'charcos')?.subcategorias || []).find(x => x.id === crit)?.color || '#ff1744';
+            const linea = (c, dash) => `<svg viewBox="0 0 44 12" class="act-ley-svg"><path d="M2 6H36" stroke="#0b1220" stroke-opacity=".7" stroke-width="7" stroke-linecap="round"/><path d="M2 6H36" stroke="#fff" stroke-width="5" stroke-linecap="round"/><path d="M2 6H34" stroke="${c}" stroke-width="3" ${dash ? 'stroke-dasharray="5 3"' : ''}/><path d="M33 1.5 42 6 33 10.5z" fill="${c}" stroke="#0b1220" stroke-width=".8"/></svg>`;
+            const filas = [];
+            if (halo) filas.push(`<li><svg viewBox="0 0 44 22" class="act-ley-svg"><ellipse cx="22" cy="11" rx="19" ry="8" fill="${col}" fill-opacity=".45" stroke="${col}" stroke-width="2" ${estimado ? 'stroke-dasharray="4 3"' : ''}/><circle cx="22" cy="11" r="5" fill="${col}" stroke="#fff" stroke-width="1.5"/></svg><span><strong>Área del charco</strong> (largo × ancho). Late más rápido cuanto más crítico${estimado ? '; borde punteado = medida estimada' : ''}.</span></li>`);
+            if (lotes) {
+                filas.push(`<li>${linea(col, true)}<span><strong>Agua que sale del lote de origen</strong> y corre por la calle hasta el charco.</span></li>`);
+                filas.push(`<li><svg viewBox="0 0 44 22" class="act-ley-svg"><rect x="4" y="3" width="36" height="16" rx="2" fill="${col}" fill-opacity=".18" stroke="${col}" stroke-width="2.5"/></svg><span><strong>Lote de origen</strong> del agua (borde del color del charco).</span></li>`);
+            }
+            filas.push(`<li>${linea('#2979ff', true)}<span><strong>Lluvia que corre por la calle</strong> hacia el charco, de los imbornales más altos a los más bajos (según su cota).</span></li>`);
+            filas.push(`<li><svg viewBox="0 0 44 22" class="act-ley-svg"><rect x="15" y="4" width="14" height="14" rx="3" fill="#00d8ff" stroke="#fff" stroke-width="1.5"/><path d="M19 8v6M22 8v6M25 8v6" stroke="#0b1f3a" stroke-width="1.6"/></svg><span><strong>Imbornales cercanos</strong> al charco (resaltados).</span></li>`);
+            return `<div class="act-leyenda-flujo"><div class="act-sub-title">Cómo leer el mapa</div><ul>${filas.join('')}</ul></div>`;
+        },
+
         renderCharco(c) {
             const card = document.getElementById('activoDetails');
             if (!card || !c) return;
             const cat = this.cats.find(x => x.id === 'charcos');
-            const color = cat?.subcategorias.find(s => s.id === c.subcategoria)?.color || '#dc2626';
+            const color = cat?.subcategorias.find(s => s.id === c.subcategoria)?.color || '#ff1744';
             const lotes = (c.lotes_origen || []).map((l, i) => {
                 const lo = App.State.lotesMap.get(l);
                 return `<li><button class="act-link" data-lot="${l}">${l}</button> ${this.esc(lo?.nombre || '')}${i === 0 ? ' <span class="act-pill">principal</span>' : ''}</li>`;
@@ -1332,12 +1458,12 @@
                     <h4>💧 ¿De dónde viene el agua?</h4>
                     ${c.origen_tipo ? `<p class="act-origen-tipo">${this.esc(c.origen_tipo)}</p>` : ''}
                     ${lotes ? `<ul class="act-lotes">${lotes}</ul>` : (c.origen_tipo ? '' : '<p class="act-empty">Sin lotes de origen indicados.</p>')}
-                    <p class="act-note">${lotes ? 'En el mapa, las flechas salen de estos lotes hacia el charco; ' : 'En el mapa, '}las flechas azules marcan cómo baja el agua por la calle.</p>
+                    ${this.leyendaFlujos(c.subcategoria, { lotes: !!lotes, estimado: this.medidasCharco(c)[2] })}
                 </div>
                 <div class="detail-section static-section">
                     <h4>📏 Análisis técnico</h4>
                     <dl class="detail-grid">
-                        ${dato('Causa probable', c.causa)}${dato('Afecta', c.afecta)}${dato('Área aprox.', c.area_m2, ' m²')}
+                        ${dato('Causa probable', c.causa)}${dato('Afecta', c.afecta)}${c.largo_m && c.ancho_m ? dato('Extensión aprox.', `${c.largo_m} × ${c.ancho_m} m`) : ''}${dato('Área aprox.', c.area_m2, ' m²')}
                         ${dato('Profundidad', c.profundidad_cm, ' cm')}${dato('Se seca en', c.drenaje_horas, ' h')}
                         ${dato('Observaciones', c.observaciones)}
                     </dl>
@@ -1389,8 +1515,8 @@
                 self._rz = setTimeout(() => self.onZoom(), 140);
                 self._rz2 = setTimeout(() => self.onZoom(), 420);
             };
-            window.addEventListener('resize', () => { if (this.state.capas.satelite) this.satAnimar(400); setTimeout(() => this.onZoom(), 150); });
-            document.addEventListener('fullscreenchange', () => setTimeout(() => this.onZoom(), 300));
+            window.addEventListener('resize', () => { if (this.state.capas.satelite) this.satAnimar(400); setTimeout(() => { this.onZoom(); this.renderOverlay(); }, 150); });
+            document.addEventListener('fullscreenchange', () => setTimeout(() => { this.onZoom(); this.renderOverlay(); }, 300));
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape' && this.state.sel && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) this.clearSelection();
             });
@@ -1433,7 +1559,7 @@
                 if (todos.length) {
                     html += `<div class="act-lot-row"><strong>🌊 Aporta agua a ${todos.length} charco${todos.length > 1 ? 's' : ''}</strong>
                         <div class="act-lot-ids">${todos.map(c => `<button class="act-link crit-${c.subcategoria}" data-ch="${c.id}">${this.esc(c.id)}</button>`).join(' ')}</div>
-                        ${this.state.capas.charcos ? '' : '<div class="act-note">Encienda la capa de charcos para ver las flechas en el mapa.</div>'}</div>`;
+                        ${this.state.capas.charcos ? (destinos.length ? this.leyendaFlujos(destinos.reduce((a, b) => CRIT_ORDEN[b.subcategoria] > CRIT_ORDEN[a.subcategoria] ? b : a).subcategoria, { halo: false }) : '') : '<div class="act-note">Encienda la capa de charcos para ver las flechas en el mapa.</div>'}</div>`;
                 }
             }
             if (!destinos.length && (lote.tipo === 'Habitacional' || lote.tipo === 'Comercial')) {

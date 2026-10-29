@@ -62,9 +62,9 @@ CHARCOS_XLSX = os.path.join(ROOT, "Activos", "ANALISIS_CHARCOS_CJB.xlsx")
 CHARCOS_JSON = os.path.join(CJB, "data", "charcos_cjb.json")
 CHARCOS_CAT = {"id": "charcos", "nombre": "Charcos / puntos de acumulación", "icono": "🌊", "estado": "levantado",
                "fuente": "Análisis técnico de la Dirección Técnica",
-               "subcategorias": [{"id": "rojo", "nombre": "Muy crítico", "color": "#dc2626"},
-                                 {"id": "amarillo", "nombre": "Intermedio", "color": "#f59e0b"},
-                                 {"id": "verde", "nombre": "Menor", "color": "#16a34a"}]}
+               "subcategorias": [{"id": "rojo", "nombre": "Muy crítico", "color": "#ff1744"},
+                                 {"id": "amarillo", "nombre": "Intermedio", "color": "#ffc400"},
+                                 {"id": "verde", "nombre": "Menor", "color": "#00e676"}]}
 FECHA_LEVANTAMIENTO = "27/07/2026"
 
 TIPOS = {
@@ -73,8 +73,8 @@ TIPOS = {
     "filtrante a": "Filtrante simple", "pg cisterna": "Cisterna (PG)",
 }
 SUBCATS = [
-    ("filtrante_simple", "Filtrante simple", "#0ea5e9"),
-    ("filtrante_doble", "Filtrante doble", "#4f46e5"),
+    ("filtrante_simple", "Filtrante simple", "#00d8ff"),
+    ("filtrante_doble", "Filtrante doble", "#4d7cff"),
     ("cisterna", "Cisterna (PG)", "#14b8a6"),
 ]
 SUB_ID = {n: i for i, n, _ in SUBCATS}
@@ -663,6 +663,8 @@ CAMPOS_CHARCOS = {
     "otros": ["Otros lotes de donde sale el agua", "Otros lotes de origen"],
     "causa": ["Causa probable"],
     "afecta": ["¿Qué afecta?"],
+    "largo": ["Largo aproximado (m)"],
+    "ancho": ["Ancho aproximado (m)"],
     "area": ["Tamaño aproximado (m²)", "Área aproximada (m²)"],
     "profundidad": ["Profundidad aproximada (cm)"],
     "horas": ["Tiempo en secarse (horas)", "Tiempo en drenar (horas)"],
@@ -780,7 +782,10 @@ def construir_charcos(geo, ubicar, filas, imbornales, lotes_geo=None):
                 "ubicacion": ubic, "calle_id": calle, "calle": filas[calle]["nombre"] if calle else None,
                 "lote_id": lote, "origen_tipo": val(r, "origen_tipo"),
                 "lotes_origen": origen, "causa": val(r, "causa"), "afecta": val(r, "afecta"),
-                "area_m2": num(val(r, "area")), "profundidad_cm": num(val(r, "profundidad")),
+                "largo_m": num(val(r, "largo")), "ancho_m": num(val(r, "ancho")),
+                "area_m2": num(val(r, "area")) or (round(math.pi / 4 * num(val(r, "largo")) * num(val(r, "ancho")), 1)
+                                                   if num(val(r, "largo")) and num(val(r, "ancho")) else None),
+                "profundidad_cm": num(val(r, "profundidad")),
                 "drenaje_horas": num(val(r, "horas")),
                 "imbornales_cercanos": cercanos, "evidencia": val(r, "evidencia"),
                 "observaciones": val(r, "observaciones"),
