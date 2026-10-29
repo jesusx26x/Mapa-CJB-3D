@@ -238,3 +238,11 @@ body.vbc-solo-mapa .panel-pestana { display: none; }
 .color-mode-legend-box.colapsada .legend-box-header { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
 
 .act-origen-tipo { margin: 0 0 6px; font-size: .78rem; font-weight: 600; color: var(--text-primary); }
+
+/* Activos de ciudad ligados a la categoría Infraestructura */
+.act-aviso { margin-top: 6px; padding: 6px 8px; border-radius: 6px; font-size: 11px; line-height: 1.35;
+             color: #92400e; background: rgba(245, 158, 11, .12); border: 1px solid rgba(245, 158, 11, .35); }
+body:not(.light-mode) .act-aviso { color: #fcd34d; }
+.multi-chip.act-chip-off { opacity: .45; text-decoration: line-through; }
+.act-sin-infra .act-opt input:disabled + .act-ico,
+.act-sin-infra .act-opt input:disabled ~ .act-opt-txt { opacity: .5; }

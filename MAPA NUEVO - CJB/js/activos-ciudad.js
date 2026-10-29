@@ -89,6 +89,7 @@
             this.buildPanel();
             this.buildDetailsCard();
             this.hookApp();
+            this.vincularInfraestructura();
             this.refresh();
             console.log(`🗺️ Activos de Ciudad: ${this.data.activos.length} imbornales · ${this.charcos.length} charcos`);
         },
@@ -567,8 +568,32 @@
             this.gCh.appendChild(this.gClusters);
         },
 
+        /** Los activos de ciudad son subcategorías de Infraestructura: si esa categoría está
+         *  apagada en «Categoría», se ocultan todos (el satélite no depende de ella). */
+        infraActiva() {
+            const b = document.querySelector('.filter-btn[data-tipo="Infraestructura"]');
+            return !b || b.classList.contains('active');
+        },
+
+        vincularInfraestructura() {
+            this.infraOn = this.infraActiva();
+            const b = document.querySelector('.filter-btn[data-tipo="Infraestructura"]');
+            if (!b) return;
+            new MutationObserver(() => {
+                const v = this.infraActiva();
+                if (v === this.infraOn) return;
+                this.infraOn = v;
+                if (!v) this.clearFlujo();
+                this.refresh();
+                // Ficha del lote abierta: actualizar su sección de activos
+                const lote = App.State.selectedId && App.State.lotesMap.get(App.State.selectedId);
+                if (lote) this.renderLotSection(lote);
+            }).observe(b, { attributes: true, attributeFilter: ['class'] });
+        },
+
         visibleImb(a) {
             const s = this.state;
+            if (this.infraOn === false) return false;
             if (!s.capas.drenaje_pluvial) return false;
             if (s.subs[a.subcategoria] === false) return false;
             if (!s.ubic[a.ubicacion]) return false;
@@ -576,7 +601,7 @@
             return true;
         },
         visibleCharco(c) {
-            return !!this.state.capas.charcos && this.state.subs[c.subcategoria] !== false;
+            return this.infraOn !== false && !!this.state.capas.charcos && this.state.subs[c.subcategoria] !== false;
         },
 
         colorImb(a) {
@@ -844,7 +869,7 @@
         /** Al elegir un lote: dibuja hacia qué charcos aporta agua. */
         flujoDesdeLote(loteId) {
             this.clearFlujo();
-            if (!this.state.capas.charcos) return [];
+            if (!this.state.capas.charcos || this.infraOn === false) return [];
             const destinos = this.charcos.filter(c => this.visibleCharco(c) && (c.lotes_origen || []).includes(loteId));
             this.flujos = destinos.map(ch => ({ ch, lotes: [loteId] }));
             this.renderFlujos();
@@ -897,7 +922,7 @@
                     </label>`).join('') : '';
                 return `
                     <label class="multi-select-option act-opt ${c.disponible ? '' : 'act-pend'}" title="${this.esc(c.fuente)}">
-                        <input type="checkbox" data-capa="${c.id}" ${c.disponible ? '' : 'disabled'} ${this.state.capas[c.id] ? 'checked' : ''}>
+                        <input type="checkbox" data-capa="${c.id}" ${c.disponible ? '' : 'disabled data-pendiente="1"'} ${this.state.capas[c.id] ? 'checked' : ''}>
                         <span class="act-ico">${c.icono}</span>
                         <span class="act-opt-txt">${this.esc(c.nombre)}</span>
                         ${c.disponible ? `<span class="dev-count-badge">${nCat(c.id)}</span>` : '<span class="act-chip">Pendiente</span>'}
@@ -916,6 +941,7 @@
                         <span class="multi-select-arrow">▼</span>
                     </div>
                     <div class="multi-select-chips" id="actChips" style="display:none;"></div>
+                    <div class="act-aviso oculto" id="actAvisoInfra">Infraestructura está apagada: los activos de ciudad se ocultan. La vista satelital sigue disponible.</div>
                     <div class="multi-select-dropdown act-dropdown" id="actDropdown" style="display:none;">
                         <div class="act-dd">
                             <div class="act-dd-title">Base</div>
@@ -1016,15 +1042,24 @@
             const s = this.state;
             const activas = [];
             if (s.capas.satelite) activas.push({ k: 'satelite', t: '🛰️ Satélite' });
+            const infra = this.infraOn !== false;
             this.cats.forEach(c => {
-                if (s.capas[c.id]) activas.push({ k: c.id, t: `${c.icono} ${c.id === 'drenaje_pluvial' ? 'Imbornales' : c.nombre.split(' /')[0]} · ${c.id === 'charcos' ? this.counts.ch : this.counts.imb}` });
+                if (s.capas[c.id]) activas.push({ k: c.id, off: !infra, t: `${c.icono} ${c.id === 'drenaje_pluvial' ? 'Imbornales' : c.nombre.split(' /')[0]} · ${c.id === 'charcos' ? this.counts.ch : this.counts.imb}` });
+            });
+            const aviso = document.getElementById('actAvisoInfra');
+            if (aviso) aviso.classList.toggle('oculto', infra);
+            document.getElementById('actMs')?.classList.toggle('act-sin-infra', !infra);
+            mount.querySelectorAll('[data-capa]:not([data-capa="satelite"]), [data-sub]').forEach(cb => {
+                if (cb.dataset.pendiente) return;
+                cb.disabled = !infra;
+                cb.closest('label')?.setAttribute('title', infra ? '' : 'Encienda la categoría Infraestructura para ver los activos de ciudad');
             });
             document.getElementById('actActiveCount').textContent = activas.length;
             document.getElementById('actPlaceholder').textContent = activas.length ? `${activas.length} capa${activas.length > 1 ? 's' : ''} activa${activas.length > 1 ? 's' : ''}` : 'Sin capas activas';
             document.getElementById('actOcultarTodo').style.display = activas.length ? '' : 'none';
             const chips = document.getElementById('actChips');
             chips.style.display = activas.length ? 'flex' : 'none';
-            chips.innerHTML = activas.map(a => `<span class="multi-chip">${this.esc(a.t)} <span class="chip-remove" data-quitar="${a.k}" title="Quitar">×</span></span>`).join('');
+            chips.innerHTML = activas.map(a => `<span class="multi-chip${a.off ? ' act-chip-off' : ''}"${a.off ? ' title="Oculto: Infraestructura está apagada"' : ''}>${this.esc(a.t)} <span class="chip-remove" data-quitar="${a.k}" title="Quitar">×</span></span>`).join('');
             chips.querySelectorAll('[data-quitar]').forEach(x => x.addEventListener('click', e => {
                 e.stopPropagation();
                 this.state.capas[x.dataset.quitar] = false;
@@ -1212,6 +1247,10 @@
                 sec.className = 'detail-section static-section act-lot-section';
                 const ref = details.querySelector('.static-section');
                 ref ? details.insertBefore(sec, ref.nextElementSibling) : details.appendChild(sec);
+            }
+            if (this.infraOn === false) {
+                sec.innerHTML = '<h4>🗺️ Activos de Ciudad</h4><p class="act-empty">Ocultos: la categoría Infraestructura está apagada.</p>';
+                return;
             }
             const r = this.data.resumen_por_lote[lote.id];
             const dentro = (r?.dentro || []).map(id => this.byId.get(id)).filter(Boolean);
