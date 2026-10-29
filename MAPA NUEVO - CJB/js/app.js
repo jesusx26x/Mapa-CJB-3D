@@ -1070,8 +1070,12 @@ const App = {
             });
         },
 
+        // Zoom máximo: 4000 %. Hasta 1000 % todo se ve igual que antes; más allá, mapa-ux.js mantiene
+        // líneas y textos del plano a tamaño legible y el satélite se amplía desde su máximo detalle.
+        ZOOM_MAX: 40,
+
         zoom(factor) {
-            this.transform.scale = Math.min(Math.max(0.2, this.transform.scale * factor), 10);
+            this.transform.scale = Math.min(Math.max(0.2, this.transform.scale * factor), this.ZOOM_MAX);
             this.updateMapTransform();
             const zoomEl = document.getElementById('zoomLevel');
             if (zoomEl) zoomEl.value = Math.round(this.transform.scale * 100) + '%';

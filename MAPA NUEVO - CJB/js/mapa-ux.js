@@ -33,7 +33,7 @@
         zoomAt(factor, cx, cy) {
             const t = App.Map.transform || { scale: 1, x: 0, y: 0 };
             const s0 = t.scale;
-            const s1 = Math.min(Math.max(0.2, s0 * factor), 10);
+            const s1 = Math.min(Math.max(0.2, s0 * factor), App.Map.ZOOM_MAX || 40);
             if (s1 === s0) return;
             const r = this.area.getBoundingClientRect();
             const mx = cx ?? (r.left + r.width / 2), my = cy ?? (r.top + r.height / 2);
@@ -133,8 +133,11 @@
                 tFin = setTimeout(() => area.classList.remove('mapa-moviendo'), 200);
             };
             const orig = App.Map.updateMapTransform.bind(App.Map);
+            let tProf = null;
             App.Map.updateMapTransform = function () {
                 moviendo();
+                clearTimeout(tProf);
+                tProf = setTimeout(() => MapaUX.zoomProfundo(), 160);
                 if (!arrastre) { orig(); return; }
                 // Arrastrando: el mouse puede enviar varios eventos por cuadro → aplicar solo el último
                 if (rafArr) return;
@@ -144,6 +147,31 @@
                     cont.style.transition = 'none';   // seguir al mouse sin retraso
                 });
             };
+        },
+
+        /* ------------------------------------------------ zoom profundo (> 1000 %) */
+        /** Más allá de 1000 % el plano seguiría creciendo: bordes de 30 px y textos gigantes que tapan
+         *  el satélite. Desde ahí se mantienen al tamaño en pantalla que tenían a 1000 %. */
+        UMBRAL_PROFUNDO: 10,
+        zoomProfundo() {
+            const svg = document.querySelector('#mapContainer svg');
+            const s = App.Map.transform?.scale || 1;
+            if (!svg) return;
+            const k = s > this.UMBRAL_PROFUNDO ? this.UMBRAL_PROFUNDO / s : 1;
+            if (Math.abs(k - (this._kProf || 1)) < 1e-3) return;
+            this._kProf = k;
+            svg.classList.toggle('zoom-profundo', k < 1);
+            svg.style.setProperty('--k-profundo', k.toFixed(4));
+            if (!this._textos) {
+                this._textos = [...svg.querySelectorAll('text, tspan')]
+                    .filter(t => !t.closest('#capaActivos, #capaCharcos, #capaRelaciones, defs'));
+                this._textos.forEach(t => { t.dataset.fs0 = parseFloat(getComputedStyle(t).fontSize) || ''; });
+            }
+            this._textos.forEach(t => {
+                const f = parseFloat(t.dataset.fs0);
+                if (!f) return;
+                t.style.fontSize = k < 1 ? (f * k).toFixed(4) + 'px' : '';
+            });
         },
 
         /* ------------------------------------------------ leyenda plegable */

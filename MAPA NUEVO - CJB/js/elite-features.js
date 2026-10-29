@@ -1348,8 +1348,8 @@ App.Elite = {
         // If value <= 10, assume multiplier (e.g., 1.5 = 150%)
         const scale = zoom > 10 ? zoom / 100 : zoom;
 
-        // Clamp between 20% and 500%
-        const clampedScale = Math.max(0.2, Math.min(5, scale));
+        // Entre 20 % y el zoom máximo del mapa (4000 %)
+        const clampedScale = Math.max(0.2, Math.min(App.Map.ZOOM_MAX || 40, scale));
 
         const container = document.getElementById('mapContainer');
         const svg = container.querySelector('svg');

@@ -38,3 +38,9 @@ body.opportunity-mode #mapContainer svg .lote:not(.gold-pulse) { filter: none !i
 .panel-map.mapa-moviendo #mapContainer svg .lote,
 .panel-map.mapa-moviendo #mapContainer svg .gold-pulse { filter: none !important; }
 .panel-map.mapa-moviendo #mapContainer { cursor: grabbing; }
+
+/* 6. Zoom profundo (> 1000 %): los bordes del plano mantienen su grosor en pantalla
+      (el JS ajusta también el tamaño de los textos). */
+#mapContainer svg.zoom-profundo > g:not(#capaActivos):not(#capaCharcos):not(#capaRelaciones) path:not(.lote) {
+    stroke-width: calc(1px * var(--k-profundo, 1)) !important;
+}
