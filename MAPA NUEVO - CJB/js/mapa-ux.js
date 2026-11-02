@@ -23,6 +23,7 @@
             if (!area || !window.App || !App.Map) { setTimeout(() => this.init(), 300); return; }
             this.area = area;
             this.rendimiento();
+            this.navegacionTeclado();
             this.pestanasPaneles();
             this.leyendaPlegable();
             this.etiquetasPorCategoria();
@@ -119,6 +120,61 @@
             });
         },
 
+        /* ------------------------------------------------ navegación con flechas */
+        /** Flechas del teclado: desplazan el mapa de forma continua (con arranque suave), también en
+         *  diagonal con dos flechas; Shift = más rápido. Mientras se navega con el teclado el mapa no
+         *  reacciona al mouse (no se sombrean lotes ni salen etiquetas) hasta que el mouse se mueva. */
+        navegacionTeclado() {
+            const DIR = { ArrowUp: [0, 1], ArrowDown: [0, -1], ArrowLeft: [1, 0], ArrowRight: [-1, 0] };
+            const teclas = new Set();
+            let raf = 0, t0 = 0, tPrev = 0, rapido = false, mouseIni = null;
+            const area = this.area;
+            const modoTeclado = on => {
+                area.classList.toggle('mapa-teclado', on);
+                if (on) { mouseIni = { x: this.mouse.x, y: this.mouse.y }; App.Map.hideTooltip?.(); }
+            };
+            const paso = t => {
+                if (!teclas.size) { raf = 0; this._panTeclado = false; return; }
+                const dt = Math.min(50, tPrev ? t - tPrev : 16);
+                tPrev = t;
+                const arranque = Math.min(1, (t - t0) / 260);
+                const v = (rapido ? 1600 : 700) * (0.3 + 0.7 * arranque);           // px de pantalla por segundo
+                let dx = 0, dy = 0;
+                teclas.forEach(k => { dx += DIR[k][0]; dy += DIR[k][1]; });
+                const n = Math.hypot(dx, dy);
+                if (n) {
+                    const tr = App.Map.transform;
+                    tr.x += dx / n * v * dt / 1000;
+                    tr.y += dy / n * v * dt / 1000;
+                    App.Map.updateMapTransform();
+                }
+                raf = requestAnimationFrame(paso);
+            };
+            document.addEventListener('keydown', e => {
+                if (!DIR[e.key] || this.derecho || this.escribiendo() || e.ctrlKey || e.metaKey || e.altKey) return;
+                e.preventDefault();
+                rapido = e.shiftKey;
+                teclas.add(e.key);
+                if (!raf) {
+                    this._panTeclado = true;
+                    t0 = performance.now(); tPrev = 0;
+                    modoTeclado(true);
+                    raf = requestAnimationFrame(paso);
+                }
+            });
+            document.addEventListener('keyup', e => {
+                if (DIR[e.key]) teclas.delete(e.key);
+                if (e.key === 'Shift') rapido = false;
+            });
+            window.addEventListener('blur', () => teclas.clear());
+            // El mouse vuelve a interactuar con el mapa en cuanto se mueve de verdad (o hace clic)
+            area.addEventListener('mousemove', e => {
+                if (!area.classList.contains('mapa-teclado') || teclas.size) return;
+                if (!mouseIni || mouseIni.x === null || Math.hypot(e.clientX - mouseIni.x, e.clientY - mouseIni.y) > 4) modoTeclado(false);
+            });
+            area.addEventListener('mousedown', () => { if (!teclas.size) modoTeclado(false); }, true);
+        },
+
         /* ------------------------------------------------ rendimiento */
         /** Arrastre fluido: una actualización por cuadro, sin animación de retraso,
          *  y el mapa en «modo movimiento» (sin hover ni animaciones) mientras se mueve. */
@@ -142,7 +198,11 @@
                 moviendo();
                 clearTimeout(tProf);
                 tProf = setTimeout(() => MapaUX.zoomProfundo(), 160);
-                if (!arrastre) { orig(); return; }
+                if (!arrastre) {
+                    orig();
+                    if (MapaUX._panTeclado) cont.style.transition = 'none';   // flechas: sin retraso
+                    return;
+                }
                 // Arrastrando: el mouse puede enviar varios eventos por cuadro → aplicar solo el último
                 if (rafArr) return;
                 rafArr = requestAnimationFrame(() => {
@@ -325,7 +385,7 @@
             ayuda.textContent = '?';
             ayuda.title = 'Atajos del mapa';
             ayuda.addEventListener('click', () => {
-                const msg = 'Rueda: zoom al cursor · Clic derecho presionado + ↑/↓: zoom · Teclas + / −: zoom · 0: restablecer · [ y ]: ocultar paneles laterales · H: ocultar encabezado (KPI) · M: solo mapa · Esc: salir';
+                const msg = 'Rueda: zoom al cursor · Clic derecho presionado + ↑/↓: zoom · Teclas + / −: zoom · 0: restablecer · Flechas: desplazar el mapa (Shift = más rápido) · [ y ]: ocultar paneles laterales · H: ocultar encabezado (KPI) · M: solo mapa · Esc: salir';
                 if (App.UI?.showToast) App.UI.showToast(msg); else alert(msg);
             });
             ctrls.appendChild(ayuda);

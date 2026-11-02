@@ -34,7 +34,8 @@ body.opportunity-mode #mapContainer svg .lote:not(.gold-pulse) { filter: none !i
     animation-play-state: paused !important;
     pointer-events: none !important;
 }
-.panel-map.mapa-moviendo .map-tooltip { opacity: 0 !important; visibility: hidden !important; }
+.panel-map.mapa-moviendo .map-tooltip,
+.panel-map.mapa-teclado .map-tooltip, body:has(.panel-map.mapa-teclado) .map-tooltip { opacity: 0 !important; visibility: hidden !important; }
 .panel-map.mapa-moviendo #mapContainer svg .lote,
 .panel-map.mapa-moviendo #mapContainer svg .gold-pulse { filter: none !important; }
 .panel-map.mapa-moviendo #mapContainer { cursor: grabbing; }
@@ -47,3 +48,7 @@ body.opportunity-mode #mapContainer svg .lote:not(.gold-pulse) { filter: none !i
 
 /* 7. Títulos de lotes cuya categoría está apagada (ver MapaUX.etiquetasPorCategoria) */
 #mapContainer svg text.lbl-cat-oculta { display: none; }
+
+/* 8. Navegación con flechas: el mapa no reacciona al mouse (sin sombreado de lotes ni etiquetas)
+      hasta que el mouse se mueva de verdad (ver MapaUX.navegacionTeclado) */
+.panel-map.mapa-teclado #mapContainer svg * { pointer-events: none !important; }
