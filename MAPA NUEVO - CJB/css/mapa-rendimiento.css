@@ -24,18 +24,17 @@
       lote era redundante y muy costoso. */
 body.opportunity-mode #mapContainer svg .lote:not(.gold-pulse) { filter: none !important; }
 
-/* 5. Mientras el mapa se mueve (arrastre o zoom):
+/* 5. Mientras el mapa se mueve (arrastre o zoom con el mouse o el touchpad):
       · se pausan las animaciones del mapa (pulso del lote, flujos, charcos);
-      · el mapa no reacciona al paso del mouse (sin tooltips ni resaltados);
       · los halos difuminados de los lotes (selección, modo BI) se apagan un
-        instante; el borde de color del lote seleccionado se mantiene. */
+        instante; el borde de color del lote seleccionado se mantiene.
+      El mouse sigue interactuando: el lote bajo el cursor conserva su resaltado y
+      su etiqueta (al arrastrar o hacer zoom ese punto del mapa queda bajo el cursor).
+      Solo la navegación con flechas apaga etiquetas y resaltados (ver punto 8). */
 .panel-map.mapa-moviendo #mapContainer svg *,
 .panel-map.mapa-moviendo #mapContainer svg *::before {
     animation-play-state: paused !important;
-    pointer-events: none !important;
 }
-.panel-map.mapa-moviendo .map-tooltip,
-.panel-map.mapa-teclado .map-tooltip, body:has(.panel-map.mapa-teclado) .map-tooltip { opacity: 0 !important; visibility: hidden !important; }
 .panel-map.mapa-moviendo #mapContainer svg .lote,
 .panel-map.mapa-moviendo #mapContainer svg .gold-pulse { filter: none !important; }
 .panel-map.mapa-moviendo #mapContainer { cursor: grabbing; }
@@ -52,3 +51,5 @@ body.opportunity-mode #mapContainer svg .lote:not(.gold-pulse) { filter: none !i
 /* 8. Navegación con flechas: el mapa no reacciona al mouse (sin sombreado de lotes ni etiquetas)
       hasta que el mouse se mueva de verdad (ver MapaUX.navegacionTeclado) */
 .panel-map.mapa-teclado #mapContainer svg * { pointer-events: none !important; }
+.panel-map.mapa-teclado .map-tooltip,
+body:has(.panel-map.mapa-teclado) .map-tooltip { opacity: 0 !important; visibility: hidden !important; }
