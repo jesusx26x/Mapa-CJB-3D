@@ -107,6 +107,9 @@
                 } else if (k === ']') {
                     e.preventDefault();
                     this.togglePanel('der');
+                } else if ((k === 'h' || k === 'H') && !e.shiftKey) {
+                    e.preventDefault();
+                    this.togglePanel('sup');
                 } else if ((k === 'm' || k === 'M') && !e.shiftKey) {
                     e.preventDefault();
                     this.toggleSoloMapa();
@@ -280,20 +283,23 @@
             };
             crear('izq', 'Ocultar / mostrar filtros (tecla [)');
             crear('der', 'Ocultar / mostrar detalles (tecla ])');
+            crear('sup', 'Ocultar / mostrar el encabezado con los KPI (tecla H)');
             let pref = {};
             try { pref = JSON.parse(localStorage.getItem('vbc-paneles-cjb') || '{}'); } catch (e) { /* sin almacenamiento */ }
             if (pref.izq) this.togglePanel('izq', true, true);
             if (pref.der) this.togglePanel('der', true, true);
+            if (pref.sup) this.togglePanel('sup', true, true);
         },
 
         togglePanel(lado, ocultar, silencioso) {
-            const cls = lado === 'izq' ? 'vbc-sin-izq' : 'vbc-sin-der';
+            const cls = { izq: 'vbc-sin-izq', der: 'vbc-sin-der', sup: 'vbc-sin-sup' }[lado];
             const v = typeof ocultar === 'boolean' ? ocultar : !document.body.classList.contains(cls);
             document.body.classList.toggle(cls, v);
             try {
                 localStorage.setItem('vbc-paneles-cjb', JSON.stringify({
                     izq: document.body.classList.contains('vbc-sin-izq'),
-                    der: document.body.classList.contains('vbc-sin-der')
+                    der: document.body.classList.contains('vbc-sin-der'),
+                    sup: document.body.classList.contains('vbc-sin-sup')
                 }));
             } catch (e) { /* sin almacenamiento */ }
             if (!silencioso) setTimeout(() => { window.dispatchEvent(new Event('resize')); App.Map.updateMapTransform(); }, 320);
@@ -319,7 +325,7 @@
             ayuda.textContent = '?';
             ayuda.title = 'Atajos del mapa';
             ayuda.addEventListener('click', () => {
-                const msg = 'Rueda: zoom al cursor · Clic derecho presionado + ↑/↓: zoom · Teclas + / −: zoom · 0: restablecer · [ y ]: ocultar paneles · M: solo mapa · Esc: salir';
+                const msg = 'Rueda: zoom al cursor · Clic derecho presionado + ↑/↓: zoom · Teclas + / −: zoom · 0: restablecer · [ y ]: ocultar paneles laterales · H: ocultar encabezado (KPI) · M: solo mapa · Esc: salir';
                 if (App.UI?.showToast) App.UI.showToast(msg); else alert(msg);
             });
             ctrls.appendChild(ayuda);

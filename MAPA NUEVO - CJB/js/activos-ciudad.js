@@ -1360,12 +1360,25 @@
                 leg.push(`<div class="act-leg-row"><span class="act-leg-lbl">Cota</span><span class="act-ramp"></span><span class="act-leg-val">${lo.toFixed(0)}–${hi.toFixed(0)} m</span></div>`);
             }
             if (s.capas.charcos && this.charcos.length) {
+                // Filtro rápido por criticidad (para presentar): cada nivel se enciende o apaga con un clic
                 const cat = this.cats.find(c => c.id === 'charcos');
-                leg.push(`<div class="act-leg-row">${cat.subcategorias.map(x => `<span class="act-leg-item"><span class="act-dot" style="background:${x.color}"></span>${this.esc(x.nombre)}</span>`).join('')}</div>`);
+                const n = id => this.charcos.filter(c => c.subcategoria === id).length;
+                const todos = cat.subcategorias.every(x => s.subs[x.id] !== false || !n(x.id));
+                leg.push(`<div class="act-crit-filtro"><span class="act-leg-lbl">Criticidad</span>${cat.subcategorias.map(x => {
+                    const on = s.subs[x.id] !== false, k = n(x.id);
+                    return `<button type="button" class="act-crit-btn${on && k ? ' on' : ''}" data-crit="${x.id}" ${k ? '' : 'disabled'} aria-pressed="${on}" title="${on ? 'Ocultar' : 'Mostrar'} charcos ${this.esc(x.nombre.toLowerCase())}" style="--cc:${x.color}"><span class="act-dot" style="background:${x.color}"></span>${this.esc(x.nombre)}<b>${k}</b></button>`;
+                }).join('')}${todos ? '' : '<button type="button" class="act-crit-todos" data-crit="*">Todos</button>'}</div>`);
             }
             const legEl = document.getElementById('actLegend');
             legEl.innerHTML = leg.join('');
             legEl.style.display = leg.length ? '' : 'none';
+            legEl.querySelectorAll('[data-crit]').forEach(b => b.addEventListener('click', () => {
+                const subs = (this.cats.find(c => c.id === 'charcos')?.subcategorias || []).map(x => x.id);
+                if (b.dataset.crit === '*') subs.forEach(id => { s.subs[id] = true; });
+                else s.subs[b.dataset.crit] = s.subs[b.dataset.crit] === false;
+                subs.forEach(id => { const cb = document.querySelector(`[data-sub="${id}"]`); if (cb) cb.checked = s.subs[id] !== false; });
+                this.refresh();
+            }));
         },
 
         /* ============================================ PANEL DERECHO */

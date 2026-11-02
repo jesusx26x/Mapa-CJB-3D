@@ -226,6 +226,15 @@ body.vbc-sin-izq .panel-pestana-izq span { transform: translateX(-1px) rotate(-1
 body.vbc-sin-der .panel-pestana-der span { transform: translateX(1px) rotate(45deg); }
 body.vbc-solo-mapa .panel-pestana { display: none; }
 
+/* Encabezado con los KPI plegable (pestaña superior, tecla H) */
+body.vbc-sin-sup .header { display: none !important; }
+body.vbc-sin-sup .main-layout { margin-top: 0 !important; height: 100vh !important; }
+.panel-pestana-sup { top: 0; left: 50%; transform: translateX(-50%); width: 56px; height: 14px;
+    border-top: 0; border-radius: 0 0 8px 8px; transition: opacity .2s, height .2s, color .2s; }
+.panel-pestana-sup:hover, .panel-pestana-sup:focus-visible { width: 56px; height: 18px; }
+.panel-pestana-sup span { transform: translateY(1px) rotate(135deg); }              /* ˄ ocultar encabezado */
+body.vbc-sin-sup .panel-pestana-sup span { transform: translateY(-2px) rotate(-45deg); } /* ˅ mostrarlo */
+
 /* ============================================================ SÍMBOLOS (selector) */
 .act-simbolos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 0 10px; }
 .act-simbolos button {
@@ -308,3 +317,16 @@ body:not(.light-mode) .act-aviso { color: #fcd34d; }
 #activoDetails .detail-grid, #loteActivosSection .detail-grid { grid-template-columns: 95px minmax(0, 1fr); }
 #activoDetails .detail-grid dd, #activoDetails .detail-grid dt { min-width: 0; margin: 0; overflow-wrap: anywhere; }
 .act-obs { margin: 4px 0 8px; font-size: 12px; line-height: 1.45; color: var(--text-primary); overflow-wrap: anywhere; white-space: pre-line; }
+
+/* Filtro rápido por criticidad de los charcos */
+.act-crit-filtro { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.act-crit-btn, .act-crit-todos { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 999px;
+    font-size: .66rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border, rgba(148,163,184,.3));
+    background: transparent; color: var(--text-muted, #94a3b8); transition: background .15s, color .15s, border-color .15s; }
+.act-crit-btn b { font-weight: 700; opacity: .85; }
+.act-crit-btn .act-dot { opacity: .45; }
+.act-crit-btn.on { color: var(--text-primary, #f1f5f9); border-color: var(--cc); background: color-mix(in srgb, var(--cc) 18%, transparent); }
+.act-crit-btn.on .act-dot { opacity: 1; }
+.act-crit-btn:disabled { opacity: .4; cursor: default; }
+.act-crit-todos { color: #38bdf8; border-style: dashed; }
+.act-crit-filtro .act-leg-lbl { font-size: .64rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; }
