@@ -302,3 +302,9 @@ body:not(.light-mode) .act-aviso { color: #fcd34d; }
 .act-nucleo.crit-amarillo { --c: 255, 196, 0; color: #0b1220; }
 .act-nucleo.crit-verde { --c: 0, 230, 118; color: #0b1220; }
 .act-nucleo.atenuado { opacity: .3; }
+
+/* Fichas de activos: nada se sale del panel (enlaces y textos largos se parten) */
+#activoDetails, #loteActivosSection { overflow-x: hidden; }
+#activoDetails .detail-grid, #loteActivosSection .detail-grid { grid-template-columns: 95px minmax(0, 1fr); }
+#activoDetails .detail-grid dd, #activoDetails .detail-grid dt { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.act-obs { margin: 4px 0 8px; font-size: 12px; line-height: 1.45; color: var(--text-primary); overflow-wrap: anywhere; white-space: pre-line; }

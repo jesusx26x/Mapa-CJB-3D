@@ -1440,6 +1440,8 @@
             }).join('');
             const imbs = (c.imbornales_cercanos || []).map(id => `<button class="act-link" data-imb="${id}">${id}</button>`).join(' ');
             const dato = (k, v, u) => (v !== null && v !== undefined && v !== '') ? `<dt>${k}</dt><dd>${this.esc(v)}${u || ''}</dd>` : '';
+            // Solo la observación de campo (las notas de ingesta quedan en el Excel de revisión)
+            const obs = String(c.observaciones || '').split(/\s*\|\s*\[Ingesta/)[0].trim();
             card.innerHTML = `
                 <div class="detail-header-v2">
                     <span class="status-badge-large act-badge" style="background:${color}">🌊 ${this.esc(c.tipo)}</span>
@@ -1465,8 +1467,8 @@
                     <dl class="detail-grid">
                         ${dato('Causa probable', c.causa)}${dato('Afecta', c.afecta)}${c.largo_m && c.ancho_m ? dato('Extensión aprox.', `${c.largo_m} × ${c.ancho_m} m`) : ''}${dato('Área aprox.', c.area_m2, ' m²')}
                         ${dato('Profundidad', c.profundidad_cm, ' cm')}${dato('Se seca en', c.drenaje_horas, ' h')}
-                        ${dato('Observaciones', c.observaciones)}
                     </dl>
+                    ${obs ? `<div class="act-sub-title">Observaciones de campo</div><p class="act-obs">${this.esc(obs)}</p>` : ''}
                     ${imbs ? `<div class="act-sub-title">Imbornales cercanos</div><div class="act-lot-ids">${imbs}</div>` : ''}
                     ${c.evidencia ? `<a class="act-btn-link" href="${this.esc(c.evidencia)}" target="_blank" rel="noopener">Ver evidencia ↗</a>` : ''}
                     <a class="act-btn-link" href="https://www.google.com/maps?q=${c.lat},${c.lon}" target="_blank" rel="noopener">Abrir en Google Maps ↗</a>
