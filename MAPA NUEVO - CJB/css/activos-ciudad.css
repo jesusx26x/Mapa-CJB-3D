@@ -212,7 +212,7 @@ body.vbc-sin-izq.vbc-sin-der .panel-map { grid-column: 1 / 4; }
     position: absolute; top: 50%; z-index: 12; transform: translateY(-50%);
     width: 14px; height: 56px; padding: 0; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
+    background: var(--bg-secondary);   /* sin color-mix: rompe la exportación a PDF (html2canvas) */
     border: 1px solid var(--border); backdrop-filter: blur(6px);
     color: var(--text-muted); opacity: .55; transition: opacity .2s, width .2s, color .2s;
 }
@@ -325,7 +325,9 @@ body:not(.light-mode) .act-aviso { color: #fcd34d; }
     background: transparent; color: var(--text-muted, #94a3b8); transition: background .15s, color .15s, border-color .15s; }
 .act-crit-btn b { font-weight: 700; opacity: .85; }
 .act-crit-btn .act-dot { opacity: .45; }
-.act-crit-btn.on { color: var(--text-primary, #f1f5f9); border-color: var(--cc); background: color-mix(in srgb, var(--cc) 18%, transparent); }
+.act-crit-btn.on { color: var(--text-primary, #f1f5f9); border-color: var(--cc); position: relative; isolation: isolate; }
+/* Tinte del color de criticidad al 18 % (sin color-mix, que html2canvas no sabe leer) */
+.act-crit-btn.on::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--cc); opacity: .18; z-index: -1; pointer-events: none; }
 .act-crit-btn.on .act-dot { opacity: 1; }
 .act-crit-btn:disabled { opacity: .4; cursor: default; }
 .act-crit-todos { color: #38bdf8; border-style: dashed; }

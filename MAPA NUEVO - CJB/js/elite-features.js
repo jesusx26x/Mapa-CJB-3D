@@ -400,6 +400,7 @@ App.Map.showSmartTooltip = function (e, id) {
     `;
 
     tooltip.style.display = 'block';
+    tooltip.classList.add('visible');
     this.updateTooltipPosition(e);
 };
 

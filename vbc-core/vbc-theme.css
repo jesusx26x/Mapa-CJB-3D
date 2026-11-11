@@ -540,6 +540,7 @@ svg .lote.highlighted {
 
 .report-table {
     width: 100%;
+    table-layout: fixed;
     border-collapse: collapse;
     font-size: 0.67rem;
     line-height: 1.25;
@@ -575,6 +576,7 @@ svg .lote.highlighted {
 }
 
 .report-table td {
+    overflow-wrap: anywhere;
     padding: 4px 6px;
     border: 1px solid #cbd5e1;
     color: #0f172a;

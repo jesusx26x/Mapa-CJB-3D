@@ -490,10 +490,20 @@
 
             modal.style.display = 'flex';
 
-            // Bind Close
-            document.getElementById('btnCloseReportModal').addEventListener('click', () => {
+            // Las páginas tienen alto fijo: si las filas no caben, pasan a la página siguiente
+            // (antes quedaban recortadas y desaparecían del informe y del PDF)
+            this.ajustarPaginas(document.getElementById('vbcReportPrintArea'));
+
+            const cerrar = () => {
                 modal.style.display = 'none';
-            });
+                modal.innerHTML = '';                 // evita IDs duplicados en la página
+                document.removeEventListener('keydown', onKey);
+            };
+            const onKey = (ev) => { if (ev.key === 'Escape') cerrar(); };
+            document.addEventListener('keydown', onKey);
+
+            // Bind Close
+            document.getElementById('btnCloseReportModal').addEventListener('click', cerrar);
 
             // Bind Print
             document.getElementById('btnPrintReport').addEventListener('click', () => {
@@ -503,6 +513,46 @@
             // Bind PDF Download via html2pdf
             document.getElementById('btnDownloadPDF').addEventListener('click', () => {
                 this.downloadPDF(title);
+            });
+        },
+
+        ajustarPaginas(area) {
+            if (!area) return;
+            const desborda = (pg) => pg.scrollHeight > pg.clientHeight + 1;
+            const plantilla = () => {
+                // Página de continuación: se clona una existente (o la primera) sin filas
+                const base = area.querySelectorAll('.report-page')[1] || area.querySelector('.report-page');
+                const pg = base.cloneNode(true);
+                pg.querySelector('tbody').innerHTML = '';
+                if (pg.querySelector('.report-page-header-mini') === null) {
+                    // Desde la portada: dejar solo la tabla y el pie
+                    [...pg.children].forEach(ch => {
+                        if (!ch.querySelector('table') && !ch.classList.contains('report-page-footer')) ch.remove();
+                    });
+                }
+                return pg;
+            };
+            let i = 0;
+            let pages = area.querySelectorAll('.report-page');
+            while (i < pages.length && i < 400) {
+                const pg = pages[i];
+                const tb = pg.querySelector('tbody');
+                if (tb && desborda(pg) && tb.rows.length > 1) {
+                    let sig = pages[i + 1];
+                    if (!sig) { sig = plantilla(); area.appendChild(sig); }
+                    const tbSig = sig.querySelector('tbody');
+                    while (desborda(pg) && tb.rows.length > 1) tbSig.insertBefore(tb.rows[tb.rows.length - 1], tbSig.firstChild);
+                    pages = area.querySelectorAll('.report-page');
+                }
+                i++;
+            }
+            // Renumerar "Página X de N"
+            const total = pages.length;
+            pages.forEach((pg, k) => {
+                pg.dataset.page = k + 1;
+                pg.querySelectorAll('div').forEach(d => {
+                    if (d.children.length === 0 && /^Página \d+ de \d+$/.test(d.textContent.trim())) d.textContent = `Página ${k + 1} de ${total}`;
+                });
             });
         },
 
@@ -519,8 +569,11 @@
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
                     jsPDF: { unit: 'mm', format: 'letter', orientation: 'landscape' },
-                    pagebreak: { mode: ['css', 'legacy'] }
+                    // Cada hoja del informe empieza en una página nueva del PDF
+                    pagebreak: { mode: ['css', 'legacy'], after: '.vbc-salto' }
                 };
+                const hojas = element.querySelectorAll('.report-page');
+                hojas.forEach((h, k) => h.classList.toggle('vbc-salto', k < hojas.length - 1));
 
                 const btn = document.getElementById('btnDownloadPDF');
                 if (btn) btn.textContent = '⏳ Generando PDF...';

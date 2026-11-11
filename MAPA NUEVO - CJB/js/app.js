@@ -1029,7 +1029,7 @@ const App = {
 
         hideTooltip() {
             const tooltip = document.getElementById('mapTooltip');
-            if (tooltip) tooltip.style.display = 'none';
+            if (tooltip) { tooltip.style.display = 'none'; tooltip.classList.remove('visible'); }
         },
 
         setupZoom() {
@@ -3036,7 +3036,8 @@ const App = {
             document.addEventListener('fullscreenchange', () => this.updateFullscreenUI());
             document.getElementById('btnExport')?.addEventListener('click', () => this.exportCSV());
             document.getElementById('btnPrint')?.addEventListener('click', () => this.exportExecutivePDF());
-            document.getElementById('btnExportFilteredReport')?.addEventListener('click', () => this.exportExecutivePDF());
+            // btnExportFilteredReport lo atiende VBC.Reporter (vista previa + PDF por hojas). La captura antigua de
+            // pantalla completa fallaba siempre (colores oklab) y dejaba un clon oculto de la página.
 
             // Modal Ver Listado
             document.getElementById('btnViewFilteredList')?.addEventListener('click', () => this.openFilteredListModal());
