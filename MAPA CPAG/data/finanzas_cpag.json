@@ -1,7 +1,7 @@
 {
   "03-03-01": {
     "id": "03-03-01",
-    "empresa_financiera": "Constructora RIR",
+    "empresa_financiera": "RIR Ingeniería SRL",
     "capital_adeudado": 10731502.80,
     "total_programado": 13047490.80,
     "total_pagado": 2315988.00,
@@ -41,7 +41,7 @@
   },
   "03-02-01": {
     "id": "03-02-01",
-    "empresa_financiera": "Constructora Fernández",
+    "empresa_financiera": "Constructora Fernández Corona SRL",
     "capital_adeudado": 21408894.00,
     "total_programado": 23787660.00,
     "total_pagado": 2378766.00,

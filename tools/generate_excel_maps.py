@@ -527,7 +527,7 @@ def build_cpag_excel(dest_path):
 
         # Determinar valores pulidos
         if lote_id in ["03-03-01", "03-02-01"]:
-            nombre_comercial = f"Proyecto Habitacional ({dev_raw})"
+            nombre_comercial = nombre_raw if nombre_raw and nombre_raw != dev_raw else f"Proyecto Habitacional ({dev_raw})"
             desc = "Lote Habitacional - Multifamiliar (Adjudicado)"
             estatus = "Adjudicado"
             desarrollador = dev_raw
